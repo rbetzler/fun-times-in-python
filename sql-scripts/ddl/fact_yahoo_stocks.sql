@@ -4,19 +4,19 @@
 
 CREATE TABLE public.fact_yahoo_stocks
 (
-  ticker text,
-  date_time timestamp without time zone,
-  open numeric,
-  high numeric,
-  low numeric,
-  close numeric,
-  adj_close numeric,
-  volume bigint,
-  dividend numeric,
-  split_numerator integer,
-  split_denominator integer,
-  index text,
-  unix_timestamp text
+  ticker              text,
+  date_time           timestamp without time zone,
+  open                numeric,
+  high                numeric,
+  low                 numeric,
+  close               numeric,
+  adj_close           numeric,
+  volume              bigint,
+  dividend            numeric,
+  split_numerator     integer,
+  split_denominator   integer,
+  index               text,
+  unix_timestamp      text
 )
 WITH (
   OIDS=FALSE
