@@ -5,4 +5,4 @@ where ticker in
 	from fact_yahoo_stocks
 	group by 1
 	having count(*) > 500
-	limit 10)
+	limit 1)
