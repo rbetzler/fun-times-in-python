@@ -18,7 +18,7 @@ from sqlalchemy import create_engine
 
 #Loop x parallel execution
 
-conn_string = "host='localhost' dbname='postgres' user='postgres' password='D@t@_Mgmt'"
+conn_string = "host='localhost' dbname='postgres' user='rbetzler' password='pwd'"
 conn = psycopg2.connect(conn_string)
 cursor = conn.cursor()
 
@@ -41,7 +41,7 @@ cntTickers = cursor.fetchone()[0]
 
     #Pull tickers
 
-conn_string = "host='localhost' dbname='postgres' user='postgres' password='D@t@_Mgmt'"
+conn_string = "host='localhost' dbname='postgres' user='rbetzler' password='pwd'"
 conn = psycopg2.connect(conn_string)
 cursor = conn.cursor()
 
@@ -83,8 +83,7 @@ if len(tickers) > 0:
     output = pd.concat(outputs)
 
     #Load df to db
-    pwd = ''
-    engine = create_engine('postgresql://postgres:' + pwd + '@localhost:5432/postgres')
+    engine = create_engine('postgresql://rbetzler:pwd@localhost:5432/postgres')
     output.to_sql('dim_yahoo_stocks', engine, if_exists = 'append')
 
 #        print("Appending data to db. Time: " + str(datetime.datetime.now()))
