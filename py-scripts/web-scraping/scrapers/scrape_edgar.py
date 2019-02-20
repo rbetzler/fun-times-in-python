@@ -6,15 +6,20 @@ Created on Sat Feb 16 16:56:11 2019
 @author: nautilus
 """
 
-import re
-import time
 import requests
-import numpy as np
 import pandas as pd
 
-year = '2019'
-quarter = 'QTR1'
-date = '20190205'
+def ConvertFileHtmPathToTxt(df, company_id, file_path):
+    
+    df['url'] = ('http://www.sec.gov/Archives/edgar/data/' 
+      + df[company_id] 
+      + '/'
+      + df[file_path].str.split('/', expand = True)[7].str.rsplit('-', expand = True, n = 1)[0].str.replace('-', '') 
+      + '/'
+      + df[file_path].str.split('/', expand = True)[7].str.rsplit('-', expand = True, n = 1)[0]
+      + '.txt')
+    
+    return df
 
 def ExtractEdgarIndex(year, quarter, date):
     
@@ -50,7 +55,13 @@ def ExtractEdgarIndex(year, quarter, date):
             'date' : df_edgar.str.slice(start = part_three, stop = part_four).str.strip(),
             'file_path' : df_edgar.str.slice(start = part_four).str.strip()})
     
+    df = ConvertFileHtmPathToTxt(df, 'company_id', 'file_path')
+    
     return df
 
-ExtractEdgarIndex(year, quarter, date)
-        
+
+##Example
+#year = '2019'
+#quarter = 'QTR1'
+#date = '20190205'
+#example = ExtractEdgarIndex(year, quarter, date)
