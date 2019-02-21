@@ -9,6 +9,7 @@ Created on Wed Feb 20 22:02:35 2019
 import bs4
 import requests
 import pandas as pd
+from sqlalchemy import create_engine
 
 #Get sec form web page
 raw_html = requests.get('https://www.sec.gov/forms').text
@@ -30,4 +31,11 @@ for row in soup_descriptions:
     file_descriptions.append(row.get_text().replace('Description:', '').strip())
 
 #Convert lists to pandas
-df_files = pd.DataFrame({'filing_type' : file_types, 'description' : file_descriptions})
+df_files = pd.DataFrame({'file_type' : file_types, 
+                         'description' : file_descriptions, 
+                         'created_at' : pd.Timestamp.now().strftime('%Y-%m-%d %M:%S')
+                         })
+
+#Load df to db
+engine = create_engine('postgresql://rbetzler:pwd@localhost:5432/postgres')
+df_files.to_sql('dim_edgar_file_types', engine, if_exists = 'append', index = False)
