@@ -6,11 +6,12 @@ Created on Sat Feb 16 16:56:11 2019
 @author: nautilus
 """
 
+import bs4
 import time
 import requests
 import pandas as pd
 
-def ConvertHtmPathToTxt(df, company_id, file_path):
+def convert_htm_path_to_txt(df, company_id, file_path):
 
     df['url'] = ('http://www.sec.gov/Archives/edgar/data/'
       + df[company_id]
@@ -22,7 +23,7 @@ def ConvertHtmPathToTxt(df, company_id, file_path):
 
     return df
 
-def ExtractEdgarIndex(year, quarter, date):
+def extract_edgar_index(year, quarter, date):
 
     #Get crawler index
     url = ('https://www.sec.gov/Archives/edgar/daily-index/'
@@ -56,28 +57,23 @@ def ExtractEdgarIndex(year, quarter, date):
             'date' : df_edgar.str.slice(start = part_three, stop = part_four).str.strip(),
             'file_path' : df_edgar.str.slice(start = part_four).str.strip()})
 
-    df = ConvertHtmPathToTxt(df, 'company_id', 'file_path')
+    df = convert_htm_path_to_txt(df, 'company_id', 'file_path')
 
     return df
 
-def RetreiveEdgar(urls, time_delay = 4):
+def retreive_edgar_docs(df, urls, time_delay = 4):
     
-    docs = []
-    for url in urls:
-        docs.append(requests.get(url).text)
-        print('Received txt... Sleeping')
-        time.sleep(time_delay)
-        print('Ok back at it')
+    df = df.assign(soup_html = '', soup_text = '')
+    for idx, row in df.iterrows():
         
-    return docs
-
-def RetreiveEdgarDf(df, urls, time_delay = 4):
-    
-    df.loc[:, 'doc'] = pd.Series('')
-    
-    for idx, row in df[urls].iteritems():
-        df.loc[idx, 'doc'] = requests.get(row).text
-        print('Received txt... Sleeping')
+        raw_html = requests.get(row[urls]).text
+        soup =  bs4.BeautifulSoup(raw_html)
+        print('Got ingredients')
+        
+        df.loc[idx].soup_html = soup
+        df.loc[idx].soup_text = soup.get_text()
+        print('Cooked soup... Sleeping')
+        
         time.sleep(time_delay)
         print('Ok back at it')
         
@@ -87,4 +83,5 @@ def RetreiveEdgarDf(df, urls, time_delay = 4):
 #year = '2019'
 #quarter = 'QTR1'
 #date = '20190205'
-#example = ExtractEdgarIndex(year, quarter, date)
+#example = extract_edgar_index(year, quarter, date)
+#example = retreive_edgar_docs(example.head(3), 'url')
