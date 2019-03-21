@@ -1,4 +1,4 @@
-# Miscellaneous commands
+# Commands
 
 ## Kubernetes
 
