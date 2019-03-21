@@ -1,3 +1,8 @@
 # fun-times-in-python
 
-a repo for web scraping, data wrangling, data science, and the like
+### What's in here?
+
+1. Web scraping financial info
+2. Data wrangling, cleaning, ETL, etc.
+3. Data science
+4. Wrapping in kubernetes
