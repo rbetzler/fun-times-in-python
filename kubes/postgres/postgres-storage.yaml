@@ -12,7 +12,7 @@ spec:
   accessModes:
     - ReadWriteMany
   hostPath:
-    path: "/home/nautilus/kube-postgres-test"
+    path: "/media/nautilus/kubes/postgres"
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
