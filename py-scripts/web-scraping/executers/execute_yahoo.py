@@ -18,10 +18,13 @@ from sqlalchemy import create_engine
 sys.path.append('/home/nautilus/development/fun-times-in-python/py-scripts/web-scraping')
 from scrape_yahoo import ExtractYahooStockPerformance
 
+sys.path.append('/home/nautilus/development/fun-times-in-python/py-scripts/utilities')
+from db_utilities import ConnectionStrings
+
 print('Start time: ' + str(datetime.datetime.now()))
 
 #Grab tickers
-conn_string = "host='10.152.183.137' dbname='dw_stocks' user='dbadmin' password='password' port='5432'"
+conn_string = ConnectionStrings().postgres
 conn = psycopg2.connect(conn_string)
 cursor = conn.cursor()
 
@@ -52,5 +55,5 @@ if len(tickers) > 0:
     output = pd.concat(outputs)
 
     #Load df to db
-    engine = create_engine('postgresql://dbadmin:password@10.152.183.137:5432/postgres')
+    engine = create_engine(ConnectionStrings().postgres)
     output.to_sql('fact_yahoo_stocks', engine, if_exists = 'append')
