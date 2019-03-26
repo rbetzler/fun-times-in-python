@@ -8,8 +8,13 @@ Created on Mon Mar 25 21:45:16 2019
 
 #Import py functions
 import os
+import sys
 import psycopg2
 import datetime
+
+#Import custom function
+sys.path.append('/home/nautilus/development/fun-times-in-python/py-scripts/utilities')
+from db_utilities import ConnectionStrings
 
 print('Start time: ' + str(datetime.datetime.now()))
 
@@ -24,7 +29,7 @@ for file in os.listdir(directory):
      tables.append(open(directory + '/' + file).read())
 
 #Connect
-conn_string = "host='10.152.183.137' dbname='dw_stocks' user='dbadmin' password='password' port='5432'"
+conn_string = ConnectionStrings().postgres
 conn = psycopg2.connect(conn_string)
 cursor = conn.cursor()
 
@@ -32,7 +37,7 @@ cursor = conn.cursor()
 for schema in schemas:
     cursor.execute(schema)
     conn.commit()
-    
+
 #Create tables
 for table in tables:
     cursor.execute(table)
