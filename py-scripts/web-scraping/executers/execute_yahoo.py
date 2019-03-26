@@ -21,7 +21,7 @@ from scrape_yahoo import ExtractYahooStockPerformance
 print('Start time: ' + str(datetime.datetime.now()))
 
 #Grab tickers
-conn_string = "host='localhost' dbname='postgres' user='rbetzler' password='pwd'"
+conn_string = "host='10.152.183.137' dbname='dw_stocks' user='dbadmin' password='password' port='5432'"
 conn = psycopg2.connect(conn_string)
 cursor = conn.cursor()
 
@@ -34,7 +34,7 @@ for row in cursor:
     tickers.append(row)
 
 if len(tickers) > 0:
-    outputs = pd.DataFrame({'open' : [], 
+    outputs = pd.DataFrame({'open' : [],
                            'high' : [],
                            'low' : [],
                            'close' : [],
@@ -47,11 +47,10 @@ if len(tickers) > 0:
                            'split_denominator' : [],
                            'ticker' : []
                            })
-    
+
     outputs = mp.Pool(4).map(ExtractYahooStockPerformance, tickers)
     output = pd.concat(outputs)
-    
+
     #Load df to db
-    engine = create_engine('postgresql://rbetzler:pwd@localhost:5432/postgres')
+    engine = create_engine('postgresql://dbadmin:password@10.152.183.137:5432/postgres')
     output.to_sql('fact_yahoo_stocks', engine, if_exists = 'append')
-    

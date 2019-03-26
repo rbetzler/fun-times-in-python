@@ -1,8 +1,8 @@
--- Table: public.fact_fred_releases
+-- Table: dw.fact_fred_releases
 
--- DROP TABLE public.fact_fred_releases;
+-- DROP TABLE dw.fact_fred_releases;
 
-CREATE TABLE public.fact_fred_releases
+CREATE TABLE dw.fact_fred_releases
 (
   release_id      numeric,
   link            text,
@@ -17,5 +17,5 @@ CREATE TABLE public.fact_fred_releases
 WITH (
   OIDS=FALSE
 );
-ALTER TABLE public.fact_fred_releases
+ALTER TABLE dw.fact_fred_releases
   OWNER TO postgres;

@@ -1,8 +1,8 @@
--- Table: public.fact_yahoo_stocks
+-- Table: dw.fact_yahoo_stocks
 
--- DROP TABLE public.fact_yahoo_stocks;
+-- DROP TABLE dw.fact_yahoo_stocks;
 
-CREATE TABLE public.fact_yahoo_stocks
+CREATE TABLE dw.fact_yahoo_stocks
 (
   ticker              text,
   date_time           timestamp without time zone,
@@ -21,7 +21,7 @@ CREATE TABLE public.fact_yahoo_stocks
 WITH (
   OIDS=FALSE
 );
-ALTER TABLE public.fact_yahoo_stocks
+ALTER TABLE dw.fact_yahoo_stocks
   OWNER TO postgres;
-COMMENT ON TABLE public.fact_yahoo_stocks
+COMMENT ON TABLE dw.fact_yahoo_stocks
   IS 'Historical stock performances scraped from yahoo finance';

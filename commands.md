@@ -4,9 +4,9 @@
 
 ### Microk8s
 ```
-microk8s.start
-microk8s.status
-microk8s.kubectl get nodes
+microk8s.start &&
+microk8s.status &&
+microk8s.kubectl get nodes &&
 microk8s.kubectl get deployment
 ```
 
