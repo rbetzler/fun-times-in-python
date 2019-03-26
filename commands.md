@@ -25,5 +25,11 @@ microk8s.kubectl create -f /home/nautilus/development/fun-times-in-python/kubes/
 `psql -h localhost -U dbadmin --password -p 31801 dw_stocks`
 
 ### Docker
+`sudo docker images`
 `sudo docker ps -a`
 `sudo docker run -it --rm 105fbac90ce5`
+
+##### Postgres
+`sudo docker run --rm -d -p 5432:5432 --name temp-postgres -e POSTGRES_PASSWORD=password postgres`
+`sudo docker exec -it temp-postgres bash`
+`psql -U postgres`
