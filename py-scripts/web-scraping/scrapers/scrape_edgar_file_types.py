@@ -39,9 +39,9 @@ for row in soup_descriptions:
 #Convert lists to pandas
 df_files = pd.DataFrame({'file_type' : file_types, 
                          'description' : file_descriptions, 
-                         'created_at' : pd.Timestamp.now().strftime('%Y-%m-%d %M:%S')
+                         'created_at' : pd.Timestamp.now()
                          })
 
 #Load df to db
 engine = create_engine(ConnectionStrings().postgres)
-df_files.to_sql('dim_edgar_file_types', engine, if_exists = 'append', index = False)
+df_files.to_sql('dim_edgar_file_types', engine, schema = 'dw', if_exists = 'append', index = False)

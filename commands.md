@@ -10,7 +10,7 @@ microk8s.kubectl get nodes &&
 microk8s.kubectl get deployment
 ```
 
-### Create kube services
+### Create kube services - postgres
 ```
 microk8s.kubectl create -f /home/nautilus/development/fun-times-in-python/kubes/postgres/postgres-config.yaml &&
 microk8s.kubectl create -f /home/nautilus/development/fun-times-in-python/kubes/postgres/postgres-storage.yaml &&
@@ -42,5 +42,6 @@ psql -U postgres
 ##### Airflow
 ```
 sudo docker pull puckel/docker-airflow
-sudo docker run --name airflow-prod -p 8080:8080 -td airflow
+sudo docker run --name airflow-prod -p 8080:8080 -td airflow -v /home/nautilus/development/fun-times-in-python/dags:/usr/local/airflow/dags airflow webserver
+sudo docker exec -ti airflow-prod bash
 ```
