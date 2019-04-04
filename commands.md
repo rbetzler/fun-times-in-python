@@ -34,6 +34,7 @@ sudo docker run -it --rm python2
 
 ##### Postgres
 ```
+sudo docker pull postgres
 sudo docker run --rm -d -p 5432:5432 --name temp-postgres -e POSTGRES_PASSWORD=password -v /media/nautilus/docks/postgres:/var/lib/postgresql/data postgres
 sudo docker exec -it temp-postgres bash
 psql -U postgres
@@ -43,7 +44,7 @@ psql -U postgres
 ```
 sudo docker pull puckel/docker-airflow
 sudo docker tag 6e247b3efc89 airflow
-sudo docker run --name airflow-prod -p 8080:8080 -v /home/nautilus/development/fun-times-in-python/dags:/usr/local/airflow/dags -td airflow 
+sudo docker run --name airflow-prod -p 8080:8080 -v /home/nautilus/development/fun-times-in-python/dags:/usr/local/airflow/dags -td airflow
 sudo docker start airflow-prod
 sudo docker exec -ti airflow-prod bash
 ```
