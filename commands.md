@@ -42,6 +42,8 @@ psql -U postgres
 ##### Airflow
 ```
 sudo docker pull puckel/docker-airflow
-sudo docker run --name airflow-prod -p 8080:8080 -td airflow -v /home/nautilus/development/fun-times-in-python/dags:/usr/local/airflow/dags airflow webserver
+sudo docker tag 6e247b3efc89 airflow
+sudo docker run --name airflow-prod -p 8080:8080 -v /home/nautilus/development/fun-times-in-python/dags:/usr/local/airflow/dags -td airflow 
+sudo docker start airflow-prod
 sudo docker exec -ti airflow-prod bash
 ```
