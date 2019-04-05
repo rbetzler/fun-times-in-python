@@ -19,9 +19,9 @@ default_args = {
 }
 
 dag = DAG(
-    'test123',
+    'scrape_edgar',
     default_args=default_args,
-    schedule_interval=timedelta(minutes=1)
+    schedule_interval=timedelta(days=1)
     )
 
 #Tasks
@@ -31,8 +31,8 @@ t1 = BashOperator(
     dag=dag)
 
 t2 = BashOperator(
-    task_id='bang',
-    bash_command='python /home/nautilus/development/fun-times-in-python/py-scripts/utilities/test_dags.py',
+    task_id='scrape_site',
+    bash_command='python /home/nautilus/development/fun-times-in-python/py-scripts/web-scraping/scrapers/scrape_edgar_file_types.py',
     dag=dag)
 
 t2.set_upstream(t1)
