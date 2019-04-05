@@ -19,9 +19,9 @@ default_args = {
 }
 
 dag = DAG(
-    'test-yahoo-stocks-test',
+    'test123',
     default_args=default_args,
-    schedule_interval=timedelta(minutes=1),
+    schedule_interval=timedelta(minutes=1)
     )
 
 #Tasks
@@ -31,6 +31,7 @@ t1 = BashOperator(
     dag=dag)
 
 t2 = BashOperator(
+    task_id='bang',
     bash_command='python /home/nautilus/development/fun-times-in-python/py-scripts/utilities/test_dags.py',
     dag=dag)
 

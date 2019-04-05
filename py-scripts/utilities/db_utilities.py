@@ -7,7 +7,9 @@ Created on Mon Mar 25 22:42:20 2019
 """
 
 class ConnectionStrings:
-    
+
     def __init__(self):
-    
-        self.postgres = ('postgresql://dbadmin:password@10.152.183.137:5432/dw_stocks')
+
+        self.postgres = 'postgresql://postgres:password@localhost:5432/dw_stocks'
+
+        self.postgres_default = 'postgresql://postgres:password@localhost:5432'

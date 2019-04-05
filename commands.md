@@ -35,8 +35,8 @@ sudo docker run -it --rm python2
 ##### Postgres
 ```
 sudo docker pull postgres
-sudo docker run --rm -d -p 5432:5432 --name temp-postgres -e POSTGRES_PASSWORD=password -v /media/nautilus/docks/postgres:/var/lib/postgresql/data postgres
-sudo docker exec -it temp-postgres bash
+sudo docker run -d -p 5432:5432 --name dw-stocks -e POSTGRES_PASSWORD=password -v /media/nautilus/docks/postgres:/var/lib/postgresql/data postgres
+sudo docker exec -it dw-stocks bash
 psql -U postgres
 ```
 

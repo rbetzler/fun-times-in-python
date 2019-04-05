@@ -2,7 +2,7 @@
 
 -- DROP TABLE dw.fact_fred_releases;
 
-CREATE TABLE dw.fact_fred_releases
+CREATE TABLE dw_stocks.fact_fred_releases
 (
   release_id      numeric,
   link            text,
@@ -17,5 +17,5 @@ CREATE TABLE dw.fact_fred_releases
 WITH (
   OIDS=FALSE
 );
-ALTER TABLE dw.fact_fred_releases
+ALTER TABLE dw_stocks.fact_fred_releases
   OWNER TO postgres;
