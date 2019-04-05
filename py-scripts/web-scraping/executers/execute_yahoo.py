@@ -19,7 +19,7 @@ sys.path.append('/home/nautilus/development/fun-times-in-python/py-scripts/web-s
 from scrape_yahoo import ExtractYahooStockPerformance
 
 sys.path.append('/home/nautilus/development/fun-times-in-python/py-scripts/utilities')
-from db_utilities import ConnectionStrings
+from db_utilities import ConnectionStrings, DbSchemas
 
 print('Start time: ' + str(datetime.datetime.now()))
 
@@ -56,4 +56,4 @@ if len(tickers) > 0:
 
     #Load df to db
     engine = create_engine(ConnectionStrings().postgres)
-    output.to_sql('fact_yahoo_stocks', engine, if_exists = 'append')
+    output.to_sql('fact_yahoo_stocks', engine, schema = DbSchemas().dw_stocks, if_exists = 'append')

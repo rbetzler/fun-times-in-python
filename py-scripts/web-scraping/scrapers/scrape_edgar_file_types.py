@@ -15,7 +15,7 @@ from sqlalchemy import create_engine
 
 #Import custom function
 sys.path.append('/home/nautilus/development/fun-times-in-python/py-scripts/utilities')
-from db_utilities import ConnectionStrings
+from db_utilities import ConnectionStrings, DbSchemas
 
 #Get sec form web page
 raw_html = requests.get('https://www.sec.gov/forms').text
@@ -32,16 +32,16 @@ file_types = []
 for row in soup_file_types:
     file_types.append(row.get_text().replace('Number:', '').strip())
 
-file_descriptions = []    
+file_descriptions = []
 for row in soup_descriptions:
     file_descriptions.append(row.get_text().replace('Description:', '').strip())
 
 #Convert lists to pandas
-df_files = pd.DataFrame({'file_type' : file_types, 
-                         'description' : file_descriptions, 
+df_files = pd.DataFrame({'file_type' : file_types,
+                         'description' : file_descriptions,
                          'created_at' : pd.Timestamp.now()
                          })
 
 #Load df to db
 engine = create_engine(ConnectionStrings().postgres)
-df_files.to_sql('dim_edgar_file_types', engine, schema = 'dw', if_exists = 'append', index = False)
+df_files.to_sql('dim_edgar_file_types', engine, schema = DbSchemas().dw_stocks, if_exists = 'append', index = False)
