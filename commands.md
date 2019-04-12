@@ -23,7 +23,8 @@ psql -U postgres
 ##### From dockerfile
 `sudo docker build . --tag airflow`
 ##### Setup container
-`sudo docker run --name airflow-prod -p 8080:8080 -v /home/nautilus/development/fun-times-in-python/dags:/usr/local/airflow/dags -td airflow`
+`sudo docker run --name airflow -p 8080:8080 -v /home/nautilus/development/fun-times-in-python/dags:/usr/local/airflow/dags &&
+-v /home/nautilus/development/fun-times-in-python/py-scripts:/usr/local/airflow_home -td airflow`
 ##### Startup container
 `sudo docker start airflow-prod`
 ##### Access terminal

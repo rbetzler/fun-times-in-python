@@ -32,7 +32,7 @@ t1 = BashOperator(
 
 t2 = BashOperator(
     task_id='scrape_site',
-    bash_command='python /home/nautilus/development/fun-times-in-python/py-scripts/web-scraping/scrapers/scrape_edgar_file_types.py',
+    bash_command='python /usr/local/airflow_home/scrubbing/web-scraping/scrapers/scrape_edgar_file_types.py',
     dag=dag)
 
 t2.set_upstream(t1)
