@@ -3,4 +3,4 @@ scipy
 pandas
 xgboost
 psycopg2
-statsmodel
+statsmodels

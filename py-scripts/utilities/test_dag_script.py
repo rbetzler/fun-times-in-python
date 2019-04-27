@@ -6,4 +6,6 @@ Created on Mon Mar 25 22:42:20 2019
 @author: nautilus
 """
 
-print('hello dag')
+import datetime
+
+print('hello dag ' + str(datetime.datetime.now()))
