@@ -23,11 +23,11 @@ default_args = {
 }
 
 dag = DAG(
-    'hello_dag_two', default_args=default_args, schedule_interval=timedelta(minutes=1))
+    'test_dag', default_args=default_args, schedule_interval=timedelta(minutes=1))
 
 # t1, t2 and t3 are examples of tasks created by instantiating operators
 t1 = BashOperator(
-    task_id='print_date_test',
+    task_id='print_test',
     bash_command='date',
     dag=dag)
 
@@ -37,7 +37,7 @@ t2 = BashOperator(
     retries=3,
     dag=dag)
 
-templated_command = "python /usr/local/airflow_home/utilities/test_dag_script.py"
+templated_command = "python /usr/local/airflow_home/utilities/test_script.py"
 
 t3 = BashOperator(
     task_id='templated_test',

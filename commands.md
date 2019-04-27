@@ -31,6 +31,7 @@ sudo docker run -d -p 5432:5432 --name dw-stocks -e POSTGRES_PASSWORD=password -
 `sudo docker start dw-stocks`
 `sudo docker exec -it dw-stocks bash`
 `psql -U postgres`
+connect from host: `psql -h 172.17.0.1 -U postgres`
 
 
 #### Airflow
