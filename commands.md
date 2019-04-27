@@ -12,10 +12,13 @@ sudo docker network create local-network
 ##### From dockerfile
 ```
 sudo docker build . --tag python3`
-sudo docker run -it --name py-temp --network local-network python3
+sudo docker run -it --name py-temp -v /home/nautilus/development/fun-times-in-python/py-scripts:/home/ --network local-network python3
 ```
 ##### Start container, access terminal
-`sudo docker start -i py-temp`
+`sudo docker start py-temp`
+`sudo docker exec -it py-temp bash`
+##### Run a python script
+`sudo docker exec py-temp python /home/utilities/test_dag_script.py`
 
 
 #### Postgres
