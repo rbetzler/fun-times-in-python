@@ -10,9 +10,9 @@ class ConnectionStrings:
 
     def __init__(self):
 
-        self.postgres = 'postgresql://postgres:password@localhost:5432/dw_stocks'
+        self.postgres_default = 'postgresql://postgres:password@172.18.0.3:5432/postgres'
 
-        self.postgres_default = 'postgresql://postgres:password@localhost:5432'
+        self.postgres_dw_stocks = 'postgresql://postgres:password@172.18.0.3:5432/dw_stocks'
 
 class DbSchemas:
 

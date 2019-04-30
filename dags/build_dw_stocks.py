@@ -10,24 +10,16 @@ from datetime import datetime, timedelta
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': datetime(2015, 6, 1),
-    'email': ['airflow@example.com'],
-    'email_on_failure': False,
-    'email_on_retry': False,
-    'retries': 1,
-    'retry_delay': timedelta(minutes=5),
-    # 'queue': 'bash_queue',
-    # 'pool': 'backfill',
-    # 'priority_weight': 10,
-    # 'end_date': datetime(2016, 1, 1),
+    'start_date': datetime(2019, 1, 1),
+    'schedule_interval': 'None'
 }
 
 container = 'py-temp'
-script = '/home/py-scripts/utilities/test_script.py'
+script = '/home/py-scripts/sql-execution/create_dw_stocks.py'
 templated_executor = "python /usr/local/airflow_home/utilities/airflow_container_executor.py " + container + " " + script
 
 dag = DAG(
-    'pipeline_template',
+    'build_dw_stocks',
     default_args = default_args,
     schedule_interval = timedelta(minutes = 10))
 
@@ -37,7 +29,7 @@ t1 = BashOperator(
     dag=dag)
 
 t2 = BashOperator(
-    task_id = 'execute_container',
+    task_id = 'build_dw_stocks',
     bash_command = templated_executor,
     dag = dag)
 
