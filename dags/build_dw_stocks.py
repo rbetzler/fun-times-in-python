@@ -20,8 +20,7 @@ templated_executor = "python /usr/local/airflow_home/utilities/airflow_container
 
 dag = DAG(
     'build_dw_stocks',
-    default_args = default_args,
-    schedule_interval = timedelta(minutes = 10))
+    default_args = default_args)
 
 t1 = BashOperator(
     task_id='start_pipeline',

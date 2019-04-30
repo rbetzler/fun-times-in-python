@@ -14,7 +14,7 @@ import datetime
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 
 #Import custom function
-sys.path.append('/home/utilities')
+sys.path.append('/home/py-scripts/utilities')
 from db_utilities import ConnectionStrings
 
 print('Start time: ' + str(datetime.datetime.now()))
