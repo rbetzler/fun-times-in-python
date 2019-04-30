@@ -7,6 +7,7 @@ from airflow.operators.bash_operator import BashOperator
 from datetime import datetime, timedelta
 
 
+#This didn't run but whatever
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
