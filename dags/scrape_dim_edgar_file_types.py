@@ -15,11 +15,11 @@ default_args = {
 }
 
 container = 'py-temp'
-script = '/home/py-scripts/sql-execution/create_dw_stocks.py'
+script = '/home/py-scripts/web-scraping/scrapers/scrape_edgar_file_types.py'
 templated_executor = "python /usr/local/airflow_home/utilities/airflow_container_executor.py " + container + " " + script
 
 dag = DAG(
-    'build_dw_stocks',
+    'scrape_edgar_file_types',
     default_args = default_args)
 
 t1 = BashOperator(
@@ -28,7 +28,7 @@ t1 = BashOperator(
     dag=dag)
 
 t2 = BashOperator(
-    task_id = 'build_dw_stocks',
+    task_id = 'scrape_edgar_file_types',
     bash_command = templated_executor,
     dag = dag)
 

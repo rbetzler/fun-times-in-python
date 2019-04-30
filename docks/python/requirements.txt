@@ -1,6 +1,9 @@
+bs4
 numpy
 scipy
 pandas
 xgboost
+requests
 psycopg2
+sqlalchemy
 statsmodels
