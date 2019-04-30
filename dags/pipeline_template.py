@@ -22,28 +22,29 @@ default_args = {
     # 'end_date': datetime(2016, 1, 1),
 }
 
-dag = DAG(
-    'test_dag', default_args=default_args, schedule_interval=timedelta(minutes=1))
+container = 'py-temp'
+script = '/home/utilities/test_script.py'
+templated_executor = "python /usr/local/airflow_home/utilities/airflow_container_executor.py " + container + " " + script
 
-# t1, t2 and t3 are examples of tasks created by instantiating operators
+dag = DAG(
+    'pipeline_template',
+    default_args = default_args,
+    schedule_interval = timedelta(minutes = 10))
+
 t1 = BashOperator(
-    task_id='print_test',
+    task_id='start_pipeline',
     bash_command='date',
     dag=dag)
 
 t2 = BashOperator(
-    task_id='sleep_test',
-    bash_command='sleep 5',
-    retries=3,
-    dag=dag)
-
-templated_command = "python /usr/local/airflow_home/utilities/test_script.py"
+    task_id = 'execute_container',
+    bash_command = templated_executor,
+    dag = dag)
 
 t3 = BashOperator(
-    task_id='templated_test',
-    bash_command=templated_command,
-    #params={'my_param': 'Parameter I passed in'},
-    dag=dag)
+    task_id = 'end_pipeline',
+    bash_command = 'date',
+    dag = dag)
 
 t2.set_upstream(t1)
-t3.set_upstream(t1)
+t3.set_upstream(t2)

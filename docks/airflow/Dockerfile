@@ -58,6 +58,7 @@ RUN set -ex \
     && pip install pyasn1 \
     && pip install apache-airflow[crypto,celery,postgres,hive,jdbc,mysql,ssh${AIRFLOW_DEPS:+,}${AIRFLOW_DEPS}]==${AIRFLOW_VERSION} \
     && pip install 'redis>=2.10.5,<3' \
+    && pip install docker-py \
     && if [ -n "${PYTHON_DEPS}" ]; then pip install ${PYTHON_DEPS}; fi \
     && apt-get purge --auto-remove -yqq $buildDeps \
     && apt-get autoremove -yqq --purge \
@@ -76,6 +77,10 @@ COPY /airflow.cfg ${AIRFLOW_HOME}/airflow.cfg
 RUN chown -R airflow: ${AIRFLOW_HOME}
 
 EXPOSE 8080 5555 8793
+
+USER root
+RUN groupadd --gid 999 docker \
+    && usermod -aG docker airflow
 
 USER airflow
 WORKDIR ${AIRFLOW_HOME}
