@@ -16,4 +16,4 @@ def run_python_in_docker(docker_container, airflow_script):
 
     client.stop(docker_container)
 
-run_python_in_docker(sys.argv[1], sys.argv[0])
+run_python_in_docker(sys.argv[1], sys.argv[2])

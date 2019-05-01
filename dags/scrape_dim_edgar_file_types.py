@@ -20,7 +20,8 @@ templated_executor = "python /usr/local/airflow_home/utilities/airflow_container
 
 dag = DAG(
     'scrape_edgar_file_types',
-    default_args = default_args)
+    default_args = default_args,
+    schedule_interval = timedelta(days = 1000))
 
 t1 = BashOperator(
     task_id='start_pipeline',

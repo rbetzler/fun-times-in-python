@@ -14,7 +14,7 @@ import pandas as pd
 from sqlalchemy import create_engine
 
 #Import custom function
-sys.path.append('/home/nautilus/development/fun-times-in-python/py-scripts/utilities')
+sys.path.append('/home/py-scripts/utilities')
 from db_utilities import ConnectionStrings, DbSchemas
 
 #Get sec form web page
@@ -43,5 +43,5 @@ df_files = pd.DataFrame({'file_type' : file_types,
                          })
 
 #Load df to db
-engine = create_engine(ConnectionStrings().postgres)
+engine = create_engine(ConnectionStrings().postgres_dw_stocks)
 df_files.to_sql('dim_edgar_file_types', engine, schema = DbSchemas().dw_stocks, if_exists = 'append', index = False)
