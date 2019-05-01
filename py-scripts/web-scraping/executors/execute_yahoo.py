@@ -15,20 +15,20 @@ import multiprocessing as mp
 from sqlalchemy import create_engine
 
 #Import custom function
-sys.path.append('/home/nautilus/development/fun-times-in-python/py-scripts/web-scraping')
+sys.path.append('/home/py-scripts/web-scraping/scrapers')
 from scrape_yahoo import ExtractYahooStockPerformance
 
-sys.path.append('/home/nautilus/development/fun-times-in-python/py-scripts/utilities')
+sys.path.append('/home/py-scripts/utilities')
 from db_utilities import ConnectionStrings, DbSchemas
 
 print('Start time: ' + str(datetime.datetime.now()))
 
 #Grab tickers
-conn_string = ConnectionStrings().postgres
+conn_string = ConnectionStrings().postgres_dw_stocks
 conn = psycopg2.connect(conn_string)
 cursor = conn.cursor()
 
-sql_file = '/home/nautilus/development/fun-times-in-python/sql-scripts/queries/scrape-stocks.sql'
+sql_file = '/home/sql-scripts/queries/scrape_stocks.sql'
 query = open(sql_file).read()
 
 cursor.execute(query)

@@ -12,7 +12,7 @@ sudo docker network create local-network
 ##### From dockerfile
 ```
 sudo docker build . --tag python3
-sudo docker run -it --name py-temp -v /home/nautilus/development/fun-times-in-python:/home --network local-network python3
+sudo docker run -it --name py-temp -v /home/nautilus/development/fun-times-in-python:/home -v /media/nautilus/raw-files:/mnt --network local-network python3
 ```
 ##### Start container, access terminal
 ```

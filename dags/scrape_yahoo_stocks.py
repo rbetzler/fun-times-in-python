@@ -8,26 +8,17 @@ from datetime import datetime, timedelta
 default_args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': datetime(2015, 6, 1),
-    'email': ['airflow@example.com'],
-    'email_on_failure': False,
-    'email_on_retry': False,
-    'retries': 1,
-    'retry_delay': timedelta(minutes=5),
-    # 'queue': 'bash_queue',
-    # 'pool': 'backfill',
-    # 'priority_weight': 10,
-    # 'end_date': datetime(2016, 1, 1),
+    'start_date': datetime(2019, 1, 1)
 }
 
 container = 'py-temp'
-script = '/home/py-scripts/utilities/test_script.py'
+script = '/home/py-scripts/web-scraping/executors/execute_yahoo.py'
 templated_executor = "python /usr/local/airflow_home/utilities/airflow_container_executor.py " + container + " " + script
 
 dag = DAG(
-    'pipeline_template',
+    'scrape_edgar_file_types',
     default_args = default_args,
-    schedule_interval = timedelta(minutes = 10))
+    schedule_interval = timedelta(days = 1000))
 
 t1 = BashOperator(
     task_id='start_pipeline',
@@ -35,7 +26,7 @@ t1 = BashOperator(
     dag=dag)
 
 t2 = BashOperator(
-    task_id = 'execute_container',
+    task_id = 'scrape_yahoo_stocks',
     bash_command = templated_executor,
     dag = dag)
 
