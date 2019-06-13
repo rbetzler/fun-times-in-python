@@ -16,7 +16,7 @@ script = '/home/py-scripts/web-scraping/executors/execute_yahoo.py'
 templated_executor = "python /usr/local/airflow_home/utilities/airflow_container_executor.py " + container + " " + script
 
 dag = DAG(
-    'scrape_edgar_file_types',
+    'scrape_yahoo_stocks',
     default_args = default_args,
     schedule_interval = timedelta(days = 1000))
 

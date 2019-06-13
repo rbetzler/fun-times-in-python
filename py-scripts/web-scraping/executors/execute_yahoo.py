@@ -56,5 +56,5 @@ outputs = mp.Pool(4).map(ExtractYahooStockPerformance, tickers)
 output = pd.concat(outputs)
 
 #Load df to db
-engine = create_engine(ConnectionStrings().postgres)
+engine = create_engine(ConnectionStrings().postgres_dw_stocks)
 output.to_sql('fact_yahoo_stocks', engine, schema = DbSchemas().dw_stocks, if_exists = 'append')
