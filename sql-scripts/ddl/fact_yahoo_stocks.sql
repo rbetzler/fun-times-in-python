@@ -2,7 +2,7 @@
 
 -- DROP TABLE dw.fact_yahoo_stocks;
 
-CREATE TABLE dw_stocks.fact_yahoo_stocks
+CREATE TABLE IF NOT EXISTS dw_stocks.fact_yahoo_stocks
 (
   ticker              text,
   date_time           timestamp without time zone,

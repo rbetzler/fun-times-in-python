@@ -1,1 +1,1 @@
-create database dw_stocks ;
+create database if not exists dw_stocks ;

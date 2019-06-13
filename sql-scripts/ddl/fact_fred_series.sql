@@ -2,7 +2,7 @@
 
 -- DROP TABLE dw.fact_fred_series;
 
-CREATE TABLE dw_stocks.fact_fred_series
+CREATE TABLE IF NOT EXISTS dw_stocks.fact_fred_series
 (
   release_id              numeric,
   series_id               text,

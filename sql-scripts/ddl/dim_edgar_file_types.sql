@@ -2,7 +2,7 @@
 
 -- DROP TABLE dw.fact_fred_releases;
 
-CREATE TABLE dw_stocks.dim_edgar_file_types
+CREATE TABLE IF NOT EXISTS dw_stocks.dim_edgar_file_types
 (
   file_type       text,
   description     text,

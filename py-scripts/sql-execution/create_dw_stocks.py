@@ -35,20 +35,20 @@ for file in os.listdir(directory):
      tables.append(open(directory + '/' + file).read())
 
 
-#Connect to default db to create dw_stocks
-conn_string = ConnectionStrings().postgres_default
-conn = psycopg2.connect(conn_string)
-cursor = conn.cursor()
-
-#Isolate commit
-conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
-
-for database in databases:
-    cursor.execute(database)
-    conn.commit()
-
-conn.close()
-cursor.close()
+# #Connect to default db to create dw_stocks
+# conn_string = ConnectionStrings().postgres_default
+# conn = psycopg2.connect(conn_string)
+# cursor = conn.cursor()
+#
+# #Isolate commit
+# conn.set_isolation_level(ISOLATION_LEVEL_AUTOCOMMIT)
+#
+# for database in databases:
+#     cursor.execute(database)
+#     conn.commit()
+#
+# conn.close()
+# cursor.close()
 
 
 #Connect to dw_stocks to create schemas

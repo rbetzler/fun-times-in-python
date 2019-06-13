@@ -2,7 +2,7 @@
 
 -- DROP TABLE dw.fact_fred_sources;
 
-CREATE TABLE dw_stocks.fact_fred_sources
+CREATE TABLE IF NOT EXISTS dw_stocks.fact_fred_sources
 (
   source_id       numeric,
   link            text,

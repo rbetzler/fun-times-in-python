@@ -2,7 +2,7 @@
 
 -- DROP TABLE dw.fact_fred_releases;
 
-CREATE TABLE dw_stocks.dim_stocks
+CREATE TABLE IF NOT EXISTS dw_stocks.dim_stocks
 (
   ticker            text,
   company           text,

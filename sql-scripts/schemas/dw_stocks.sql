@@ -1,1 +1,1 @@
-create schema dw_stocks ;
+create schema if not exists dw_stocks ;
