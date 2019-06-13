@@ -16,7 +16,9 @@ CREATE TABLE IF NOT EXISTS dw_stocks.fact_yahoo_stocks
   split_numerator     integer,
   split_denominator   integer,
   index               text,
-  unix_timestamp      text
+  unix_timestamp      text,
+  dw_created_at       timestamp without time zone,
+  dw_updated_at       timestamp without time zone
 )
 WITH (
   OIDS=FALSE

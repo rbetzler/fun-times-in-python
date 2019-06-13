@@ -10,9 +10,9 @@ CREATE TABLE IF NOT EXISTS dw_stocks.fact_fred_releases
   press_release   text,
   realtime_end    date,
   realtime_start  date,
-  created_at      timestamp without time zone,
-  updated_at      timestamp without time zone,
-  source_id       numeric
+  source_id       numeric,
+  dw_created_at   timestamp without time zone,
+  dw_updated_at   timestamp without time zone
 )
 WITH (
   OIDS=FALSE

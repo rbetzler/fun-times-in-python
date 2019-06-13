@@ -36,24 +36,25 @@ tickers = []
 for row in cursor:
     tickers.append(row)
 
-if len(tickers) > 0:
-    outputs = pd.DataFrame({'open' : [],
-                           'high' : [],
-                           'low' : [],
-                           'close' : [],
-                           'adj_close' : [],
-                           'volume' : [],
-                           'unix_timestamp' : [],
-                           'date_time' : [],
-                           'dividend' : [],
-                           'split_numerator' : [],
-                           'split_denominator' : [],
-                           'ticker' : []
-                           })
+tickers = tickers[:10]
 
-    outputs = mp.Pool(4).map(ExtractYahooStockPerformance, tickers)
-    output = pd.concat(outputs)
+outputs = pd.DataFrame({'open' : [],
+                       'high' : [],
+                       'low' : [],
+                       'close' : [],
+                       'adj_close' : [],
+                       'volume' : [],
+                       'unix_timestamp' : [],
+                       'date_time' : [],
+                       'dividend' : [],
+                       'split_numerator' : [],
+                       'split_denominator' : [],
+                       'ticker' : []
+                       })
 
-    #Load df to db
-    engine = create_engine(ConnectionStrings().postgres)
-    output.to_sql('fact_yahoo_stocks', engine, schema = DbSchemas().dw_stocks, if_exists = 'append')
+outputs = mp.Pool(4).map(ExtractYahooStockPerformance, tickers)
+output = pd.concat(outputs)
+
+#Load df to db
+engine = create_engine(ConnectionStrings().postgres)
+output.to_sql('fact_yahoo_stocks', engine, schema = DbSchemas().dw_stocks, if_exists = 'append')
