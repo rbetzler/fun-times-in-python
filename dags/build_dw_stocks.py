@@ -22,9 +22,9 @@ dag = DAG(
     schedule_interval = timedelta(days = 1000))
 
 t1 = BashOperator(
-    task_id='start_pipeline',
-    bash_command='date',
-    dag=dag)
+    task_id = 'start_pipeline',
+    bash_command = 'date',
+    dag = dag)
 
 t2 = BashOperator(
     task_id = 'build_dw_stocks',
