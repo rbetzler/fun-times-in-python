@@ -24,7 +24,7 @@ args = {
     'email_on_failure': False,
     'email_on_retry': False,
     'retries': 1,
-    'retry_delay': timedelta(minutes=5),
+    'retry_delay': timedelta(minutes = 5),
     # 'queue': 'bash_queue',
     # 'pool': 'backfill',
     # 'priority_weight': 10,
@@ -32,13 +32,13 @@ args = {
 }
 
 dag = DAG(
-    dag_id='operator_docker',
+    dag_id='yahoo_stocks',
     default_args=args,
     schedule_interval=None,
 )
 
 task = DockerOperator(
-    task_id = 'test_docker',
+    task_id = 'scrape_yahoo_stocks',
     image = 'python3',
     auto_remove = True,
     command = 'python /home/py-scripts/web-scraping/yahoo/execute_yahoo.py',
