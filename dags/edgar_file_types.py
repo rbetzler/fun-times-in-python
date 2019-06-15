@@ -17,7 +17,7 @@ script = '/home/py-scripts/web-scraping/scrapers/scrape_edgar_file_types.py'
 templated_executor = "python /usr/local/airflow_home/utilities/airflow_container_executor.py " + container + " " + script
 
 dag = DAG(
-    'scrape_edgar_file_types',
+    'edgar_file_types',
     default_args = default_args,
     schedule_interval = timedelta(days = 1000))
 

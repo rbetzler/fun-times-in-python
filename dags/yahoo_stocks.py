@@ -8,6 +8,7 @@ from pprint import pprint
 
 import airflow
 from airflow.models import DAG
+from airflow.operators.bash_operator import BashOperator
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.docker_operator import DockerOperator
 from datetime import datetime, timedelta
@@ -20,11 +21,11 @@ args = {
     'owner': 'airflow',
     'depends_on_past': False,
     'start_date': datetime(2015, 6, 1),
-    'email': ['airflow@example.com'],
-    'email_on_failure': False,
-    'email_on_retry': False,
+    'email': ['rbetzler94@gmail.com'],
+    'email_on_failure': True,
+    'email_on_retry': True,
     'retries': 1,
-    'retry_delay': timedelta(minutes = 5),
+    'retry_delay': timedelta(minutes = 1),
     # 'queue': 'bash_queue',
     # 'pool': 'backfill',
     # 'priority_weight': 10,
@@ -37,6 +38,11 @@ dag = DAG(
     schedule_interval=None,
 )
 
+start_time = BashOperator(
+    task_id = 'start_pipeline',
+    bash_command = 'date',
+    dag = dag)
+
 task = DockerOperator(
     task_id = 'scrape_yahoo_stocks',
     image = 'python3',
@@ -46,3 +52,11 @@ task = DockerOperator(
     network_mode = 'local-network',
     dag = dag
     )
+
+end_time = BashOperator(
+    task_id = 'end_pipeline',
+    bash_command = 'date',
+    dag = dag)
+
+task.set_upstream(start_time)
+end_time.set_upstream(task)
