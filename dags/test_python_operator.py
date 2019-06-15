@@ -50,7 +50,7 @@ run_this = PythonOperator(
     task_id='print_the_context',
     provide_context=True,
     python_callable=print_context,
-    dag=dag,
+    dag=dag
 )
 # [END howto_operator_python]
 
@@ -58,7 +58,7 @@ run_this = PythonOperator(
 # [START howto_operator_python_kwargs]
 def my_sleeping_function(random_base):
     """This is a function that will run within the DAG execution"""
-    time.sleep(random_base)
+    time.sldeep(random_base)
 
 
 # Generate 5 sleeping tasks, sleeping from 0.0 to 0.4 seconds respectively
@@ -67,7 +67,9 @@ for i in range(5):
         task_id='sleep_for_' + str(i),
         python_callable=my_sleeping_function,
         op_kwargs={'random_base': float(i) / 10},
-        dag=dag,
+        email_on_failure=True,
+        email='rbetzler94@gmail.com',
+        dag=dag
     )
 
     run_this >> task
