@@ -29,7 +29,7 @@ args = {
 }
 
 dag = DAG(
-    dag_id='example_py_dockerized',
+    dag_id='operator_python_dockerized',
     default_args=args,
     schedule_interval=None,
 )

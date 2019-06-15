@@ -32,7 +32,7 @@ args = {
 }
 
 dag = DAG(
-    dag_id='example_python_operator_dockerized_native',
+    dag_id='operator_docker',
     default_args=args,
     schedule_interval=None,
 )
@@ -40,7 +40,10 @@ dag = DAG(
 task = DockerOperator(
     task_id = 'test_docker',
     image = 'python3',
+    auto_remove = True,
     command = 'python /home/py-scripts/web-scraping/yahoo/execute_yahoo.py',
+    volumes = ['/home/nautilus/development/fun-times-in-python:/home', '/media/nautilus/raw-files:/mnt'],
+    network_mode = 'local-network',
     dag = dag
     )
 

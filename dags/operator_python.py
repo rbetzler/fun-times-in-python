@@ -33,7 +33,7 @@ args = {
 }
 
 dag = DAG(
-    dag_id='py_operator',
+    dag_id='operator_python',
     default_args=args,
     schedule_interval=None,
 )

@@ -25,7 +25,7 @@ script = '/home/py-scripts/utilities/test_script.py'
 templated_executor = "python /usr/local/airflow_home/utilities/airflow_container_executor.py " + container + " " + script
 
 dag = DAG(
-    'pipeline_template',
+    'operator_bash',
     default_args = default_args,
     schedule_interval = timedelta(minutes = 10))
 
