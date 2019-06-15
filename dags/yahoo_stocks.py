@@ -16,7 +16,6 @@ from datetime import datetime, timedelta
 import sys
 import docker
 
-
 args = {
     'owner': 'airflow',
     'depends_on_past': False,
@@ -45,7 +44,7 @@ start_time = BashOperator(
 
 task = DockerOperator(
     task_id = 'scrape_yahoo_stocks',
-    image = 'python3',
+    image = 'py-dw-stocks',
     auto_remove = True,
     command = 'python /home/py-scripts/web-scraping/yahoo/execute_yahoo.py',
     volumes = ['/home/nautilus/development/fun-times-in-python:/home', '/media/nautilus/raw-files:/mnt'],
