@@ -6,16 +6,13 @@ Created on Wed Feb 20 22:02:35 2019
 @author: nautilus
 """
 
-#import py functions
 import bs4
 import sys
 import requests
 import pandas as pd
 from sqlalchemy import create_engine
+from py_scripts.utilities.db_utilities import ConnectionStrings, DbSchemas
 
-#Import custom function
-sys.path.append('/home/py-scripts/utilities')
-from db_utilities import ConnectionStrings, DbSchemas
 
 #Get sec form web page
 raw_html = requests.get('https://www.sec.gov/forms').text

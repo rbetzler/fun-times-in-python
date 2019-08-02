@@ -6,17 +6,14 @@ Created on Mon Mar 25 21:45:16 2019
 @author: nautilus
 """
 
-#Import py functions
 import os
 import sys
 import psycopg2
 import datetime
 import pandas as pd
 from sqlalchemy import create_engine
+from py_scripts.utilities.db_utilities import ConnectionStrings, DbSchemas
 
-#Import custom function
-sys.path.append('/home/py-scripts/utilities')
-from db_utilities import ConnectionStrings, DbSchemas
 
 #Path to raw file
 file_path = '/mnt/dim-stocks/directory-us-tickers.csv'
