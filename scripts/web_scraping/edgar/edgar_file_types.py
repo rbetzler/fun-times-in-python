@@ -1,10 +1,12 @@
-import scripts.web_scraping
+import pandas as pd
+import scripts.web_scraping.scraper as scraper
 
-class EdgarScraper(WebScraper):
+class EdgarFileTypesScraper(scraper.WebScraper):
 
     @property
     def base_url(self) -> str:
-        return 'https://www.sec.gov/forms'
+        url = 'https://www.sec.gov/forms'
+        return pd.DataFrame([url])
 
     @property
     def drop_raw_file(self) -> bool:
@@ -28,11 +30,11 @@ class EdgarScraper(WebScraper):
 
     def parse(self, soup) -> pd.DataFrame:
 
-        #Use tags to get file types and descriptions
+        # Use tags to get file types and descriptions
         soup_file_types = soup.find_all('td', {'class' : 'release-number-content views-field views-field-field-release-number is-active'})
         soup_descriptions = soup.find_all('td', {'class' : 'display-title-content views-field views-field-field-display-title'})
 
-        #Load into lists
+        # Load into lists
         file_types = []
         for row in soup_file_types:
             file_types.append(row.get_text().replace('Number:', '').strip())
@@ -41,7 +43,7 @@ class EdgarScraper(WebScraper):
         for row in soup_descriptions:
             file_descriptions.append(row.get_text().replace('Description:', '').strip())
 
-        #Convert lists to pandas
+        # Convert lists to pandas
         df = pd.DataFrame({
             'file_type' : file_types,
             'description' : file_descriptions,
@@ -50,5 +52,7 @@ class EdgarScraper(WebScraper):
 
         return df
 
+
 if __name__ == '__main__':
-    EdgarScraper().execute()
+    EdgarFileTypesScraper().execute()
+
