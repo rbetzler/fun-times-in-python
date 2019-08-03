@@ -6,16 +6,13 @@ Created on Mon Mar 25 21:45:16 2019
 @author: nautilus
 """
 
-#Import py functions
 import os
 import sys
 import psycopg2
 import datetime
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
+from py_scripts.utilities.db_utilities import ConnectionStrings
 
-#Import custom function
-sys.path.append('/home/py-scripts/utilities')
-from db_utilities import ConnectionStrings
 
 print('Start time: ' + str(datetime.datetime.now()))
 
