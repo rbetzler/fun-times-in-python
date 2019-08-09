@@ -1,20 +1,24 @@
 import pandas as pd
 import scripts.web_scraping.scraper as scraper
 
-class EdgarFileTypesScraper(scraper.WebScraper):
 
+class EdgarFileTypesScraper(scraper.WebScraper):
     @property
-    def base_url(self) -> str:
+    def one_url(self) -> str:
         url = 'https://www.sec.gov/forms'
         return pd.DataFrame([url])
 
     @property
-    def drop_raw_file(self) -> bool:
+    def place_raw_file(self) -> bool:
         return True
 
     @property
-    def file_path(self) -> str:
-        return '/Users/rickbetzler/Desktop/stock_test.csv'
+    def export_folder(self) -> str:
+        return '/Users/rickbetzler/Desktop/testing/'
+
+    @property
+    def export_file_name(self) -> str:
+        return 'stock_test_'
 
     @property
     def load_to_db(self) -> bool:
@@ -23,10 +27,6 @@ class EdgarFileTypesScraper(scraper.WebScraper):
     @property
     def table(self) -> str:
         return 'dim_edgar_file_types'
-
-    @property
-    def schema(self) -> str:
-        return DbSchemas().dw_stocks
 
     def parse(self, soup) -> pd.DataFrame:
 

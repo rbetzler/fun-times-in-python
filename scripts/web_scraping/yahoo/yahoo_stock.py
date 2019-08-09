@@ -1,5 +1,3 @@
-import re
-import numpy as np
 import pandas as pd
 import scripts.web_scraping.scraper as scraper
 
@@ -37,7 +35,7 @@ class YahooStockScraper(scraper.WebScraper):
 
         @property
         def export_file_name(self) -> str:
-            return 'yahoo_test'
+            return 'yahoo_test_'
 
         @property
         def table(self) -> str:
