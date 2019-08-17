@@ -5,3 +5,4 @@ audit/
 *.xml
 *.cpython-37.pyc
 *.pyc
+*.DS_Store
