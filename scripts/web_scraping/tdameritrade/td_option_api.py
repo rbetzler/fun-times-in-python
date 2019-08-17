@@ -47,7 +47,7 @@ class ApiGrabber(api_grabber.ApiGrabber):
 
     @property
     def export_folder(self) -> str:
-        return '/Users/rickbetzler/Desktop/testing/'
+        return '/Users/rickbetzler/personal/raw_files/td_ameritrade/options'
 
     @property
     def export_file_name(self) -> str:

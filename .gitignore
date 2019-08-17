@@ -1,0 +1,7 @@
+# Ignore audit folder
+audit/
+
+# Ignore
+*.xml
+*.cpython-37.pyc
+*.pyc

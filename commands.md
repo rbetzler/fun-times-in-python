@@ -13,6 +13,7 @@ sudo docker network create local-network
 ```
 sudo docker build . --tag py-dw-stocks
 sudo docker run -it --name py-temp -v /home/nautilus/development/fun-times-in-python:/home -v /media/nautilus/raw-files:/mnt --network local-network py-dw-stocks
+docker run -it --name py-temp -v /Users/rickbetzler/personal/fun-times-in-python:/usr/src/app -v /Users/rickbetzler/personal/raw_files:/mnt --network local-network py-dw-stocks
 ```
 ##### Start container, access terminal
 ```
@@ -28,6 +29,7 @@ sudo docker exec -it py-temp bash
 ```
 sudo docker pull postgres
 sudo docker run -d -p 5432:5432 --name dw-stocks -e POSTGRES_PASSWORD=password -v /media/nautilus/docks/postgres:/var/lib/postgresql/data --network local-network postgres
+docker run -d -p 5432:5432 --name dw-stocks -e POSTGRES_PASSWORD=password -v /Users/rickbetzler/personal/docks/postgres:/var/lib/postgresql/data --network local-network postgres
 ```
 ##### Start postgres, access terminal and db
 ```
