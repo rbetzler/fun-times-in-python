@@ -1,0 +1,49 @@
+import abc
+import datetime
+import pandas as pd
+from sqlalchemy import create_engine
+from scripts.ingestion import file_loader
+from scripts.utilities import db_utilities
+
+
+class NasdaqListStocks(file_loader.FileLoader):
+    @property
+    def input_folder(self) -> str:
+        return '/nasdaq/'
+
+    @property
+    def input_file_name(self) -> str:
+        return 'companylist_2019_08_18'
+
+    # overriding since this was manually extracted
+    @property
+    def input_file_path(self) -> str:
+        file_path = 'audit/raw' \
+                    + self.input_folder \
+                    + self.input_file_name \
+                    + self.input_file_type
+        return file_path
+
+    @property
+    def export_folder(self) -> str:
+        return '/nasdaq/'
+
+    @property
+    def export_file_name(self) -> str:
+        return 'listed_stocks'
+
+    @property
+    def table(self) -> str:
+        return 'listed_stocks'
+
+    @property
+    def schema(self) -> str:
+        return 'nasdaq'
+
+    def parse(self, file) -> pd.DataFrame:
+        df = file
+        return df
+
+
+if __name__ == '__main__':
+    NasdaqListStocks().execute()

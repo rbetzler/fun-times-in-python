@@ -4,7 +4,7 @@ import datetime
 import requests
 import psycopg2
 import pandas as pd
-from scripts.web_scraping import scraper
+from scripts.ingestion import scraper
 
 
 class Edgar10k(scraper.WebScraper):

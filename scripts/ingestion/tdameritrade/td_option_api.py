@@ -2,7 +2,7 @@ import time
 import datetime
 import requests
 import pandas as pd
-from scripts.web_scraping import api_grabber
+from scripts.ingestion import api_grabber
 from scripts.utilities.db_utilities import ConnectionStrings, DbSchemas
 
 

@@ -1,5 +1,5 @@
 import pandas as pd
-import scripts.web_scraping.scraper as scraper
+import scripts.ingestion.scraper as scraper
 
 
 class EdgarFileTypesScraper(scraper.WebScraper):
