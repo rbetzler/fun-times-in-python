@@ -6,7 +6,7 @@ import psycopg2
 import pandas as pd
 import concurrent.futures
 from sqlalchemy import create_engine
-from scripts.utilities.db_utilities import ConnectionStrings, DbSchemas
+from scripts.utilities import db_utilities
 
 
 class ApiGrabber(abc.ABC):
@@ -14,7 +14,7 @@ class ApiGrabber(abc.ABC):
                  run_date=datetime.datetime.now().strftime('%Y-%m-%d-%H-%M'),
                  start_date=datetime.datetime.now().date().strftime('%Y-%m-%d'),
                  end_date=datetime.datetime.now().date().strftime('%Y-%m-%d')):
-        self.db_connection = ConnectionStrings().postgres_dw_stocks
+        self.db_connection = db_utilities.DW_STOCKS
         self.run_date = run_date
         self.start_date = start_date
         self.end_date = end_date
@@ -25,13 +25,8 @@ class ApiGrabber(abc.ABC):
         return pd.DataFrame()
 
     @property
-    def sql_file(self) -> str:
-        return ''
-
-    @property
     def query(self) -> str:
-        query = open(self.sql_file).read()
-        return query
+        return ''
 
     @property
     def get_call_inputs_from_db(self) -> pd.DataFrame:
@@ -77,7 +72,7 @@ class ApiGrabber(abc.ABC):
 
     @property
     def schema(self) -> str:
-        return DbSchemas().dw_stocks
+        return 'td_ameritrade'
 
     @property
     def db_engine(self) -> str:
@@ -119,10 +114,11 @@ class ApiGrabber(abc.ABC):
         api_calls = self.get_api_calls
         df = self.parallel_output
         executor = concurrent.futures.ThreadPoolExecutor(max_workers=self.n_cores)
-        future_to_url = {executor.submit(self.parallelize, row.values[0]): row for idx, row in api_calls.iterrows()}
+        future_to_url = {executor.submit(self.parallelize, row[0]): row for idx, row in api_calls.iterrows()}
 
         for future in concurrent.futures.as_completed(future_to_url):
             df = pd.concat([df, future.result()], sort=False)
+            # df = df.append(future.result())
             time.sleep(self.len_of_pause)
 
         if self.place_raw_file:

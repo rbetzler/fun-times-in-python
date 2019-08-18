@@ -89,6 +89,10 @@ class FileLoader(abc.ABC):
     def index(self) -> bool:
         return False
 
+    @property
+    def column_mapping(self) -> dict:
+        return {}
+
     def parse(self, file) -> pd.DataFrame:
         pass
 
@@ -100,6 +104,8 @@ class FileLoader(abc.ABC):
             df.to_csv(self.export_file_path, index=self.place_with_index)
 
         if self.load_to_db:
+            if 'dw_created_at' not in df:
+                df['dw_created_at'] = datetime.datetime.now().utcnow().strftime("%m/%d/%Y %H:%M:%S")
             df.to_sql(
                 self.table,
                 self.db_engine,

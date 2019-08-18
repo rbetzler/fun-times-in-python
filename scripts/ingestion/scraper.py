@@ -7,7 +7,7 @@ import psycopg2
 import pandas as pd
 import concurrent.futures
 from sqlalchemy import create_engine
-from scripts.utilities.db_utilities import ConnectionStrings, DbSchemas
+from scripts.utilities import db_utilities
 
 
 class WebScraper(abc.ABC):
@@ -15,7 +15,7 @@ class WebScraper(abc.ABC):
                  run_date=datetime.datetime.now().strftime('%Y-%m-%d-%H-%M'),
                  start_date=datetime.datetime.now().date().strftime('%Y-%m-%d'),
                  end_date=datetime.datetime.now().date().strftime('%Y-%m-%d')):
-        self.db_connection = ConnectionStrings().postgres_dw_stocks
+        self.db_connection = db_utilities.DW_STOCKS
         self.run_date = run_date
         self.start_date = start_date
         self.end_date = end_date
