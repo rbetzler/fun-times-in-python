@@ -42,7 +42,7 @@ class TdOptionsApi(api_grabber.ApiGrabber):
 
     @property
     def export_folder(self) -> str:
-        return 'audit/processed/td_ameritrade/options'
+        return 'audit/processed/td_ameritrade/options/'
 
     @property
     def export_file_name(self) -> str:
@@ -77,7 +77,7 @@ class TdOptionsApi(api_grabber.ApiGrabber):
             'timeValue': 'time_value',
             'theoreticalOptionValue': 'theoretical_option_value',
             'theoreticalVolatility': 'theoretical_volatility',
-            'optionDeliverablesList': '',
+            'optionDeliverablesList': 'option_deliverable_list',
             'strikePrice': 'strike_price',
             'expirationDate': 'expiration_date',
             'daysToExpiration': 'days_to_expiration',
@@ -101,8 +101,8 @@ class TdOptionsApi(api_grabber.ApiGrabber):
         for date in chain.keys():
             for strike in chain.get(date).keys():
                 temp = pd.DataFrame.from_dict(chain.get(date).get(strike))
-                temp['expiration_date'] = time.strftime('%Y-%m-%d %H:%M:%S',
-                                                        time.localtime(temp['expirationDate'].values[0]/1000))
+                temp['expiration_date_from_epoch'] = time.strftime('%Y-%m-%d %H:%M:%S',
+                                                                   time.localtime(temp['expirationDate'].values[0]/1000))
                 temp['strike'] = strike
                 temp['strike_date'] = date
                 df = df.append(temp)
