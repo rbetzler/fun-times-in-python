@@ -11,19 +11,27 @@ from scripts.utilities.db_utilities import ConnectionStrings, DbSchemas
 
 
 class WebScraper(abc.ABC):
-    def __init__(self):
+    def __init__(self,
+                 run_date=datetime.datetime.now().strftime('%Y-%m-%d-%H-%M'),
+                 start_date=datetime.datetime.now().date().strftime('%Y-%m-%d'),
+                 end_date=datetime.datetime.now().date().strftime('%Y-%m-%d')):
         self.db_connection = ConnectionStrings().postgres_dw_stocks
+        self.run_date = run_date
+        self.start_date = start_date
+        self.end_date = end_date
+
 
     @property
     def get_urls(self) -> pd.DataFrame:
         if self.sql_file is not None:
             urls = self.get_urls_from_db
-        else: urls = self.base_url
+        else:
+            urls = self.one_url
         return urls
 
     @property
-    def base_url(self) -> str:
-        return ''
+    def one_url(self) -> pd.DataFrame:
+        return pd.DataFrame
 
     @property
     def sql_file(self) -> str:
@@ -45,8 +53,28 @@ class WebScraper(abc.ABC):
         return False
 
     @property
-    def file_path(self) -> str:
+    def place_with_index(self) -> bool:
+        return False
+
+    @property
+    def export_folder(self) -> str:
         return ''
+
+    @property
+    def export_file_name(self) -> str:
+        return ''
+
+    @property
+    def export_file_type(self) -> str:
+        return '.csv'
+
+    @property
+    def export_file_path(self) -> str:
+        file_path = self.export_folder \
+                    + self.export_file_name \
+                    + self.run_date \
+                    + self.export_file_type
+        return file_path
 
     @property
     def load_to_db(self) -> bool:
@@ -73,16 +101,8 @@ class WebScraper(abc.ABC):
         return False
 
     @property
-    def n_batches(self) -> int:
-        return 1
-
-    def batch_size(self, urls) -> int:
-        n = int(len(urls)/self.n_batches)
-        return n
-
-    @property
     def parallel_output(self) -> pd.DataFrame:
-        return pd.DataFrame(columns=['file_type', 'description', 'created_at'])
+        return pd.DataFrame()
 
     @property
     def n_cores(self) -> int:
@@ -119,11 +139,11 @@ class WebScraper(abc.ABC):
         future_to_url = {executor.submit(self.parallelize, row.values[0]): row for idx, row in urls.iterrows()}
 
         for future in concurrent.futures.as_completed(future_to_url):
-            df = pd.concat([df, future.result()])
+            df = pd.concat([df, future.result()], sort=False)
             time.sleep(self.len_of_pause)
 
         if self.place_raw_file:
-            df.to_csv(self.file_path)
+            df.to_csv(self.export_file_path, index=self.place_with_index)
 
         if self.load_to_db:
             df.to_sql(
