@@ -11,14 +11,19 @@ from scripts.utilities import db_utilities
 
 class ApiGrabber(abc.ABC):
     def __init__(self,
-                 run_date=datetime.datetime.now().strftime('%Y-%m-%d-%H-%M'),
                  start_date=datetime.datetime.now().date().strftime('%Y-%m-%d'),
-                 end_date=datetime.datetime.now().date().strftime('%Y-%m-%d')):
+                 end_date=datetime.datetime.now().date().strftime('%Y-%m-%d'),
+                 lower_bound=0,
+                 batch_size=0):
         self.db_connection = db_utilities.DW_STOCKS
-        self.run_date = run_date
         self.start_date = start_date
         self.end_date = end_date
+        self.lower_bound = lower_bound
+        self.batch_size = batch_size
 
+    @property
+    def run_date(self) -> str:
+        return datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')
 
     @property
     def get_api_calls(self) -> pd.DataFrame:
@@ -91,7 +96,7 @@ class ApiGrabber(abc.ABC):
         return pd.DataFrame()
 
     @property
-    def n_cores(self) -> int:
+    def n_workers(self) -> int:
         return 1
 
     @property
@@ -106,20 +111,24 @@ class ApiGrabber(abc.ABC):
         pass
 
     def parallelize(self, api) -> pd.DataFrame:
+        print('Calling api ' + datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
         api_response = self.call_api(api)
+        print('Parsing response ' + datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
         df = self.parse(api_response)
+        print('Done parsing ' + datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
+        time.sleep(self.len_of_pause)
+        print('Done sleeping ' + datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
         return df
 
     def execute(self):
         api_calls = self.get_api_calls
         df = self.parallel_output
-        executor = concurrent.futures.ThreadPoolExecutor(max_workers=self.n_cores)
+        executor = concurrent.futures.ThreadPoolExecutor(max_workers=self.n_workers)
         future_to_url = {executor.submit(self.parallelize, row[0]): row for idx, row in api_calls.iterrows()}
 
         for future in concurrent.futures.as_completed(future_to_url):
             df = pd.concat([df, future.result()], sort=False)
             # df = df.append(future.result())
-            time.sleep(self.len_of_pause)
 
         if self.place_raw_file:
             df.to_csv(self.export_file_path, index=self.place_with_index)

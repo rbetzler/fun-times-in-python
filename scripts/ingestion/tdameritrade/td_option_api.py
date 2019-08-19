@@ -21,10 +21,13 @@ class TdOptionsApi(api_grabber.ApiGrabber):
 
     @property
     def query(self) -> str:
-        return td_option_tickers.QUERY
+        return td_option_tickers.QUERY.format(
+            batch_size=self.batch_size,
+            batch_start=self.lower_bound
+        )
 
     @property
-    def tickers(self) -> str:
+    def tickers(self) -> pd.DataFrame:
         df = self.get_call_inputs_from_db
         return df
 
@@ -42,7 +45,7 @@ class TdOptionsApi(api_grabber.ApiGrabber):
 
     @property
     def export_folder(self) -> str:
-        return 'audit/processed/td_ameritrade/options/'
+        return 'audit/processed/td_ameritrade/options/2019_08_18/'
 
     @property
     def export_file_name(self) -> str:
@@ -55,6 +58,14 @@ class TdOptionsApi(api_grabber.ApiGrabber):
     @property
     def table(self) -> str:
         return ''
+
+    @property
+    def n_workers(self) -> int:
+        return 20
+
+    @property
+    def len_of_pause(self) -> int:
+        return 2
 
     def column_renames(self) -> dict:
         names = {
@@ -131,4 +142,10 @@ class TdOptionsApi(api_grabber.ApiGrabber):
 
 
 if __name__ == '__main__':
-    TdOptionsApi().execute()
+    batch_size = 100
+    n_batches = 30
+    for batch in range(8, n_batches):
+        lower_bound = (batch-1) * batch_size
+        print('Beginning Batch: ' + str(batch))
+        TdOptionsApi(lower_bound=lower_bound, batch_size=batch_size).execute()
+        print('Completed Batch: ' + str(batch))
