@@ -1,5 +1,6 @@
 import pandas as pd
-import scripts.web_scraping.scraper as scraper
+import scripts.ingestion.scraper as scraper
+from scripts.sql_scripts.queries import scrape_yahoo_stocks
 
 
 class YahooStockScraper(scraper.WebScraper):
@@ -18,8 +19,8 @@ class YahooStockScraper(scraper.WebScraper):
             return pd.DataFrame(urls)
 
         @property
-        def sql_file(self) -> str:
-            return '/home/sql_scripts/queries/scrape_stocks.sql'
+        def query(self) -> str:
+            return scrape_yahoo_stocks.QUERY
 
         @property
         def request_type(self) -> str:
@@ -31,7 +32,7 @@ class YahooStockScraper(scraper.WebScraper):
 
         @property
         def export_folder(self) -> str:
-            return '/Users/rickbetzler/Desktop/testing/'
+            return '/mnt/audit/yahoo/stocks/'
 
         @property
         def export_file_name(self) -> str:
@@ -39,7 +40,11 @@ class YahooStockScraper(scraper.WebScraper):
 
         @property
         def table(self) -> str:
-            return 'fact_yahoo_stocks'
+            return 'stocks'
+
+        @property
+        def schema(self) -> str:
+            return 'yahoo'
 
         @property
         def n_cores(self) -> int:

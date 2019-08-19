@@ -1,5 +1,4 @@
 import abc
-import bs4
 import time
 import datetime
 import requests
@@ -7,46 +6,38 @@ import psycopg2
 import pandas as pd
 import concurrent.futures
 from sqlalchemy import create_engine
-from scripts.utilities.db_utilities import ConnectionStrings, DbSchemas
+from scripts.utilities import db_utilities
 
 
-class WebScraper(abc.ABC):
+class ApiGrabber(abc.ABC):
     def __init__(self,
-                 run_date=datetime.datetime.now().strftime('%Y-%m-%d-%H-%M'),
                  start_date=datetime.datetime.now().date().strftime('%Y-%m-%d'),
-                 end_date=datetime.datetime.now().date().strftime('%Y-%m-%d')):
-        self.db_connection = ConnectionStrings().postgres_dw_stocks
-        self.run_date = run_date
+                 end_date=datetime.datetime.now().date().strftime('%Y-%m-%d'),
+                 lower_bound=0,
+                 batch_size=0):
+        self.db_connection = db_utilities.DW_STOCKS
         self.start_date = start_date
         self.end_date = end_date
-
-
-    @property
-    def get_urls(self) -> pd.DataFrame:
-        if self.sql_file is not None:
-            urls = self.get_urls_from_db
-        else:
-            urls = self.one_url
-        return urls
+        self.lower_bound = lower_bound
+        self.batch_size = batch_size
 
     @property
-    def one_url(self) -> pd.DataFrame:
-        return pd.DataFrame
+    def run_date(self) -> str:
+        return datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')
 
     @property
-    def sql_file(self) -> str:
-        return None
+    def get_api_calls(self) -> pd.DataFrame:
+        return pd.DataFrame()
 
     @property
     def query(self) -> str:
-        query = open(self.sql_file).read()
-        return query
+        return ''
 
     @property
-    def get_urls_from_db(self) -> pd.DataFrame:
+    def get_call_inputs_from_db(self) -> pd.DataFrame:
         conn = psycopg2.connect(self.db_connection)
-        urls = pd.read_sql(self.query, conn)
-        return urls
+        apis = pd.read_sql(self.query, conn)
+        return apis
 
     @property
     def place_raw_file(self) -> bool:
@@ -86,7 +77,7 @@ class WebScraper(abc.ABC):
 
     @property
     def schema(self) -> str:
-        return DbSchemas().dw_stocks
+        return 'td_ameritrade'
 
     @property
     def db_engine(self) -> str:
@@ -105,42 +96,39 @@ class WebScraper(abc.ABC):
         return pd.DataFrame()
 
     @property
-    def n_cores(self) -> int:
+    def n_workers(self) -> int:
         return 1
-
-    @property
-    def request_type(self) -> str:
-        return 'text'
 
     @property
     def len_of_pause(self) -> int:
         return 0
 
-    def retrieve_web_page(self, url) -> bs4.BeautifulSoup:
-        if self.request_type == 'text':
-            raw_html = requests.get(url).text
-            soup = bs4.BeautifulSoup(raw_html, features="html.parser")
-        elif self.request_type == 'json':
-            soup = requests.get(url).json()
-        return soup
+    def call_api(self, call) -> requests.Response:
+        api_response = requests.get(call)
+        return api_response
 
     def parse(self) -> pd.DataFrame:
         pass
 
-    def parallelize(self, url) -> pd.DataFrame:
-        soup = self.retrieve_web_page(url)
-        df = self.parse(soup)
+    def parallelize(self, api) -> pd.DataFrame:
+        print('Calling api ' + datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
+        api_response = self.call_api(api)
+        print('Parsing response ' + datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
+        df = self.parse(api_response)
+        print('Done parsing ' + datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
+        time.sleep(self.len_of_pause)
+        print('Done sleeping ' + datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
         return df
 
     def execute(self):
-        urls = self.get_urls
+        api_calls = self.get_api_calls
         df = self.parallel_output
-        executor = concurrent.futures.ThreadPoolExecutor(max_workers=self.n_cores)
-        future_to_url = {executor.submit(self.parallelize, row.values[0]): row for idx, row in urls.iterrows()}
+        executor = concurrent.futures.ThreadPoolExecutor(max_workers=self.n_workers)
+        future_to_url = {executor.submit(self.parallelize, row[0]): row for idx, row in api_calls.iterrows()}
 
         for future in concurrent.futures.as_completed(future_to_url):
             df = pd.concat([df, future.result()], sort=False)
-            time.sleep(self.len_of_pause)
+            # df = df.append(future.result())
 
         if self.place_raw_file:
             df.to_csv(self.export_file_path, index=self.place_with_index)

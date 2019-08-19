@@ -1,4 +1,5 @@
 import abc
+import bs4
 import time
 import datetime
 import requests
@@ -6,27 +7,35 @@ import psycopg2
 import pandas as pd
 import concurrent.futures
 from sqlalchemy import create_engine
-from scripts.utilities.db_utilities import ConnectionStrings, DbSchemas
+from scripts.utilities import db_utilities
 
 
-class ApiGrabber(abc.ABC):
+class WebScraper(abc.ABC):
     def __init__(self,
                  run_date=datetime.datetime.now().strftime('%Y-%m-%d-%H-%M'),
                  start_date=datetime.datetime.now().date().strftime('%Y-%m-%d'),
                  end_date=datetime.datetime.now().date().strftime('%Y-%m-%d')):
-        self.db_connection = ConnectionStrings().postgres_dw_stocks
+        self.db_connection = db_utilities.DW_STOCKS
         self.run_date = run_date
         self.start_date = start_date
         self.end_date = end_date
 
 
     @property
-    def get_api_calls(self) -> pd.DataFrame:
-        return pd.DataFrame()
+    def get_urls(self) -> pd.DataFrame:
+        if self.sql_file is not None:
+            urls = self.get_urls_from_db
+        else:
+            urls = self.one_url
+        return urls
+
+    @property
+    def one_url(self) -> pd.DataFrame:
+        return pd.DataFrame
 
     @property
     def sql_file(self) -> str:
-        return ''
+        return None
 
     @property
     def query(self) -> str:
@@ -34,10 +43,10 @@ class ApiGrabber(abc.ABC):
         return query
 
     @property
-    def get_call_inputs_from_db(self) -> pd.DataFrame:
+    def get_urls_from_db(self) -> pd.DataFrame:
         conn = psycopg2.connect(self.db_connection)
-        apis = pd.read_sql(self.query, conn)
-        return apis
+        urls = pd.read_sql(self.query, conn)
+        return urls
 
     @property
     def place_raw_file(self) -> bool:
@@ -100,26 +109,34 @@ class ApiGrabber(abc.ABC):
         return 1
 
     @property
+    def request_type(self) -> str:
+        return 'text'
+
+    @property
     def len_of_pause(self) -> int:
         return 0
 
-    def call_api(self, call) -> requests.Response:
-        api_response = requests.get(call)
-        return api_response
+    def retrieve_web_page(self, url) -> bs4.BeautifulSoup:
+        if self.request_type == 'text':
+            raw_html = requests.get(url).text
+            soup = bs4.BeautifulSoup(raw_html, features="html.parser")
+        elif self.request_type == 'json':
+            soup = requests.get(url).json()
+        return soup
 
     def parse(self) -> pd.DataFrame:
         pass
 
-    def parallelize(self, api) -> pd.DataFrame:
-        api_response = self.call_api(api)
-        df = self.parse(api_response)
+    def parallelize(self, url) -> pd.DataFrame:
+        soup = self.retrieve_web_page(url)
+        df = self.parse(soup)
         return df
 
     def execute(self):
-        api_calls = self.get_api_calls
+        urls = self.get_urls
         df = self.parallel_output
         executor = concurrent.futures.ThreadPoolExecutor(max_workers=self.n_cores)
-        future_to_url = {executor.submit(self.parallelize, row.values[0]): row for idx, row in api_calls.iterrows()}
+        future_to_url = {executor.submit(self.parallelize, row.values[0]): row for idx, row in urls.iterrows()}
 
         for future in concurrent.futures.as_completed(future_to_url):
             df = pd.concat([df, future.result()], sort=False)

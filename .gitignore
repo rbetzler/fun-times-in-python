@@ -1,8 +1,10 @@
 # Ignore audit folder
 audit/
+.idea/
 
 # Ignore
 *.xml
 *.cpython-37.pyc
 *.pyc
 *.DS_Store
+*.swp
