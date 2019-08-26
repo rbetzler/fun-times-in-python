@@ -86,7 +86,7 @@ class WebScraper(abc.ABC):
 
     @property
     def schema(self) -> str:
-        return DbSchemas().dw_stocks
+        return ''
 
     @property
     def db_engine(self) -> str:
@@ -130,6 +130,7 @@ class WebScraper(abc.ABC):
     def parallelize(self, url) -> pd.DataFrame:
         soup = self.retrieve_web_page(url)
         df = self.parse(soup)
+        time.sleep(self.len_of_pause)
         return df
 
     def execute(self):
@@ -140,7 +141,6 @@ class WebScraper(abc.ABC):
 
         for future in concurrent.futures.as_completed(future_to_url):
             df = pd.concat([df, future.result()], sort=False)
-            time.sleep(self.len_of_pause)
 
         if self.place_raw_file:
             df.to_csv(self.export_file_path, index=self.place_with_index)

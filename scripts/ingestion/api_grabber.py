@@ -44,6 +44,14 @@ class ApiGrabber(abc.ABC):
         return False
 
     @property
+    def place_batch_file(self) -> bool:
+        return False
+
+    @property
+    def batch_name(self) -> str:
+        return 'batch'
+
+    @property
     def place_with_index(self) -> bool:
         return False
 
@@ -59,10 +67,10 @@ class ApiGrabber(abc.ABC):
     def export_file_type(self) -> str:
         return '.csv'
 
-    @property
-    def export_file_path(self) -> str:
+    def export_file_path(self, api) -> str:
         file_path = self.export_folder \
                     + self.export_file_name \
+                    + api + '_' \
                     + self.run_date \
                     + self.export_file_type
         return file_path
@@ -111,27 +119,26 @@ class ApiGrabber(abc.ABC):
         pass
 
     def parallelize(self, api) -> pd.DataFrame:
-        print('Calling api ' + datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
-        api_response = self.call_api(api)
-        print('Parsing response ' + datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
+        api_response = self.call_api(api[1])
         df = self.parse(api_response)
-        print('Done parsing ' + datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
+
+        if self.place_raw_file:
+            df.to_csv(self.export_file_path(api[0]), index=self.place_with_index)
+
         time.sleep(self.len_of_pause)
-        print('Done sleeping ' + datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
         return df
 
     def execute(self):
         api_calls = self.get_api_calls
         df = self.parallel_output
-        executor = concurrent.futures.ThreadPoolExecutor(max_workers=self.n_workers)
-        future_to_url = {executor.submit(self.parallelize, row[0]): row for idx, row in api_calls.iterrows()}
+        executor = concurrent.futures.ProcessPoolExecutor(max_workers=self.n_workers)
+        future_to_url = {executor.submit(self.parallelize, row): row for row in api_calls.iterrows()}
 
         for future in concurrent.futures.as_completed(future_to_url):
             df = pd.concat([df, future.result()], sort=False)
-            # df = df.append(future.result())
 
-        if self.place_raw_file:
-            df.to_csv(self.export_file_path, index=self.place_with_index)
+        if self.place_batch_file:
+            df.to_csv(self.export_file_path(self.batch_name), index=self.place_with_index)
 
         if self.load_to_db:
             df.to_sql(

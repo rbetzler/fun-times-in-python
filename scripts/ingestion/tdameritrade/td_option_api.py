@@ -1,4 +1,5 @@
 import time
+import datetime
 import pandas as pd
 from scripts.ingestion import api_grabber
 from scripts.sql_scripts.queries import td_option_tickers
@@ -8,12 +9,15 @@ class TdOptionsApi(api_grabber.ApiGrabber):
     @property
     def get_api_calls(self) -> pd.DataFrame:
         apis = []
+        tickers = []
         for idx, row in self.tickers.iterrows():
             apis.append(self.api_call_base
                         + '?apikey=' + self.apikey
                         + '&symbol=' + row.values[0]
                         + '&contractType=' + self.contract_types)
-        return pd.DataFrame(apis)
+            tickers.append(row.values[0])
+        df = pd.DataFrame(data=apis, index=tickers)
+        return df
 
     @property
     def contract_types(self) -> str:
@@ -37,19 +41,15 @@ class TdOptionsApi(api_grabber.ApiGrabber):
 
     @property
     def apikey(self) -> str:
-        return ''
-
-    @property
-    def place_raw_file(self) -> bool:
-        return True
+        return 'B41S3HBMUXQOLM81JXQ7CWXJMSN17CSM'
 
     @property
     def export_folder(self) -> str:
-        return 'audit/processed/td_ameritrade/options/2019_08_18/'
+        return 'audit/processed/td_ameritrade/options/2019_08_25/'
 
     @property
     def export_file_name(self) -> str:
-        return 'td_api_'
+        return 'td_'
 
     @property
     def load_to_db(self) -> bool:
@@ -65,7 +65,7 @@ class TdOptionsApi(api_grabber.ApiGrabber):
 
     @property
     def len_of_pause(self) -> int:
-        return 2
+        return 1
 
     def column_renames(self) -> dict:
         names = {
@@ -108,24 +108,24 @@ class TdOptionsApi(api_grabber.ApiGrabber):
 
     def parse_chain(self, chain) -> pd.DataFrame:
         df = pd.DataFrame()
-
+        print('Starting parse on chain: ' + datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
         for date in chain.keys():
             for strike in chain.get(date).keys():
                 temp = pd.DataFrame.from_dict(chain.get(date).get(strike))
-                temp['expiration_date_from_epoch'] = time.strftime('%Y-%m-%d %H:%M:%S',
-                                                                   time.localtime(temp['expirationDate'].values[0]/1000))
+                temp['expiration_date_from_epoch'] = \
+                    time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(temp['expirationDate'].values[0]/1000))
                 temp['strike'] = strike
                 temp['strike_date'] = date
                 df = df.append(temp)
 
         df = df.rename(columns=self.column_renames())
-
+        print('Ending parse on chain: ' + datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
         return df
 
     def parse(self, res) -> pd.DataFrame:
         res = res.json()
 
-        symbol = res.get('symbol')
+        ticker = res.get('symbol')
         volatility = res.get('volatility')
         n_contracts = res.get('numberOfContracts')
         interest_rate = res.get('interestRate')
@@ -133,18 +133,17 @@ class TdOptionsApi(api_grabber.ApiGrabber):
         puts = self.parse_chain(res.get('putExpDateMap'))
 
         df = calls.append(puts)
-        df['symbol'] = symbol
+        df['symbol'] = ticker
         df['volatility'] = volatility
         df['n_contracts'] = n_contracts
         df['interest_rate'] = interest_rate
-
         return df
 
 
 if __name__ == '__main__':
     batch_size = 100
-    n_batches = 30
-    for batch in range(8, n_batches):
+    n_batches = 29
+    for batch in range(9, n_batches):
         lower_bound = (batch-1) * batch_size
         print('Beginning Batch: ' + str(batch))
         TdOptionsApi(lower_bound=lower_bound, batch_size=batch_size).execute()
