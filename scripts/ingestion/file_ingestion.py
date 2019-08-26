@@ -1,43 +1,22 @@
+import os
 import abc
-import time
 import datetime
-import requests
-import psycopg2
 import pandas as pd
-import concurrent.futures
 from sqlalchemy import create_engine
 from scripts.utilities import db_utilities
 
 
-class ApiGrabber(abc.ABC):
+class FileIngestion(abc.ABC):
     def __init__(self,
                  start_date=datetime.datetime.now().date().strftime('%Y-%m-%d'),
-                 end_date=datetime.datetime.now().date().strftime('%Y-%m-%d'),
-                 lower_bound=0,
-                 batch_size=0):
+                 end_date=datetime.datetime.now().date().strftime('%Y-%m-%d')):
         self.db_connection = db_utilities.DW_STOCKS
         self.start_date = start_date
         self.end_date = end_date
-        self.lower_bound = lower_bound
-        self.batch_size = batch_size
 
     @property
     def run_date(self) -> str:
         return datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')
-
-    @property
-    def get_api_calls(self) -> pd.DataFrame:
-        return pd.DataFrame()
-
-    @property
-    def query(self) -> str:
-        return ''
-
-    @property
-    def get_call_inputs_from_db(self) -> pd.DataFrame:
-        conn = psycopg2.connect(self.db_connection)
-        apis = pd.read_sql(self.query, conn)
-        return apis
 
     @property
     def place_raw_file(self) -> bool:
@@ -54,6 +33,18 @@ class ApiGrabber(abc.ABC):
     @property
     def place_with_index(self) -> bool:
         return False
+
+    @property
+    def import_directory(self) -> str:
+        return ''
+
+    @property
+    def import_file_prefix(self) -> str:
+        return ''
+
+    @property
+    def import_file_date_format(self) -> str:
+        return '%Y%m%d%H%M%S'
 
     @property
     def export_folder(self) -> str:
@@ -100,42 +91,23 @@ class ApiGrabber(abc.ABC):
         return False
 
     @property
-    def parallel_output(self) -> pd.DataFrame:
+    def data_format(self) -> pd.DataFrame:
         return pd.DataFrame()
-
-    @property
-    def n_workers(self) -> int:
-        return 1
-
-    @property
-    def len_of_pause(self) -> int:
-        return 0
-
-    def call_api(self, call) -> requests.Response:
-        api_response = requests.get(call)
-        return api_response
 
     def parse(self) -> pd.DataFrame:
         pass
 
-    def parallelize(self, api) -> pd.DataFrame:
-        api_response = self.call_api(api[1])
-        df = self.parse(api_response)
-
-        if self.place_raw_file:
-            df.to_csv(self.export_file_path(api[0]), index=self.place_with_index)
-
-        time.sleep(self.len_of_pause)
-        return df
-
     def execute(self):
-        api_calls = self.get_api_calls
-        df = self.parallel_output
-        executor = concurrent.futures.ProcessPoolExecutor(max_workers=self.n_workers)
-        future_to_url = {executor.submit(self.parallelize, row): row for row in api_calls.iterrows()}
+        files = os.listdir(self.import_directory)
+        files = pd.DataFrame(files, columns=['file_names'])
+        # files = files['file_names'].str.find(self.import_file_prefix)
+        files['file_date'] = files['file_names'].str.rpartition('_')[2].str.partition('.csv')[0]
+        files['file_date'] = pd.to_datetime(files['file_date'], format=self.import_file_date_format)
 
-        for future in concurrent.futures.as_completed(future_to_url):
-            df = pd.concat([df, future.result()], sort=False)
+        df = self.data_format
+        for file in files:
+            raw = pd.read_csv(file)
+            df = pd.concat([df, raw])
 
         if self.place_batch_file:
             df.to_csv(self.export_file_path(self.batch_name), index=self.place_with_index)
