@@ -6,6 +6,8 @@ import psycopg2
 import pandas as pd
 import concurrent.futures
 from sqlalchemy import create_engine
+
+from scripts.ingestion import utils
 from scripts.utilities import db_utilities
 
 
@@ -119,7 +121,7 @@ class ApiGrabber(abc.ABC):
         pass
 
     def parallelize(self, api) -> pd.DataFrame:
-        api_response = self.call_api(api[1])
+        api_response = self.call_api(api[1][0])
         df = self.parse(api_response)
 
         if self.place_raw_file:
@@ -129,6 +131,7 @@ class ApiGrabber(abc.ABC):
         return df
 
     def execute(self):
+        utils.create_directory(self.export_folder)
         api_calls = self.get_api_calls
         df = self.parallel_output
         executor = concurrent.futures.ProcessPoolExecutor(max_workers=self.n_workers)

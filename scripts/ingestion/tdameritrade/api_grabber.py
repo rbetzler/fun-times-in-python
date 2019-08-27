@@ -45,11 +45,18 @@ class TdOptionsApi(api_grabber.ApiGrabber):
 
     @property
     def export_folder(self) -> str:
-        return 'audit/processed/td_ameritrade/options/2019_08_25/'
+        folder = 'audit/processed/td_ameritrade/options/' \
+                 + datetime.datetime.utcnow().strftime('%Y_%m_%d_%H_%S') \
+                 + '/'
+        return folder
 
     @property
     def export_file_name(self) -> str:
         return 'td_'
+
+    @property
+    def place_raw_file(self) -> bool:
+        return True
 
     @property
     def load_to_db(self) -> bool:
@@ -61,7 +68,7 @@ class TdOptionsApi(api_grabber.ApiGrabber):
 
     @property
     def n_workers(self) -> int:
-        return 20
+        return 1
 
     @property
     def len_of_pause(self) -> int:
@@ -115,7 +122,8 @@ class TdOptionsApi(api_grabber.ApiGrabber):
                 temp['expiration_date_from_epoch'] = \
                     time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(temp['expirationDate'].values[0]/1000))
                 temp['strike'] = strike
-                temp['strike_date'] = date
+                temp['strike_date'] = date.partition(':')[0]
+                temp['days_to_expiration_date'] = date.partition(':')[2]
                 df = df.append(temp)
 
         df = df.rename(columns=self.column_renames())
@@ -143,7 +151,7 @@ class TdOptionsApi(api_grabber.ApiGrabber):
 if __name__ == '__main__':
     batch_size = 100
     n_batches = 29
-    for batch in range(9, n_batches):
+    for batch in range(5, n_batches):
         lower_bound = (batch-1) * batch_size
         print('Beginning Batch: ' + str(batch))
         TdOptionsApi(lower_bound=lower_bound, batch_size=batch_size).execute()

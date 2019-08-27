@@ -1,56 +1,42 @@
-import abc
 import datetime
 import pandas as pd
-from sqlalchemy import create_engine
-from scripts.utilities import db_utilities
+from scripts.ingestion import file_ingestion
 
 
-class FileLoader(abc.ABC):
-    def __init__(self,
-                 run_date=datetime.datetime.now().strftime('%Y-%m-%d-%H-%M'),
-                 start_date=datetime.datetime.now().date().strftime('%Y-%m-%d'),
-                 end_date=datetime.datetime.now().date().strftime('%Y-%m-%d')):
-        self.db_connection = db_utilities.DW_STOCKS
-        self.run_date = run_date
-        self.start_date = start_date
-        self.end_date = end_date
-
-    @property
-    def place_raw_file(self) -> bool:
-        return False
-
-    @property
-    def place_with_index(self) -> bool:
-        return False
-
+class ListStocks(file_ingestion.FileIngestion):
     @property
     def input_folder(self) -> str:
-        return ''
+        return '/nasdaq/'
 
     @property
     def input_file_name(self) -> str:
-        return ''
+        file_in = 'companylist_' + self.exchange + '_2019_08_18'
+        return file_in
+
+    # overriding since this was manually extracted
+    @property
+    def input_file_path(self) -> str:
+        file_path = 'audit/raw' \
+                    + self.input_folder \
+                    + self.input_file_name \
+                    + self.input_file_type
+        return file_path
 
     @property
     def input_file_type(self) -> str:
         return '.csv'
 
     @property
-    def input_file_path(self) -> str:
-        file_path = 'audit/raw' \
-                    + self.input_folder \
-                    + self.input_file_name \
-                    + self.run_date \
-                    + self.input_file_type
-        return file_path
+    def exchange(self) -> str:
+        return ''
 
     @property
     def export_folder(self) -> str:
-        return ''
+        return '/' + self.exchange + '/'
 
     @property
     def export_file_name(self) -> str:
-        return ''
+        return 'listed_stocks_' + self.exchange + '.py'
 
     @property
     def export_file_type(self) -> str:
@@ -67,34 +53,33 @@ class FileLoader(abc.ABC):
 
     @property
     def load_to_db(self) -> bool:
-        return False
+        return True
 
     @property
     def table(self) -> str:
-        return ''
+        return 'listed_stocks'
 
     @property
     def schema(self) -> str:
-        return ''
-
-    @property
-    def db_engine(self) -> str:
-        return create_engine(self.db_connection)
-
-    @property
-    def append_to_table(self) -> str:
-        return 'append'
-
-    @property
-    def index(self) -> bool:
-        return False
+        return 'nasdaq'
 
     @property
     def column_mapping(self) -> dict:
-        return {}
+        cols = {
+            'Symbol': 'ticker',
+            'ADR TSO': 'adr_tso',
+            'Name': 'company',
+            'IPOyear': 'ipo_year',
+            'Sector': 'sector',
+            'Industry': 'industry'
+        }
+        return cols
 
     def parse(self, file) -> pd.DataFrame:
-        pass
+        df = file.rename(columns=self.column_mapping)
+        df = df[list(self.column_mapping.values())]
+        df['exchange'] = self.exchange
+        return df
 
     def execute(self):
         file = pd.read_csv(self.input_file_path)
@@ -112,3 +97,27 @@ class FileLoader(abc.ABC):
                 schema=self.schema,
                 if_exists=self.append_to_table,
                 index=self.index)
+
+
+class AmexListStocks(ListStocks):
+    @property
+    def exchange(self) -> str:
+        return 'amex'
+
+
+class NasdaqListStocks(ListStocks):
+    @property
+    def exchange(self) -> str:
+        return 'nasdaq'
+
+
+class NyseListStocks(ListStocks):
+    @property
+    def exchange(self) -> str:
+        return 'nyse'
+
+
+if __name__ == '__main__':
+    AmexListStocks().execute()
+    NasdaqListStocks().execute()
+    NyseListStocks().execute()

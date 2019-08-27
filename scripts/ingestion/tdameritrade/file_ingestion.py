@@ -4,8 +4,12 @@ from scripts.ingestion import file_ingestion
 
 class FileIngestion(file_ingestion.FileIngestion):
     @property
+    def job_name(self) -> str:
+        return 'td_options_api'
+
+    @property
     def import_directory(self) -> str:
-        return 'audit/processed/td_ameritrade/options/2019_08_25'
+        return 'audit/processed/td_ameritrade/options/2019_08_26'
 
     @property
     def import_file_prefix(self) -> str:
@@ -13,7 +17,7 @@ class FileIngestion(file_ingestion.FileIngestion):
 
     @property
     def load_to_db(self) -> bool:
-        return False
+        return True
 
     @property
     def table(self) -> str:

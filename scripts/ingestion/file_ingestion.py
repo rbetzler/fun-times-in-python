@@ -27,8 +27,8 @@ class FileIngestion(abc.ABC):
         return False
 
     @property
-    def batch_name(self) -> str:
-        return 'batch'
+    def job_name(self) -> str:
+        return 'job'
 
     @property
     def place_with_index(self) -> bool:
@@ -91,6 +91,10 @@ class FileIngestion(abc.ABC):
         return 'append'
 
     @property
+    def column_mapping(self) -> dict:
+        return {}
+
+    @property
     def index(self) -> bool:
         return False
 
@@ -98,33 +102,67 @@ class FileIngestion(abc.ABC):
     def data_format(self) -> pd.DataFrame:
         return pd.DataFrame()
 
+    @property
+    def parse_files(self) -> pd.DataFrame:
+        files = []
+        folders = []
+        file_paths = []
+        for dir_obj in os.listdir(self.import_directory):
+            if os.path.isdir(self.import_directory + '/' + dir_obj):
+                for file in os.listdir(self.import_directory + '/' + dir_obj):
+                    files.append(file)
+                    folders.append(dir_obj)
+                    file_paths.append(self.import_directory + '/' + dir_obj + '/' + file)
+            elif os.path.isfile(self.import_directory + '/' + dir_obj):
+                files.append(dir_obj)
+                folders.append(self.import_directory.rpartition('/')[2])
+                file_paths.append(self.import_directory + '/' + dir_obj)
+
+        df = pd.DataFrame(files, columns=['file_names'])
+        df['folders'] = folders
+        df['file_paths'] = file_paths
+
+        df = df[df['file_names'].str.contains(self.import_file_extension)]
+        df['file_dates'] = df['file_names'].str.rpartition('_')[2].str.partition(self.import_file_extension)[0]
+        df['file_dates'] = pd.to_datetime(df['file_dates'], format=self.import_file_date_format)
+        return df
+
+    @property
+    def get_ingest_audit(self) -> pd.DataFrame:
+        query = 'select max(ingest_datetime) from audit.ingest_load_times ' \
+                + 'where schema_name = ' + self.schema \
+                + ' and table_name = ' + self.table \
+                + ' and job_name = ' + self.job_name
+        return query
+
     def parse(self) -> pd.DataFrame:
         pass
 
     def execute(self):
-        files = os.listdir(self.import_directory)
-        files = pd.DataFrame(files, columns=['file_names'])
-        files = files[files['file_names'].str.contains(self.import_file_extension)]
-        files['file_date'] = files['file_names'].str.rpartition('_')[2].str.partition(self.import_file_extension)[0]
-        files['file_date'] = pd.to_datetime(files['file_date'], format=self.import_file_date_format)
-
-        print('Start: ' + str(datetime.datetime.utcnow()))
-
+        files = self.find_files_to_ingest
         df = self.data_format
         for idx, row in files.iterrows():
-            raw_file_path = self.import_directory + '/' + row['file_names']
-            raw = pd.read_csv(raw_file_path)
+            raw = pd.read_csv(row['file_paths'])
             df = pd.concat([df, raw], sort=False)
 
-        print('End: ' + str(datetime.datetime.utcnow()))
+        if bool(self.column_mapping):
+            df = df.rename(columns=self.column_mapping)
+            df = df[list(self.column_mapping.values())]
 
         if self.place_batch_file:
-            df.to_csv(self.export_file_path(self.batch_name), index=self.place_with_index)
+            df.to_csv(self.export_file_path(self.job_name), index=self.place_with_index)
 
         if self.load_to_db:
+            if 'dw_created_at' not in df:
+                ingest_datetime = datetime.datetime.now().utcnow().strftime("%m/%d/%Y %H:%M:%S")
+                df['dw_created_at'] = ingest_datetime
             df.to_sql(
                 self.table,
                 self.db_engine,
                 schema=self.schema,
                 if_exists=self.append_to_table,
                 index=self.index)
+
+            insert_statement = 'INSERT INTO ' + self.schema + '.' + self.table + \
+                ' (schema_name, table_name, job_name, ingest_datetime) ' + \
+                ' VALUES ('
