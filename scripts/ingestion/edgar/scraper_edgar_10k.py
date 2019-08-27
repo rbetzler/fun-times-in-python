@@ -1,8 +1,3 @@
-import bs4
-import time
-import datetime
-import requests
-import psycopg2
 import pandas as pd
 from scripts.ingestion import scraper
 

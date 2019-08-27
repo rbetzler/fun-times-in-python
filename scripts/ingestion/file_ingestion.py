@@ -43,6 +43,10 @@ class FileIngestion(abc.ABC):
         return ''
 
     @property
+    def import_file_extension(self) -> str:
+        return '.csv'
+
+    @property
     def import_file_date_format(self) -> str:
         return '%Y%m%d%H%M%S'
 
@@ -100,14 +104,19 @@ class FileIngestion(abc.ABC):
     def execute(self):
         files = os.listdir(self.import_directory)
         files = pd.DataFrame(files, columns=['file_names'])
-        # files = files['file_names'].str.find(self.import_file_prefix)
-        files['file_date'] = files['file_names'].str.rpartition('_')[2].str.partition('.csv')[0]
+        files = files[files['file_names'].str.contains(self.import_file_extension)]
+        files['file_date'] = files['file_names'].str.rpartition('_')[2].str.partition(self.import_file_extension)[0]
         files['file_date'] = pd.to_datetime(files['file_date'], format=self.import_file_date_format)
 
+        print('Start: ' + str(datetime.datetime.utcnow()))
+
         df = self.data_format
-        for file in files:
-            raw = pd.read_csv(file)
-            df = pd.concat([df, raw])
+        for idx, row in files.iterrows():
+            raw_file_path = self.import_directory + '/' + row['file_names']
+            raw = pd.read_csv(raw_file_path)
+            df = pd.concat([df, raw], sort=False)
+
+        print('End: ' + str(datetime.datetime.utcnow()))
 
         if self.place_batch_file:
             df.to_csv(self.export_file_path(self.batch_name), index=self.place_with_index)
