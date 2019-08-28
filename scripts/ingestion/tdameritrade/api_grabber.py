@@ -46,7 +46,7 @@ class TdOptionsApi(api_grabber.ApiGrabber):
     @property
     def export_folder(self) -> str:
         folder = 'audit/processed/td_ameritrade/options/' \
-                 + datetime.datetime.utcnow().strftime('%Y_%m_%d_%H_%S') \
+                 + self.run_time.strftime('%Y_%m_%d_%H_%S') \
                  + '/'
         return folder
 
@@ -151,7 +151,7 @@ class TdOptionsApi(api_grabber.ApiGrabber):
 if __name__ == '__main__':
     batch_size = 100
     n_batches = 29
-    for batch in range(5, n_batches):
+    for batch in range(1, n_batches):
         lower_bound = (batch-1) * batch_size
         print('Beginning Batch: ' + str(batch))
         TdOptionsApi(lower_bound=lower_bound, batch_size=batch_size).execute()

@@ -8,15 +8,9 @@ from scripts.utilities import db_utilities
 
 class FileIngestion(abc.ABC):
     def __init__(self,
-                 start_date=datetime.datetime.now().date().strftime('%Y-%m-%d'),
-                 end_date=datetime.datetime.now().date().strftime('%Y-%m-%d')):
+                 run_datetime=datetime.datetime.now().utcnow().strftime("%Y-%m-%d %H:%M:%S")):
         self.db_connection = db_utilities.DW_STOCKS
-        self.start_date = start_date
-        self.end_date = end_date
-
-    @property
-    def run_date(self) -> str:
-        return datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')
+        self.run_datetime = run_datetime
 
     @property
     def place_raw_file(self) -> bool:
@@ -66,7 +60,7 @@ class FileIngestion(abc.ABC):
         file_path = self.export_folder \
                     + self.export_file_name \
                     + api + '_' \
-                    + self.run_date \
+                    + self.run_datetime \
                     + self.export_file_type
         return file_path
 
@@ -103,7 +97,7 @@ class FileIngestion(abc.ABC):
         return pd.DataFrame()
 
     @property
-    def parse_files(self) -> pd.DataFrame:
+    def get_available_files(self) -> pd.DataFrame:
         files = []
         folders = []
         file_paths = []
@@ -129,40 +123,54 @@ class FileIngestion(abc.ABC):
 
     @property
     def get_ingest_audit(self) -> pd.DataFrame:
-        query = 'select max(ingest_datetime) from audit.ingest_load_times ' \
-                + 'where schema_name = ' + self.schema \
-                + ' and table_name = ' + self.table \
-                + ' and job_name = ' + self.job_name
-        return query
+        query = f" select coalesce(max(ingest_datetime), '1900-01-01') as ingest_datetime" \
+                + f" from audit.ingest_load_times" \
+                + f" where schema_name = '{self.schema}'" \
+                + f" and table_name = '{self.table}'" \
+                + f" and job_name = '{self.job_name}'"
+        df = db_utilities.query_db(query=query)['ingest_datetime'].values[0]
+        return df
+
+    @property
+    def get_ingest_files(self) -> pd.DataFrame:
+        available_files = self.get_available_files
+        last_ingest_datetime = self.get_ingest_audit
+        df = available_files[available_files['file_dates'] > last_ingest_datetime]
+        return df
+
+    @property
+    def insert_audit_record(self):
+        query = f" INSERT INTO audit.ingest_load_times" \
+                + f" (schema_name, table_name, job_name, ingest_datetime)" \
+                + f" VALUES ('{self.schema}', '{self.table}', '{self.job_name}', '{self.run_datetime}')"
+        db_utilities.insert_record(query=query)
+        return
 
     def parse(self) -> pd.DataFrame:
         pass
 
     def execute(self):
-        files = self.find_files_to_ingest
+        files = self.get_ingest_files
         df = self.data_format
         for idx, row in files.iterrows():
             raw = pd.read_csv(row['file_paths'])
             df = pd.concat([df, raw], sort=False)
 
-        if bool(self.column_mapping):
-            df = df.rename(columns=self.column_mapping)
-            df = df[list(self.column_mapping.values())]
+        if not df.empty:
+            if bool(self.column_mapping):
+                df = df.rename(columns=self.column_mapping)
+                df = df[list(self.column_mapping.values())]
 
-        if self.place_batch_file:
-            df.to_csv(self.export_file_path(self.job_name), index=self.place_with_index)
+            if self.place_batch_file:
+                df.to_csv(self.export_file_path(self.job_name), index=self.place_with_index)
 
-        if self.load_to_db:
-            if 'dw_created_at' not in df:
-                ingest_datetime = datetime.datetime.now().utcnow().strftime("%m/%d/%Y %H:%M:%S")
-                df['dw_created_at'] = ingest_datetime
-            df.to_sql(
-                self.table,
-                self.db_engine,
-                schema=self.schema,
-                if_exists=self.append_to_table,
-                index=self.index)
-
-            insert_statement = 'INSERT INTO ' + self.schema + '.' + self.table + \
-                ' (schema_name, table_name, job_name, ingest_datetime) ' + \
-                ' VALUES ('
+            if self.load_to_db:
+                if 'dw_created_at' not in df:
+                    df['dw_created_at'] = self.run_datetime
+                df.to_sql(
+                    self.table,
+                    self.db_engine,
+                    schema=self.schema,
+                    if_exists=self.append_to_table,
+                    index=self.index)
+                self.insert_audit_record

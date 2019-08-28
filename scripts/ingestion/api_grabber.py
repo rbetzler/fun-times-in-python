@@ -13,11 +13,13 @@ from scripts.utilities import db_utilities
 
 class ApiGrabber(abc.ABC):
     def __init__(self,
+                 run_time=datetime.datetime.now(),
                  start_date=datetime.datetime.now().date().strftime('%Y-%m-%d'),
                  end_date=datetime.datetime.now().date().strftime('%Y-%m-%d'),
                  lower_bound=0,
                  batch_size=0):
         self.db_connection = db_utilities.DW_STOCKS
+        self.run_time = run_time
         self.start_date = start_date
         self.end_date = end_date
         self.lower_bound = lower_bound
