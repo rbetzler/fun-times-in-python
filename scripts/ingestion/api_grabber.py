@@ -39,8 +39,7 @@ class ApiGrabber(abc.ABC):
 
     @property
     def get_call_inputs_from_db(self) -> pd.DataFrame:
-        conn = psycopg2.connect(self.db_connection)
-        apis = pd.read_sql(self.query, conn)
+        apis = db_utilities.query_db(query=self.query)
         return apis
 
     @property

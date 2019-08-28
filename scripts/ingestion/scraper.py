@@ -3,7 +3,6 @@ import bs4
 import time
 import datetime
 import requests
-import psycopg2
 import pandas as pd
 import concurrent.futures
 from sqlalchemy import create_engine
@@ -44,8 +43,7 @@ class WebScraper(abc.ABC):
 
     @property
     def get_urls_from_db(self) -> pd.DataFrame:
-        conn = psycopg2.connect(self.db_connection)
-        urls = pd.read_sql(self.query, conn)
+        urls = db_utilities.query_db(query=self.query)
         return urls
 
     @property
