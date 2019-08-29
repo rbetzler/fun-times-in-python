@@ -1,4 +1,4 @@
-QUERY = """
+OPTIONS = """
     CREATE TABLE IF NOT EXISTS td.options (
         symbol                      text,
         volatility                  numeric(20,6),
@@ -54,5 +54,20 @@ QUERY = """
         strike_date                 timestamp without time zone,
         days_to_expiration_date     numeric(20,6),
         dw_created_at               timestamp without time zone
+    );
+    """
+
+EQUITIES = """
+    CREATE TABLE IF NOT EXISTS td.equities (
+        symbol                  text,
+        open                    numeric(20,6),
+        high                    numeric(20,6),
+        low                     numeric(20,6),
+        close                   numeric(20,6),
+        volume                  numeric(20,6),
+        market_datetime_epoch   text,
+        empty                   boolean,
+        market_datetime         timestamp without time zone,
+        dw_created_at           timestamp without time zone
     );
     """

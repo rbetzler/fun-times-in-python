@@ -1,6 +1,5 @@
-import datetime
-from scripts.sql_scripts import table_creator
-from scripts.sql_scripts.yahoo import ddl
+from scripts.ingestion import table_creator
+from scripts.ingestion.yahoo import ddl
 
 
 class YahooStocksTable(table_creator.TableCreator):

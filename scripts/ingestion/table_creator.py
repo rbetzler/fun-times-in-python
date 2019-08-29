@@ -1,8 +1,7 @@
 import abc
 import psycopg2
-import datetime
 from scripts.utilities import db_utilities
-from scripts.sql_scripts.yahoo import ddl
+from scripts.ingestion.yahoo import ddl
 
 
 class TableCreator(abc.ABC):

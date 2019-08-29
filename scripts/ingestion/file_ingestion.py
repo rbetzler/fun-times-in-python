@@ -1,5 +1,6 @@
 import os
 import abc
+import psycopg2
 import datetime
 import pandas as pd
 from sqlalchemy import create_engine
@@ -8,9 +9,10 @@ from scripts.utilities import db_utilities
 
 class FileIngestion(abc.ABC):
     def __init__(self,
-                 run_datetime=datetime.datetime.now().utcnow().strftime("%Y-%m-%d %H:%M:%S")):
+                 run_datetime=datetime.datetime.now()):
         self.db_connection = db_utilities.DW_STOCKS
-        self.run_datetime = run_datetime
+        self.run_datetime = run_datetime.strftime('%Y%m%d%H%M%S')
+        self.ingest_datetime = run_datetime.strftime("%Y-%m-%d %H:%M:%S")
 
     @property
     def place_raw_file(self) -> bool:
@@ -50,16 +52,16 @@ class FileIngestion(abc.ABC):
 
     @property
     def export_file_name(self) -> str:
-        return ''
+        return 'batch_'
 
     @property
     def export_file_type(self) -> str:
         return '.csv'
 
-    def export_file_path(self, api) -> str:
-        file_path = self.export_folder \
+    def export_file_path(self, job) -> str:
+        file_path = self.export_folder + '/' \
                     + self.export_file_name \
-                    + api + '_' \
+                    + job + '_' \
                     + self.run_datetime \
                     + self.export_file_type
         return file_path
@@ -89,7 +91,26 @@ class FileIngestion(abc.ABC):
         return {}
 
     @property
+    def get_columns_in_db(self) -> dict:
+        query = f'select * from {self.schema}.{self.table} limit 1'
+        df = db_utilities.query_db(query=query)
+        cols = list(df.columns)
+        return cols
+
+    def add_and_order_columns(self, df) -> pd.DataFrame:
+        cols = self.get_columns_in_db
+        for col in cols:
+            if col not in df:
+                df[col] = ''
+        df = df[cols]
+        return df
+
+    @property
     def index(self) -> bool:
+        return False
+
+    @property
+    def header_row(self) -> bool:
         return False
 
     @property
@@ -142,7 +163,7 @@ class FileIngestion(abc.ABC):
     def insert_audit_record(self):
         query = f" INSERT INTO audit.ingest_load_times" \
                 + f" (schema_name, table_name, job_name, ingest_datetime)" \
-                + f" VALUES ('{self.schema}', '{self.table}', '{self.job_name}', '{self.run_datetime}')"
+                + f" VALUES ('{self.schema}', '{self.table}', '{self.job_name}', '{self.ingest_datetime}')"
         db_utilities.insert_record(query=query)
         return
 
@@ -152,6 +173,7 @@ class FileIngestion(abc.ABC):
     def execute(self):
         files = self.get_ingest_files
         df = self.data_format
+        files = files[-4:]
         for idx, row in files.iterrows():
             raw = pd.read_csv(row['file_paths'])
             df = pd.concat([df, raw], sort=False)
@@ -159,18 +181,31 @@ class FileIngestion(abc.ABC):
         if not df.empty:
             if bool(self.column_mapping):
                 df = df.rename(columns=self.column_mapping)
-                df = df[list(self.column_mapping.values())]
+
+            if 'dw_created_at' not in df:
+                df['dw_created_at'] = self.ingest_datetime
+
+            df = self.add_and_order_columns(df)
 
             if self.place_batch_file:
-                df.to_csv(self.export_file_path(self.job_name), index=self.place_with_index)
+                df.to_csv(self.export_file_path(self.job_name), index=self.place_with_index, header=self.header_row)
+                file = open(self.export_file_path(self.job_name), 'r')
 
-            if self.load_to_db:
-                if 'dw_created_at' not in df:
-                    df['dw_created_at'] = self.run_datetime
+                conn = psycopg2.connect(self.db_connection)
+                cursor = conn.cursor()
+                cursor.copy_from(file, table=f'{self.schema}.{self.table}', sep=',', null='')
+
+                conn.commit()
+                cursor.close()
+                conn.close()
+                file.close()
+
+            elif self.load_to_db:
                 df.to_sql(
                     self.table,
                     self.db_engine,
                     schema=self.schema,
                     if_exists=self.append_to_table,
                     index=self.index)
-                self.insert_audit_record
+
+            self.insert_audit_record

@@ -52,7 +52,7 @@ class TdOptionsApi(api_grabber.ApiGrabber):
 
     @property
     def period(self) -> str:
-        return '2'
+        return '20'
 
     @property
     def frequency_type(self) -> str:
@@ -87,7 +87,7 @@ class TdOptionsApi(api_grabber.ApiGrabber):
 
     @property
     def n_workers(self) -> int:
-        return 1
+        return 15
 
     @property
     def len_of_pause(self) -> int:
@@ -109,7 +109,10 @@ class TdOptionsApi(api_grabber.ApiGrabber):
         df = candles
         df['symbol'] = symbol
         df['empty'] = empty
-        df['market_datetime'] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(df['datetime'].values[0] / 1000))
+        try:
+            df['market_datetime'] = pd.to_datetime(df['datetime'], unit='ms')
+        except KeyError:
+            print('ehh')
 
         df = df.rename(columns=self.column_renames())
         return df

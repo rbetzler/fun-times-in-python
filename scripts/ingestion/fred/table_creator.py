@@ -1,6 +1,5 @@
-import datetime
-from scripts.sql_scripts import table_creator
-from scripts.sql_scripts.fred import ddls
+from scripts.ingestion import table_creator
+from scripts.ingestion.fred import ddls
 
 
 class FredTableCreator(table_creator.TableCreator):
