@@ -52,7 +52,7 @@ class TdOptionsApi(api_grabber.ApiGrabber):
 
     @property
     def export_file_name(self) -> str:
-        return 'td_'
+        return 'td_options_'
 
     @property
     def place_raw_file(self) -> bool:
@@ -68,11 +68,11 @@ class TdOptionsApi(api_grabber.ApiGrabber):
 
     @property
     def n_workers(self) -> int:
-        return 1
+        return 15
 
     @property
     def len_of_pause(self) -> int:
-        return 1
+        return 5
 
     def column_renames(self) -> dict:
         names = {
@@ -115,25 +115,27 @@ class TdOptionsApi(api_grabber.ApiGrabber):
 
     def parse_chain(self, chain) -> pd.DataFrame:
         df = pd.DataFrame()
-        print('Starting parse on chain: ' + datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
-        for date in chain.keys():
-            for strike in chain.get(date).keys():
-                temp = pd.DataFrame.from_dict(chain.get(date).get(strike))
-                temp['expiration_date_from_epoch'] = \
-                    time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(temp['expirationDate'].values[0]/1000))
-                temp['strike'] = strike
-                temp['strike_date'] = date.partition(':')[0]
-                temp['days_to_expiration_date'] = date.partition(':')[2]
-                df = df.append(temp)
-
+        # print('Starting parse on chain: ' + datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
+        try:
+            for date in chain.keys():
+                for strike in chain.get(date).keys():
+                    temp = pd.DataFrame.from_dict(chain.get(date).get(strike))
+                    temp['expiration_date_from_epoch'] = \
+                        time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(temp['expirationDate'].values[0]/1000))
+                    temp['strike'] = strike
+                    temp['strike_date'] = date.partition(':')[0]
+                    temp['days_to_expiration_date'] = date.partition(':')[2]
+                    df = df.append(temp)
+        except AttributeError:
+            print('ehh')
         df = df.rename(columns=self.column_renames())
-        print('Ending parse on chain: ' + datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
+        # print('Ending parse on chain: ' + datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
         return df
 
     def parse(self, res) -> pd.DataFrame:
         res = res.json()
 
-        ticker = res.get('symbol')
+        symbol = res.get('symbol')
         volatility = res.get('volatility')
         n_contracts = res.get('numberOfContracts')
         interest_rate = res.get('interestRate')
@@ -141,7 +143,7 @@ class TdOptionsApi(api_grabber.ApiGrabber):
         puts = self.parse_chain(res.get('putExpDateMap'))
 
         df = calls.append(puts)
-        df['symbol'] = ticker
+        df['symbol'] = symbol
         df['volatility'] = volatility
         df['n_contracts'] = n_contracts
         df['interest_rate'] = interest_rate
@@ -150,8 +152,8 @@ class TdOptionsApi(api_grabber.ApiGrabber):
 
 if __name__ == '__main__':
     batch_size = 100
-    n_batches = 29
-    for batch in range(1, n_batches):
+    n_batches = 30
+    for batch in range(11, n_batches):
         lower_bound = (batch-1) * batch_size
         print('Beginning Batch: ' + str(batch))
         TdOptionsApi(lower_bound=lower_bound, batch_size=batch_size).execute()
