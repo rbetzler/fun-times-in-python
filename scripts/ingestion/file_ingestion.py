@@ -67,6 +67,10 @@ class FileIngestion(abc.ABC):
         return file_path
 
     @property
+    def export_file_separator(self) -> str:
+        return ','
+
+    @property
     def load_to_db(self) -> bool:
         return False
 
@@ -101,7 +105,7 @@ class FileIngestion(abc.ABC):
         cols = self.get_columns_in_db
         for col in cols:
             if col not in df:
-                df[col] = ''
+                df[col] = None
         df = df[cols]
         return df
 
@@ -167,17 +171,18 @@ class FileIngestion(abc.ABC):
         db_utilities.insert_record(query=query)
         return
 
-    def parse(self) -> pd.DataFrame:
-        pass
+    def clean_df(self, df) -> pd.DataFrame:
+        return df
 
     def execute(self):
         files = self.get_ingest_files
         df = self.data_format
-        files = files[-4:]
+        files = files[-25:]
         for idx, row in files.iterrows():
             raw = pd.read_csv(row['file_paths'])
             df = pd.concat([df, raw], sort=False)
 
+        df = self.clean_df(df)
         if not df.empty:
             if bool(self.column_mapping):
                 df = df.rename(columns=self.column_mapping)
@@ -188,12 +193,18 @@ class FileIngestion(abc.ABC):
             df = self.add_and_order_columns(df)
 
             if self.place_batch_file:
-                df.to_csv(self.export_file_path(self.job_name), index=self.place_with_index, header=self.header_row)
+                df.to_csv(self.export_file_path(self.job_name),
+                          index=self.place_with_index,
+                          header=self.header_row,
+                          sep=self.export_file_separator)
                 file = open(self.export_file_path(self.job_name), 'r')
 
                 conn = psycopg2.connect(self.db_connection)
                 cursor = conn.cursor()
-                cursor.copy_from(file, table=f'{self.schema}.{self.table}', sep=',', null='')
+                cursor.copy_from(file,
+                                 table=f'{self.schema}.{self.table}',
+                                 sep=self.export_file_separator,
+                                 null='')
 
                 conn.commit()
                 cursor.close()

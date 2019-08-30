@@ -107,6 +107,10 @@ class ApiGrabber(abc.ABC):
         return pd.DataFrame()
 
     @property
+    def column_mapping(self) -> dict:
+        return {}
+
+    @property
     def n_workers(self) -> int:
         return 1
 
@@ -124,6 +128,9 @@ class ApiGrabber(abc.ABC):
     def parallelize(self, api) -> pd.DataFrame:
         api_response = self.call_api(api[1][0])
         df = self.parse(api_response)
+
+        if bool(self.column_mapping):
+            df = df.rename(columns=self.column_mapping)
 
         if self.place_raw_file:
             df.to_csv(self.export_file_path(api[0]), index=self.place_with_index)
