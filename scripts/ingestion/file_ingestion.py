@@ -4,13 +4,13 @@ import psycopg2
 import datetime
 import pandas as pd
 from sqlalchemy import create_engine
-from scripts.utilities import db_utilities
+from scripts.utilities import utils
 
 
 class FileIngestion(abc.ABC):
     def __init__(self,
                  run_datetime=datetime.datetime.now()):
-        self.db_connection = db_utilities.DW_STOCKS
+        self.db_connection = utils.DW_STOCKS
         self.run_datetime = run_datetime.strftime('%Y%m%d%H%M%S')
         self.ingest_datetime = run_datetime.strftime("%Y-%m-%d %H:%M:%S")
 
@@ -97,7 +97,7 @@ class FileIngestion(abc.ABC):
     @property
     def get_columns_in_db(self) -> dict:
         query = f'select * from {self.schema}.{self.table} limit 1'
-        df = db_utilities.query_db(query=query)
+        df = utils.query_db(query=query)
         cols = list(df.columns)
         return cols
 
@@ -153,7 +153,7 @@ class FileIngestion(abc.ABC):
                 + f" where schema_name = '{self.schema}'" \
                 + f" and table_name = '{self.table}'" \
                 + f" and job_name = '{self.job_name}'"
-        df = db_utilities.query_db(query=query)['ingest_datetime'].values[0]
+        df = utils.query_db(query=query)['ingest_datetime'].values[0]
         return df
 
     @property
@@ -168,7 +168,7 @@ class FileIngestion(abc.ABC):
         query = f" INSERT INTO audit.ingest_load_times" \
                 + f" (schema_name, table_name, job_name, ingest_datetime)" \
                 + f" VALUES ('{self.schema}', '{self.table}', '{self.job_name}', '{self.ingest_datetime}')"
-        db_utilities.insert_record(query=query)
+        utils.insert_record(query=query)
         return
 
     def clean_df(self, df) -> pd.DataFrame:
@@ -177,7 +177,6 @@ class FileIngestion(abc.ABC):
     def execute(self):
         files = self.get_ingest_files
         df = self.data_format
-        files = files[-25:]
         for idx, row in files.iterrows():
             raw = pd.read_csv(row['file_paths'])
             df = pd.concat([df, raw], sort=False)

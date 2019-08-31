@@ -13,7 +13,7 @@ class TdOptionsApi(api_grabber.ApiGrabber):
         for idx, row in self.tickers.iterrows():
             apis.append(self.api_call_base
                         + row.values[0] + '/pricehistory'
-                        + '?apikey=' + self.api_secret
+                        + '?apikey=' + self.apikey
                         + '&periodType=' + self.period_type
                         + '&period=' + self.period
                         + '&frequencyType=' + self.frequency_type
@@ -43,8 +43,8 @@ class TdOptionsApi(api_grabber.ApiGrabber):
         return 'https://api.tdameritrade.com/v1/marketdata/'
 
     @property
-    def api_name(self) -> str:
-        return 'API_TD'
+    def apikey(self) -> str:
+        return 'B41S3HBMUXQOLM81JXQ7CWXJMSN17CSM'
 
     @property
     def period_type(self) -> str:

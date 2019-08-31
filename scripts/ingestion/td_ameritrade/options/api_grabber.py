@@ -12,7 +12,7 @@ class TdOptionsApi(api_grabber.ApiGrabber):
         tickers = []
         for idx, row in self.tickers.iterrows():
             apis.append(self.api_call_base
-                        + '?apikey=' + self.apikey
+                        + '?apikey=' + self.api_secret
                         + '&symbol=' + row.values[0]
                         + '&contractType=' + self.contract_types)
             tickers.append(row.values[0])
@@ -40,8 +40,8 @@ class TdOptionsApi(api_grabber.ApiGrabber):
         return 'https://api.tdameritrade.com/v1/marketdata/chains'
 
     @property
-    def apikey(self) -> str:
-        return 'B41S3HBMUXQOLM81JXQ7CWXJMSN17CSM'
+    def api_name(self) -> str:
+        return 'API_TD'
 
     @property
     def export_folder(self) -> str:

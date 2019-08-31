@@ -7,8 +7,7 @@ import pandas as pd
 import concurrent.futures
 from sqlalchemy import create_engine
 
-from scripts.ingestion import utils
-from scripts.utilities import db_utilities
+from scripts.utilities import utils
 
 
 class ApiGrabber(abc.ABC):
@@ -18,7 +17,7 @@ class ApiGrabber(abc.ABC):
                  end_date=datetime.datetime.now().date().strftime('%Y-%m-%d'),
                  lower_bound=0,
                  batch_size=0):
-        self.db_connection = db_utilities.DW_STOCKS
+        self.db_connection = utils.DW_STOCKS
         self.run_time = run_time
         self.start_date = start_date
         self.end_date = end_date
@@ -39,8 +38,16 @@ class ApiGrabber(abc.ABC):
 
     @property
     def get_call_inputs_from_db(self) -> pd.DataFrame:
-        apis = db_utilities.query_db(query=self.query)
+        apis = utils.query_db(query=self.query)
         return apis
+
+    @property
+    def api_name(self) -> str:
+        return ''
+
+    @property
+    def api_secret(self) -> str:
+        return utils.retrieve_secret(self.api_name)
 
     @property
     def place_raw_file(self) -> bool:

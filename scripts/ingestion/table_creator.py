@@ -1,6 +1,6 @@
 import abc
 import psycopg2
-from scripts.utilities import db_utilities
+from scripts.utilities import utils
 from scripts.ingestion.yahoo import ddl
 
 
@@ -8,7 +8,7 @@ class TableCreator(abc.ABC):
 
     @property
     def db_connection(self) -> str:
-        return db_utilities.DW_STOCKS
+        return utils.DW_STOCKS
 
     @property
     def schema_name(self) -> str:

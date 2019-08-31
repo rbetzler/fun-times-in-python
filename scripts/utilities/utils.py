@@ -1,3 +1,4 @@
+import os
 import psycopg2
 import pandas as pd
 
@@ -20,3 +21,16 @@ def insert_record(db_connection=DW_STOCKS, query=None):
     conn.commit()
     cursor.close()
     conn.close()
+
+
+def retrieve_secret(var, pwd=''):
+    secrets = open('audit/babylon.env').read().split()
+    for secret in secrets:
+        if var == secret.split('=')[0]:
+            pwd = secret.split('=')[1]
+    return pwd
+
+
+def create_directory(directory):
+    if not os.path.exists(directory):
+        os.mkdir(directory)

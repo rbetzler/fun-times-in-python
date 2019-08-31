@@ -6,7 +6,7 @@ import requests
 import pandas as pd
 import concurrent.futures
 from sqlalchemy import create_engine
-from scripts.utilities import db_utilities
+from scripts.utilities import utils
 
 
 class WebScraper(abc.ABC):
@@ -14,7 +14,7 @@ class WebScraper(abc.ABC):
                  run_date=datetime.datetime.now().strftime('%Y-%m-%d-%H-%M'),
                  start_date=datetime.datetime.now().date().strftime('%Y-%m-%d'),
                  end_date=datetime.datetime.now().date().strftime('%Y-%m-%d')):
-        self.db_connection = db_utilities.DW_STOCKS
+        self.db_connection = utils.DW_STOCKS
         self.run_date = run_date
         self.start_date = start_date
         self.end_date = end_date
@@ -43,7 +43,7 @@ class WebScraper(abc.ABC):
 
     @property
     def get_urls_from_db(self) -> pd.DataFrame:
-        urls = db_utilities.query_db(query=self.query)
+        urls = utils.query_db(query=self.query)
         return urls
 
     @property
