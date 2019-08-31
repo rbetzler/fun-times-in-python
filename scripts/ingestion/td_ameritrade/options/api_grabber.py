@@ -1,11 +1,10 @@
 import time
-import datetime
 import pandas as pd
 from scripts.ingestion import api_grabber
 from scripts.sql_scripts.queries import td_option_tickers
 
 
-class TdOptionsApi(api_grabber.ApiGrabber):
+class TDOptionsAPI(api_grabber.APIGrabber):
     @property
     def get_api_calls(self) -> pd.DataFrame:
         apis = []
@@ -156,5 +155,5 @@ if __name__ == '__main__':
     for batch in range(11, n_batches):
         lower_bound = (batch-1) * batch_size
         print('Beginning Batch: ' + str(batch))
-        TdOptionsApi(lower_bound=lower_bound, batch_size=batch_size).execute()
+        TDOptionsAPI(lower_bound=lower_bound, batch_size=batch_size).execute()
         print('Completed Batch: ' + str(batch))

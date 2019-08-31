@@ -1,16 +1,14 @@
-import time
-import datetime
 import pandas as pd
 from scripts.ingestion import api_grabber
 from scripts.sql_scripts.queries import td_option_tickers
 
 
-class TdOptionsApi(api_grabber.ApiGrabber):
+class TDOptionsAPI(api_grabber.APIGrabber):
     @property
     def get_api_calls(self) -> pd.DataFrame:
         apis = []
         tickers = []
-        for idx, row in self.tickers.iterrows():
+        for idx, row in self.get_call_inputs_from_db.iterrows():
             apis.append(self.api_call_base
                         + row.values[0] + '/pricehistory'
                         + '?apikey=' + self.api_secret
@@ -32,11 +30,6 @@ class TdOptionsApi(api_grabber.ApiGrabber):
             batch_size=self.batch_size,
             batch_start=self.lower_bound
         )
-
-    @property
-    def tickers(self) -> pd.DataFrame:
-        df = self.get_call_inputs_from_db
-        return df
 
     @property
     def api_call_base(self) -> str:
@@ -124,5 +117,5 @@ if __name__ == '__main__':
     for batch in range(1, n_batches):
         lower_bound = (batch-1) * batch_size
         print('Beginning Batch: ' + str(batch))
-        TdOptionsApi(lower_bound=lower_bound, batch_size=batch_size).execute()
+        TDOptionsAPI(lower_bound=lower_bound, batch_size=batch_size).execute()
         print('Completed Batch: ' + str(batch))

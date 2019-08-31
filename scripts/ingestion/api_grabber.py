@@ -2,7 +2,6 @@ import abc
 import time
 import datetime
 import requests
-import psycopg2
 import pandas as pd
 import concurrent.futures
 from sqlalchemy import create_engine
@@ -10,7 +9,7 @@ from sqlalchemy import create_engine
 from scripts.utilities import utils
 
 
-class ApiGrabber(abc.ABC):
+class APIGrabber(abc.ABC):
     def __init__(self,
                  run_time=datetime.datetime.now(),
                  start_date=datetime.datetime.now().date().strftime('%Y-%m-%d'),
@@ -77,10 +76,10 @@ class ApiGrabber(abc.ABC):
     def export_file_type(self) -> str:
         return '.csv'
 
-    def export_file_path(self, api) -> str:
+    def export_file_path(self, batch) -> str:
         file_path = self.export_folder \
                     + self.export_file_name \
-                    + api + '_' \
+                    + batch + '_' \
                     + self.run_date \
                     + self.export_file_type
         return file_path

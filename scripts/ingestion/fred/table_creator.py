@@ -8,7 +8,7 @@ class FredTableCreator(table_creator.TableCreator):
         return 'fred'
 
 
-class FredReleasesTable(FredTableCreator):
+class FREDReleasesTable(FredTableCreator):
     @property
     def table_name(self) -> str:
         return 'releases'
@@ -18,7 +18,7 @@ class FredReleasesTable(FredTableCreator):
         return ddls.RELEASES
 
 
-class FredSeriesTable(FredTableCreator):
+class FREDSeriesTable(FredTableCreator):
     @property
     def table_name(self) -> str:
         return 'series'
@@ -28,7 +28,7 @@ class FredSeriesTable(FredTableCreator):
         return ddls.SERIES
 
 
-class FredSourcesTable(FredTableCreator):
+class FREDSourcesTable(FredTableCreator):
     @property
     def table_name(self) -> str:
         return 'sources'
@@ -38,7 +38,18 @@ class FredSourcesTable(FredTableCreator):
         return ddls.SOURCES
 
 
+class FREDJobsTable(FredTableCreator):
+    @property
+    def table_name(self) -> str:
+        return 'jobs'
+
+    @property
+    def table_ddl(self) -> str:
+        return ddls.JOBS
+
+
 if __name__ == '__main__':
-    FredReleasesTable().execute()
-    FredSeriesTable().execute()
-    FredSourcesTable().execute()
+    FREDReleasesTable().execute()
+    FREDSeriesTable().execute()
+    FREDSourcesTable().execute()
+    FREDJobsTable().execute()
