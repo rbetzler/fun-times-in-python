@@ -1,4 +1,3 @@
-import pandas as pd
 from scripts.ingestion import file_ingestion
 
 

@@ -58,7 +58,7 @@ SERIES_SEARCHES = """
   ('gdp', True, NOW()),
   ('treasury', True, NOW());
   """
-JOBS = """
+JOBS = f"""
   CREATE TABLE IF NOT EXISTS fred.jobs
   (
     series_id       text,
@@ -67,43 +67,45 @@ JOBS = """
     is_active       boolean,
     dw_created_at   timestamp without time zone
   );
-  INSERT INTO fred.jobs(series_id, series_name, category, is_active, dw_created_at) VALUES 
-  ('FPCPITOTLZGWLD', 'inflation_world', 'inflation', True, NOW()),
-  ('FPCPITOTLZGUSA', 'inflation_usa', 'inflation', True, NOW()),
-  ('FPCPITOTLZGAUS', 'australia', 'inflation', True, NOW()),
-  ('FPCPITOTLZGAUT', 'austria', 'inflation', True, NOW()),
-  ('FPCPITOTLZGBEL', 'belgium', 'inflation', True, NOW()),
-  ('FPCPITOTLZGBRA', 'brazil', 'inflation', True, NOW()),
-  ('FPCPITOTLZGCAN', 'canada', 'inflation', True, NOW()),
-  ('FPCPITOTLZGCHN', 'china', 'inflation', True, NOW()),
-  ('FPCPITOTLZGEAP', 'developing_countries_in_east_asia_and_pacific', 'inflation', True, NOW()),
-  ('FPCPITOTLZGECA', 'developing_countries_in_europe_and_central_asia', 'inflation', True, NOW()),
-  ('FPCPITOTLZGLAC', 'developing_countries_in_latin_america_and_caribbean', 'inflation', True, NOW()),
-  ('FPCPITOTLZGMNA', 'developing_countries_in_middle_east_and_north africa', 'inflation', True, NOW()),
-  ('FPCPITOTLZGSSA', 'developing_countries_in_sub_saharan_africa', 'inflation', True, NOW()),
-  ('FPCPITOTLZGFRA', 'france', 'inflation', True, NOW()),
-  ('FPCPITOTLZGDEU', 'germany', 'inflation', True, NOW()),
-  ('FPCPITOTLZGGRC', 'greece', 'inflation', True, NOW()),
-  ('FPCPITOTLZGIND', 'india', 'inflation', True, NOW()),
-  ('FPCPITOTLZGIDN', 'indonesia', 'inflation', True, NOW()),
-  ('FPCPITOTLZGITA', 'italy', 'inflation', True, NOW()),
-  ('FPCPITOTLZGJPN', 'japan', 'inflation', True, NOW()),
-  ('FPCPITOTLZGLMY', 'low_and_middle_income_countries', 'inflation', True, NOW()),
-  ('FPCPITOTLZGMEX', 'mexico', 'inflation', True, NOW()),
-  ('FPCPITOTLZGOED', 'oecd_members', 'inflation', True, NOW()),
-  ('FPCPITOTLZGPOL', 'poland', 'inflation', True, NOW()),
-  ('FPCPITOTLZGSAU', 'saudi_arabia', 'inflation', True, NOW()),
-  ('FPCPITOTLZGZAF', 'south_africa', 'inflation', True, NOW()),
-  ('FPCPITOTLZGESP', 'spain', 'inflation', True, NOW()),
-  ('FPCPITOTLZGCHE', 'switzerland', 'inflation', True, NOW()),
-  ('FPCPITOTLZGTUR', 'turkey', 'inflation', True, NOW()),
-  ('FPCPITOTLZGARB', 'the_arab_world', 'inflation', True, NOW()),
-  ('FPCPITOTLZGEMU', 'the_euro_area', 'inflation', True, NOW()),
-  ('FPCPITOTLZGEUU', 'the_european_union', 'inflation', True, NOW()),
-  ('FPCPITOTLZGKOR', 'the_republic_of_korea', 'inflation', True, NOW()),
-  ('FPCPITOTLZGRUS', 'the_russian_federation', 'inflation', True, NOW()),
-  ('FPCPITOTLZGGBR', 'the_united_kingdom', 'inflation', True, NOW()),
-  ('FPCPITOTLZGUSA', 'the_united_states', 'inflation', True, NOW()),
-  ('FPCPITOTLZGWLD', 'the_world', 'inflation', True, NOW()),
-  ('FPCPITOTLZGLCN', 'latin_america_and_caribbean', 'inflation', True, NOW());
+  INSERT INTO fred.jobs(series_id, series_name, category, is_active, dw_created_at)
+    with series as (
+    select *
+        , lower(title) as lower_title
+        , trim(lower(regexp_replace(
+            substring(title, position('for' in title)+4), 
+            '[\s+\-]', '_', 'g'))) as subtitle
+    from fred.series
+    )
+    select 
+        id as series_id
+        , subtitle as series_name
+        , 'inflation' as category
+        , true as is_active
+        , NOW() as dw_created_at
+    from series
+    where lower(title) like '%inflation%'
+    and not lower(title) like '%discontinued%'
+    and not lower(title) like '%treasury%'
+    and left(title, 30) = 'Inflation, consumer prices for'
+    and (lower_title like '%australia%'
+        or lower_title like '%germany%'
+        or lower_title like '%france%'
+        or lower_title like '%spain%'
+        or lower_title like '%greece%'
+        or lower_title like '%italy%'
+        or lower_title like '%euro%'
+        or lower_title like '%united kingdom%'
+        or lower_title like '%united states%'
+        or lower_title like '%canada%'
+        or lower_title like '%mexico%'
+        or lower_title like '%turkey%'
+        or lower_title like '%poland%'
+        or lower_title like '%brazil%'
+        or lower_title like '%republic of korea%'
+        or lower_title like '%china%'
+        or lower_title like '%india%'
+        or lower_title like '%russian federation%'
+        or lower_title like '%countries%'
+        or lower_title like '%oecd%')
+    order by observation_start, title;
   """

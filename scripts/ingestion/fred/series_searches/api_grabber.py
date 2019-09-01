@@ -5,7 +5,7 @@ from scripts.ingestion import api_grabber
 class FREDSeriesAPIGrabber(api_grabber.APIGrabber):
     @property
     def api_calls_query(self) -> str:
-        return "select search from fred.series_searches where is_active ;"
+        return "select search from fred.series_searches where is_active;"
 
     def format_api_calls(self, idx, row) -> tuple:
         api_call = 'https://api.stlouisfed.org/fred/series/search' \
