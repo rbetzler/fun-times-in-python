@@ -28,25 +28,31 @@ class APIGrabber(abc.ABC):
         return datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')
 
     @property
-    def get_api_calls(self) -> pd.DataFrame:
-        return pd.DataFrame()
-
-    @property
-    def query(self) -> str:
-        return ''
-
-    @property
-    def get_call_inputs_from_db(self) -> pd.DataFrame:
-        apis = utils.query_db(query=self.query)
-        return apis
-
-    @property
     def api_name(self) -> str:
         return ''
 
     @property
     def api_secret(self) -> str:
         return utils.retrieve_secret(self.api_name)
+
+    @property
+    def api_calls_query(self) -> str:
+        return ''
+
+    @property
+    def get_api_calls(self) -> pd.DataFrame:
+        calls = []
+        names = []
+        params = utils.query_db(query=self.api_calls_query)
+        for idx, row in params.iterrows():
+            api = self.format_api_calls(idx, row)
+            calls.append(api[0])
+            names.append(api[1])
+        df = pd.DataFrame(data=calls, index=names)
+        return df
+
+    def format_api_calls(self, idx, row) -> tuple:
+        return ()
 
     @property
     def place_raw_file(self) -> bool:

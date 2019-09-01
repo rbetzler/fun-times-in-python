@@ -15,25 +15,23 @@ RELEASES = """
 SERIES = """
   CREATE TABLE IF NOT EXISTS fred.series
   (
-    release_id              numeric,
-    series_id               text,
-    frequency_long          text,
-    frequency               text,
-    group_popularity        numeric,
-    last_updated            timestamp without time zone,
-    notes                   text,
-    observation_end_date    date,
-    observation_start_date  date,
-    popularity              numeric,
-    realtime_end            date,
-    realtime_start          date,
-    seasonal_adj_long       text,
-    seasonal_adj            text,
-    title                   text,
-    units_long              text,
-    units                   text,
-    dw_created_at           timestamp without time zone,
-    dw_updated_at           timestamp without time zone
+      id                            text,
+      realtime_start                timestamp without time zone,
+      realtime_end                  timestamp without time zone,
+      title                         text,
+      observation_start             timestamp without time zone,
+      observation_end               timestamp without time zone,
+      frequency                     text,
+      frequency_short               text,
+      units                         text,
+      units_short                   text,
+      seasonal_adjustment           text,
+      seasonal_adjustment_short     text,
+      last_updated                  text,
+      popularity                    text,
+      group_popularity              text,
+      notes                         text,
+      dw_created_at                 timestamp without time zone
   );
   """
 SOURCES = """
@@ -47,6 +45,18 @@ SOURCES = """
     dw_created_at     timestamp without time zone,
     dw_updated_at     timestamp without time zone
   );
+  """
+SERIES_SEARCHES = """
+  CREATE TABLE IF NOT EXISTS fred.series_searches
+  (
+    search          text,
+    is_active       boolean,
+    dw_created_at   timestamp without time zone
+  );
+   INSERT INTO fred.series_searches(search, is_active, dw_created_at) VALUES 
+  ('inflation', True, NOW()),
+  ('gdp', True, NOW()),
+  ('treasury', True, NOW());
   """
 JOBS = """
   CREATE TABLE IF NOT EXISTS fred.jobs
@@ -95,6 +105,5 @@ JOBS = """
   ('FPCPITOTLZGGBR', 'the_united_kingdom', 'inflation', True, NOW()),
   ('FPCPITOTLZGUSA', 'the_united_states', 'inflation', True, NOW()),
   ('FPCPITOTLZGWLD', 'the_world', 'inflation', True, NOW()),
-  ('FPCPITOTLZGLCN', 'latin_america_and_caribbean', 'inflation', True, NOW()),
-  ('FPCPITOTLZGSSF', 'sub_saharan_africa', 'inflation', True, NOW());
+  ('FPCPITOTLZGLCN', 'latin_america_and_caribbean', 'inflation', True, NOW());
   """

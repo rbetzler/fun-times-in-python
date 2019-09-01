@@ -4,21 +4,16 @@ from scripts.ingestion import api_grabber
 
 class FREDInflationAPIGrabber(api_grabber.APIGrabber):
     @property
-    def query(self) -> str:
+    def api_calls_query(self) -> str:
         return "select series_id, series_name from fred.jobs where is_active and category = 'inflation'; "
 
-    @property
-    def get_api_calls(self) -> pd.DataFrame:
-        apis = []
-        series = []
-        for idx, row in self.get_call_inputs_from_db.iterrows():
-            apis.append('https://api.stlouisfed.org/fred/series/observations?'
-                        + 'series_id=' + row[0]
-                        + '&api_key=' + self.api_secret
-                        + '&file_type=json')
-            series.append(row[1])
-        df = pd.DataFrame(data=apis, index=series)
-        return df
+    def format_api_calls(self, idx, row) -> tuple:
+        api_call = 'https://api.stlouisfed.org/fred/series/observations?' \
+                   + 'series_id=' + row[0] \
+                   + '&api_key=' + self.api_secret \
+                   + '&file_type=json'
+        api_name = row[1]
+        return api_call, api_name
 
     @property
     def api_name(self) -> str:

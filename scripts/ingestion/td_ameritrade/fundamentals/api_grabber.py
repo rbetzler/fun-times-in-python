@@ -3,34 +3,25 @@ from scripts.ingestion import api_grabber
 from scripts.sql_scripts.queries import td_option_tickers
 
 
-class TdFundamentalsApi(api_grabber.ApiGrabber):
-    @property
-    def get_api_calls(self) -> pd.DataFrame:
-        apis = []
-        tickers = []
-        for idx, row in self.get_call_inputs_from_db.iterrows():
-            apis.append(self.api_call_base
-                        + '?apikey=' + self.api_secret
-                        + '&symbol=' + row.values[0]
-                        + '&projection=' + self.search_type)
-            tickers.append(row.values[0])
-        df = pd.DataFrame(data=apis, index=tickers)
-        return df
+class TDFundamentalsAPI(api_grabber.APIGrabber):
+    def format_api_calls(self, idx, row) -> tuple:
+        api_call = 'https://api.tdameritrade.com/v1/instruments' \
+                   + '?apikey=' + self.api_secret \
+                   + '&symbol=' + row.values[0] \
+                   + '&projection=' + self.search_type
+        api_name = row.values[0]
+        return api_call, api_name
 
     @property
     def search_type(self) -> str:
         return 'fundamental'
 
     @property
-    def query(self) -> str:
+    def api_calls_query(self) -> str:
         return td_option_tickers.QUERY.format(
             batch_size=self.batch_size,
             batch_start=self.lower_bound
         )
-
-    @property
-    def api_call_base(self) -> str:
-        return 'https://api.tdameritrade.com/v1/instruments'
 
     @property
     def api_name(self) -> str:
@@ -134,5 +125,5 @@ if __name__ == '__main__':
     for batch in range(1, n_batches):
         lower_bound = (batch-1) * batch_size
         print('Beginning Batch: ' + str(batch))
-        TdFundamentalsApi(lower_bound=lower_bound, batch_size=batch_size).execute()
+        TDFundamentalsAPI(lower_bound=lower_bound, batch_size=batch_size).execute()
         print('Completed Batch: ' + str(batch))

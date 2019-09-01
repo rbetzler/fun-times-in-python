@@ -4,36 +4,27 @@ from scripts.sql_scripts.queries import td_option_tickers
 
 
 class TDOptionsAPI(api_grabber.APIGrabber):
-    @property
-    def get_api_calls(self) -> pd.DataFrame:
-        apis = []
-        tickers = []
-        for idx, row in self.get_call_inputs_from_db.iterrows():
-            apis.append(self.api_call_base
-                        + row.values[0] + '/pricehistory'
-                        + '?apikey=' + self.api_secret
-                        + '&periodType=' + self.period_type
-                        + '&period=' + self.period
-                        + '&frequencyType=' + self.frequency_type
-                        + '&frequency=' + self.frequency)
-            tickers.append(row.values[0])
-        df = pd.DataFrame(data=apis, index=tickers)
-        return df
+    def format_api_calls(self, idx, row) -> tuple:
+        api_call = 'https://api.tdameritrade.com/v1/marketdata/' \
+                   + row.values[0] + '/pricehistory' \
+                   + '?apikey=' + self.api_secret \
+                   + '&periodType=' + self.period_type \
+                   + '&period=' + self.period \
+                   + '&frequencyType=' + self.frequency_type \
+                   + '&frequency=' + self.frequency
+        api_name = row.values[0]
+        return api_call, api_name
 
     @property
     def contract_types(self) -> str:
         return 'ALL'
 
     @property
-    def query(self) -> str:
+    def api_calls_query(self) -> str:
         return td_option_tickers.QUERY.format(
             batch_size=self.batch_size,
             batch_start=self.lower_bound
         )
-
-    @property
-    def api_call_base(self) -> str:
-        return 'https://api.tdameritrade.com/v1/marketdata/'
 
     @property
     def api_name(self) -> str:

@@ -5,38 +5,28 @@ from scripts.sql_scripts.queries import td_option_tickers
 
 
 class TDOptionsAPI(api_grabber.APIGrabber):
-    @property
-    def get_api_calls(self) -> pd.DataFrame:
-        apis = []
-        tickers = []
-        for idx, row in self.tickers.iterrows():
-            apis.append(self.api_call_base
-                        + '?apikey=' + self.api_secret
-                        + '&symbol=' + row.values[0]
-                        + '&contractType=' + self.contract_types)
-            tickers.append(row.values[0])
-        df = pd.DataFrame(data=apis, index=tickers)
-        return df
+    def format_api_calls(self, idx, row) -> tuple:
+        api_call = 'https://api.tdameritrade.com/v1/marketdata/chains' \
+                   + '?apikey=' + self.api_secret \
+                   + '&symbol=' + row.values[0] \
+                   + '&contractType=' + self.contract_types
+        api_name = row.values[0]
+        return api_call, api_name
 
     @property
     def contract_types(self) -> str:
         return 'ALL'
 
     @property
-    def query(self) -> str:
+    def api_calls_query(self) -> str:
         return td_option_tickers.QUERY.format(
             batch_size=self.batch_size,
             batch_start=self.lower_bound
         )
 
     @property
-    def tickers(self) -> pd.DataFrame:
-        df = self.get_call_inputs_from_db
-        return df
-
-    @property
     def api_call_base(self) -> str:
-        return 'https://api.tdameritrade.com/v1/marketdata/chains'
+        return
 
     @property
     def api_name(self) -> str:
@@ -114,7 +104,6 @@ class TDOptionsAPI(api_grabber.APIGrabber):
 
     def parse_chain(self, chain) -> pd.DataFrame:
         df = pd.DataFrame()
-        # print('Starting parse on chain: ' + datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
         try:
             for date in chain.keys():
                 for strike in chain.get(date).keys():
@@ -128,7 +117,6 @@ class TDOptionsAPI(api_grabber.APIGrabber):
         except AttributeError:
             print('ehh')
         df = df.rename(columns=self.column_renames())
-        # print('Ending parse on chain: ' + datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
         return df
 
     def parse(self, res) -> pd.DataFrame:
@@ -150,9 +138,9 @@ class TDOptionsAPI(api_grabber.APIGrabber):
 
 
 if __name__ == '__main__':
-    batch_size = 100
-    n_batches = 30
-    for batch in range(11, n_batches):
+    batch_size = 10
+    n_batches = 2
+    for batch in range(1, n_batches):
         lower_bound = (batch-1) * batch_size
         print('Beginning Batch: ' + str(batch))
         TDOptionsAPI(lower_bound=lower_bound, batch_size=batch_size).execute()
