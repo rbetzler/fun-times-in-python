@@ -11,14 +11,10 @@ from scripts.utilities import utils
 
 class WebScraper(abc.ABC):
     def __init__(self,
-                 run_date=datetime.datetime.now().strftime('%Y-%m-%d-%H-%M'),
-                 start_date=datetime.datetime.now().date().strftime('%Y-%m-%d'),
-                 end_date=datetime.datetime.now().date().strftime('%Y-%m-%d')):
+                 run_datetime=datetime.datetime.now()):
         self.db_connection = utils.DW_STOCKS
-        self.run_date = run_date
-        self.start_date = start_date
-        self.end_date = end_date
-
+        self.run_datetime = run_datetime.strftime('%Y-%m-%d-%H-%M')
+        self.ingest_datetime = run_datetime.strftime("%Y-%m-%d %H:%M:%S")
 
     @property
     def get_urls(self) -> pd.DataFrame:
@@ -70,7 +66,7 @@ class WebScraper(abc.ABC):
     def export_file_path(self) -> str:
         file_path = self.export_folder \
                     + self.export_file_name \
-                    + self.run_date \
+                    + self.run_datetime \
                     + self.export_file_type
         return file_path
 
@@ -144,6 +140,8 @@ class WebScraper(abc.ABC):
             df.to_csv(self.export_file_path, index=self.place_with_index)
 
         if self.load_to_db:
+            if 'dw_created_at' not in df:
+                df['dw_created_at'] = self.ingest_datetime
             df.to_sql(
                 self.table,
                 self.db_engine,

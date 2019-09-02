@@ -62,6 +62,7 @@ class FREDSeriesAPIGrabber(api_grabber.APIGrabber):
         df = self.parse_helper(res)
         obs = pd.DataFrame(res.get('observations'))
         df = df.merge(obs)
+        # this might simplifiable using json definition
         df['country'] = api[0]
         df['series'] = api[1][1]
         return df
