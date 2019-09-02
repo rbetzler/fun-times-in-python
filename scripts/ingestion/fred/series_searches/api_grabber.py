@@ -2,7 +2,7 @@ import pandas as pd
 from scripts.ingestion import api_grabber
 
 
-class FREDSeriesAPIGrabber(api_grabber.APIGrabber):
+class FREDSeriesSearchesAPIGrabber(api_grabber.APIGrabber):
     @property
     def api_calls_query(self) -> str:
         return "select search from fred.series_searches where is_active;"
@@ -40,4 +40,4 @@ class FREDSeriesAPIGrabber(api_grabber.APIGrabber):
 
 
 if __name__ == '__main__':
-    FREDSeriesAPIGrabber().execute()
+    FREDSeriesSearchesAPIGrabber().execute()

@@ -142,6 +142,8 @@ class FileIngestion(abc.ABC):
         df['file_paths'] = file_paths
 
         df = df[df['file_names'].str.contains(self.import_file_extension)]
+        df = df[df['file_names'].str[:len(self.import_file_prefix)] == self.import_file_prefix]
+
         df['file_dates'] = df['file_names'].str.rpartition('_')[2].str.partition(self.import_file_extension)[0]
         df['file_dates'] = pd.to_datetime(df['file_dates'], format=self.import_file_date_format)
         return df
@@ -181,8 +183,8 @@ class FileIngestion(abc.ABC):
             raw = pd.read_csv(row['file_paths'])
             df = pd.concat([df, raw], sort=False)
 
-        df = self.clean_df(df)
         if not df.empty:
+            df = self.clean_df(df)
             if bool(self.column_mapping):
                 df = df.rename(columns=self.column_mapping)
 

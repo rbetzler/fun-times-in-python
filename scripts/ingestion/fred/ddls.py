@@ -247,3 +247,30 @@ JOBS = f"""
             or lower_title like '%japan%'
             or lower_title like '%united states%');
   """
+SERIES_TEMPLATE = """
+  CREATE TABLE IF NOT EXISTS fred._series_template
+  (
+    realtime_start      timestamp without time zone,
+    realtime_end        timestamp without time zone,
+    observation_start   timestamp without time zone,
+    observation_end     timestamp without time zone,
+    units               text,
+    output_type         integer,
+    file_type           text,
+    order_by            text,
+    sort_order          text,
+    count               integer,
+    series_offset       integer,
+    series_limit        integer,
+    date                timestamp without time zone,
+    value               numeric(20,6),
+    country             text,
+    series              text,
+    dw_created_at       timestamp without time zone
+  );
+  CREATE TABLE fred.inflation AS (select * from fred._series_template);
+  CREATE TABLE fred.central_government_debt AS (select * from fred._series_template);
+  CREATE TABLE fred.household_debt_to_gdp AS (select * from fred._series_template);
+  CREATE TABLE fred.real_gdp_per_capita AS (select * from fred._series_template);
+  CREATE TABLE fred.stock_market_capitalization_to_gdp AS (select * from fred._series_template);
+  """

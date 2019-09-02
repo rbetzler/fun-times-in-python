@@ -1,7 +1,7 @@
 from scripts.ingestion import file_ingestion
 
 
-class FREDSeriesFileIngestion(file_ingestion.FileIngestion):
+class FREDSeriesSearchesFileIngestion(file_ingestion.FileIngestion):
     @property
     def job_name(self) -> str:
         return 'fred_series_searches'
@@ -28,4 +28,4 @@ class FREDSeriesFileIngestion(file_ingestion.FileIngestion):
 
 
 if __name__ == '__main__':
-    FREDSeriesFileIngestion().execute()
+    FREDSeriesSearchesFileIngestion().execute()

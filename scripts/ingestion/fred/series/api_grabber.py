@@ -30,7 +30,7 @@ class FREDSeriesAPIGrabber(api_grabber.APIGrabber):
             names.append(api[1])
             categories.append(api[2])
         df = pd.DataFrame(data=calls, index=names)
-        df['categories'] = categories
+        df[1] = categories
         return df
 
     @property
@@ -63,7 +63,7 @@ class FREDSeriesAPIGrabber(api_grabber.APIGrabber):
         obs = pd.DataFrame(res.get('observations'))
         df = df.merge(obs)
         df['country'] = api[0]
-        df['series'] = api[1]['categories']
+        df['series'] = api[1][1]
         return df
 
     def parallelize(self, api) -> pd.DataFrame:
@@ -74,7 +74,8 @@ class FREDSeriesAPIGrabber(api_grabber.APIGrabber):
             df = df.rename(columns=self.column_mapping)
 
         if self.place_raw_file:
-            df.to_csv(self.export_file_path(api[0]), index=self.place_with_index)
+            export_file_var = api[1][1] + '_' + api[0]
+            df.to_csv(self.export_file_path(export_file_var), index=self.place_with_index)
 
         time.sleep(self.len_of_pause)
         return df

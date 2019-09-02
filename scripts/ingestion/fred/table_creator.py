@@ -58,9 +58,20 @@ class FREDSeriesSearchesTable(FredTableCreator):
         return ddls.SERIES_SEARCHES
 
 
+class FREDSeriesTables(FredTableCreator):
+    @property
+    def table_name(self) -> str:
+        return '_series_template'
+
+    @property
+    def table_ddl(self) -> str:
+        return ddls.SERIES_TEMPLATE
+
+
 if __name__ == '__main__':
     FREDReleasesTable().execute()
     FREDSeriesTable().execute()
     FREDSourcesTable().execute()
     FREDJobsTable().execute()
     FREDSeriesSearchesTable().execute()
+    FREDSeriesTables().execute()
