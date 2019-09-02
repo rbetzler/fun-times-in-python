@@ -27,7 +27,7 @@ class YahooStockScraper(scraper.WebScraper):
             return 'json'
 
         @property
-        def place_raw_file(self) -> bool:
+        def place_batch_file(self) -> bool:
             return True
 
         @property

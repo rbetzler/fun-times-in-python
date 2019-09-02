@@ -4,7 +4,7 @@ import scripts.ingestion.scraper as scraper
 
 class EdgarFileTypesScraper(scraper.WebScraper):
     @property
-    def one_url(self) -> str:
+    def py_urls(self) -> str:
         url = 'https://www.sec.gov/forms'
         return pd.DataFrame([url])
 

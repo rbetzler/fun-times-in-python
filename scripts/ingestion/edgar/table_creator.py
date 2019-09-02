@@ -28,6 +28,17 @@ class SICCIKCodesTable(ABCEdgarTable):
         return ddls.SIC_CIK_CODES
 
 
+class FilingsTable(ABCEdgarTable):
+    @property
+    def table_name(self) -> str:
+        return 'filings'
+
+    @property
+    def table_ddl(self) -> str:
+        return ddls.FILINGS
+
+
 if __name__ == '__main__':
     FileTypesTable().execute()
     SICCIKCodesTable().execute()
+    FilingsTable().execute()

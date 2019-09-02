@@ -5,7 +5,7 @@ import scripts.ingestion.scraper as scraper
 
 class SICCIKCodesScraper(scraper.WebScraper):
     @property
-    def one_url(self) -> str:
+    def py_urls(self) -> str:
         url_prefix = 'https://www.sec.gov/divisions/corpfin/organization/cfia-'
         url_suffix = '.htm'
         urls = []

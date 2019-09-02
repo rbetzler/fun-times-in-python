@@ -16,3 +16,14 @@ SIC_CIK_CODES = """
       dw_created_at     timestamp without time zone
     );
 """
+FILINGS = """
+    CREATE TABLE IF NOT EXISTS edgar.filings
+    (
+        company_name        text,
+        filing_type         text,
+        cik_code            text,
+        date                timestamp without time zone,
+        url                 text,
+        dw_created_at       timestamp without time zone
+    );
+"""

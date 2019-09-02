@@ -24,7 +24,7 @@ class FileIngestion(abc.ABC):
 
     @property
     def job_name(self) -> str:
-        return 'job'
+        return ''
 
     @property
     def place_with_index(self) -> bool:
