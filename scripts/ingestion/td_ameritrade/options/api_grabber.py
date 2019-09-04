@@ -4,52 +4,48 @@ from scripts.ingestion import api_grabber
 from scripts.sql_scripts.queries import td_option_tickers
 
 
-class TdOptionsApi(api_grabber.ApiGrabber):
-    @property
-    def get_api_calls(self) -> pd.DataFrame:
-        apis = []
-        for idx, row in self.tickers.iterrows():
-            apis.append(self.api_call_base
-                        + '?apikey=' + self.apikey
-                        + '&symbol=' + row.values[0]
-                        + '&contractType=' + self.contract_types)
-        return pd.DataFrame(apis)
+class TDOptionsAPI(api_grabber.APIGrabber):
+    def format_api_calls(self, idx, row) -> tuple:
+        api_call = 'https://api.tdameritrade.com/v1/marketdata/chains' \
+                   + '?apikey=' + self.api_secret \
+                   + '&symbol=' + row.values[0] \
+                   + '&contractType=' + self.contract_types
+        api_name = row.values[0]
+        return api_call, api_name
 
     @property
     def contract_types(self) -> str:
         return 'ALL'
 
     @property
-    def query(self) -> str:
+    def api_calls_query(self) -> str:
         return td_option_tickers.QUERY.format(
             batch_size=self.batch_size,
             batch_start=self.lower_bound
         )
 
     @property
-    def tickers(self) -> pd.DataFrame:
-        df = self.get_call_inputs_from_db
-        return df
-
-    @property
     def api_call_base(self) -> str:
-        return 'https://api.tdameritrade.com/v1/marketdata/chains'
+        return
 
     @property
-    def apikey(self) -> str:
-        return ''
+    def api_name(self) -> str:
+        return 'API_TD'
+
+    @property
+    def export_folder(self) -> str:
+        folder = 'audit/processed/td_ameritrade/options/' \
+                 + self.run_time.strftime('%Y_%m_%d_%H_%S') \
+                 + '/'
+        return folder
+
+    @property
+    def export_file_name(self) -> str:
+        return 'td_options_'
 
     @property
     def place_raw_file(self) -> bool:
         return True
-
-    @property
-    def export_folder(self) -> str:
-        return 'audit/processed/td_ameritrade/options/2019_08_18/'
-
-    @property
-    def export_file_name(self) -> str:
-        return 'td_api_'
 
     @property
     def load_to_db(self) -> bool:
@@ -61,11 +57,11 @@ class TdOptionsApi(api_grabber.ApiGrabber):
 
     @property
     def n_workers(self) -> int:
-        return 20
+        return 15
 
     @property
     def len_of_pause(self) -> int:
-        return 2
+        return 5
 
     def column_renames(self) -> dict:
         names = {
@@ -108,18 +104,19 @@ class TdOptionsApi(api_grabber.ApiGrabber):
 
     def parse_chain(self, chain) -> pd.DataFrame:
         df = pd.DataFrame()
-
-        for date in chain.keys():
-            for strike in chain.get(date).keys():
-                temp = pd.DataFrame.from_dict(chain.get(date).get(strike))
-                temp['expiration_date_from_epoch'] = time.strftime('%Y-%m-%d %H:%M:%S',
-                                                                   time.localtime(temp['expirationDate'].values[0]/1000))
-                temp['strike'] = strike
-                temp['strike_date'] = date
-                df = df.append(temp)
-
+        try:
+            for date in chain.keys():
+                for strike in chain.get(date).keys():
+                    temp = pd.DataFrame.from_dict(chain.get(date).get(strike))
+                    temp['expiration_date_from_epoch'] = \
+                        time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(temp['expirationDate'].values[0]/1000))
+                    temp['strike'] = strike
+                    temp['strike_date'] = date.partition(':')[0]
+                    temp['days_to_expiration_date'] = date.partition(':')[2]
+                    df = df.append(temp)
+        except AttributeError:
+            print('ehh')
         df = df.rename(columns=self.column_renames())
-
         return df
 
     def parse(self, res) -> pd.DataFrame:
@@ -137,15 +134,14 @@ class TdOptionsApi(api_grabber.ApiGrabber):
         df['volatility'] = volatility
         df['n_contracts'] = n_contracts
         df['interest_rate'] = interest_rate
-
         return df
 
 
 if __name__ == '__main__':
-    batch_size = 100
-    n_batches = 30
-    for batch in range(8, n_batches):
+    batch_size = 10
+    n_batches = 2
+    for batch in range(1, n_batches):
         lower_bound = (batch-1) * batch_size
         print('Beginning Batch: ' + str(batch))
-        TdOptionsApi(lower_bound=lower_bound, batch_size=batch_size).execute()
+        TDOptionsAPI(lower_bound=lower_bound, batch_size=batch_size).execute()
         print('Completed Batch: ' + str(batch))

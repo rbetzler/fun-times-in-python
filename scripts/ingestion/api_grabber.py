@@ -2,20 +2,22 @@ import abc
 import time
 import datetime
 import requests
-import psycopg2
 import pandas as pd
 import concurrent.futures
 from sqlalchemy import create_engine
-from scripts.utilities import db_utilities
+
+from scripts.utilities import utils
 
 
-class ApiGrabber(abc.ABC):
+class APIGrabber(abc.ABC):
     def __init__(self,
+                 run_time=datetime.datetime.now(),
                  start_date=datetime.datetime.now().date().strftime('%Y-%m-%d'),
                  end_date=datetime.datetime.now().date().strftime('%Y-%m-%d'),
                  lower_bound=0,
                  batch_size=0):
-        self.db_connection = db_utilities.DW_STOCKS
+        self.db_connection = utils.DW_STOCKS
+        self.run_time = run_time
         self.start_date = start_date
         self.end_date = end_date
         self.lower_bound = lower_bound
@@ -26,22 +28,43 @@ class ApiGrabber(abc.ABC):
         return datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')
 
     @property
-    def get_api_calls(self) -> pd.DataFrame:
-        return pd.DataFrame()
-
-    @property
-    def query(self) -> str:
+    def api_name(self) -> str:
         return ''
 
     @property
-    def get_call_inputs_from_db(self) -> pd.DataFrame:
-        conn = psycopg2.connect(self.db_connection)
-        apis = pd.read_sql(self.query, conn)
-        return apis
+    def api_secret(self) -> str:
+        return utils.retrieve_secret(self.api_name)
+
+    @property
+    def api_calls_query(self) -> str:
+        return ''
+
+    @property
+    def get_api_calls(self) -> pd.DataFrame:
+        calls = []
+        names = []
+        params = utils.query_db(query=self.api_calls_query)
+        for idx, row in params.iterrows():
+            api = self.format_api_calls(idx, row)
+            calls.append(api[0])
+            names.append(api[1])
+        df = pd.DataFrame(data=calls, index=names)
+        return df
+
+    def format_api_calls(self, idx, row) -> tuple:
+        return ()
 
     @property
     def place_raw_file(self) -> bool:
         return False
+
+    @property
+    def place_batch_file(self) -> bool:
+        return False
+
+    @property
+    def batch_name(self) -> str:
+        return 'batch'
 
     @property
     def place_with_index(self) -> bool:
@@ -59,10 +82,10 @@ class ApiGrabber(abc.ABC):
     def export_file_type(self) -> str:
         return '.csv'
 
-    @property
-    def export_file_path(self) -> str:
+    def export_file_path(self, batch) -> str:
         file_path = self.export_folder \
                     + self.export_file_name \
+                    + batch + '_' \
                     + self.run_date \
                     + self.export_file_type
         return file_path
@@ -77,7 +100,7 @@ class ApiGrabber(abc.ABC):
 
     @property
     def schema(self) -> str:
-        return 'td_ameritrade'
+        return ''
 
     @property
     def db_engine(self) -> str:
@@ -96,6 +119,10 @@ class ApiGrabber(abc.ABC):
         return pd.DataFrame()
 
     @property
+    def column_mapping(self) -> dict:
+        return {}
+
+    @property
     def n_workers(self) -> int:
         return 1
 
@@ -111,27 +138,30 @@ class ApiGrabber(abc.ABC):
         pass
 
     def parallelize(self, api) -> pd.DataFrame:
-        print('Calling api ' + datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
-        api_response = self.call_api(api)
-        print('Parsing response ' + datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
+        api_response = self.call_api(api[1][0])
         df = self.parse(api_response)
-        print('Done parsing ' + datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
+
+        if bool(self.column_mapping):
+            df = df.rename(columns=self.column_mapping)
+
+        if self.place_raw_file:
+            df.to_csv(self.export_file_path(api[0]), index=self.place_with_index)
+
         time.sleep(self.len_of_pause)
-        print('Done sleeping ' + datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S'))
         return df
 
     def execute(self):
+        utils.create_directory(self.export_folder)
         api_calls = self.get_api_calls
         df = self.parallel_output
-        executor = concurrent.futures.ThreadPoolExecutor(max_workers=self.n_workers)
-        future_to_url = {executor.submit(self.parallelize, row[0]): row for idx, row in api_calls.iterrows()}
+        executor = concurrent.futures.ProcessPoolExecutor(max_workers=self.n_workers)
+        future_to_url = {executor.submit(self.parallelize, row): row for row in api_calls.iterrows()}
 
         for future in concurrent.futures.as_completed(future_to_url):
             df = pd.concat([df, future.result()], sort=False)
-            # df = df.append(future.result())
 
-        if self.place_raw_file:
-            df.to_csv(self.export_file_path, index=self.place_with_index)
+        if self.place_batch_file:
+            df.to_csv(self.export_file_path(self.batch_name), index=self.place_with_index)
 
         if self.load_to_db:
             df.to_sql(

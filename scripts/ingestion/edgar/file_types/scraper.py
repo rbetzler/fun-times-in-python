@@ -4,35 +4,29 @@ import scripts.ingestion.scraper as scraper
 
 class EdgarFileTypesScraper(scraper.WebScraper):
     @property
-    def one_url(self) -> str:
+    def py_urls(self) -> str:
         url = 'https://www.sec.gov/forms'
         return pd.DataFrame([url])
 
     @property
-    def place_raw_file(self) -> bool:
+    def load_to_db(self) -> bool:
         return True
 
     @property
-    def export_folder(self) -> str:
-        return '/Users/rickbetzler/Desktop/testing/'
-
-    @property
-    def export_file_name(self) -> str:
-        return 'stock_test_'
-
-    @property
-    def load_to_db(self) -> bool:
-        return False
-
-    @property
     def table(self) -> str:
-        return 'dim_edgar_file_types'
+        return 'file_types'
+
+    @property
+    def schema(self) -> str:
+        return 'edgar'
 
     def parse(self, soup) -> pd.DataFrame:
 
         # Use tags to get file types and descriptions
-        soup_file_types = soup.find_all('td', {'class' : 'release-number-content views-field views-field-field-release-number is-active'})
-        soup_descriptions = soup.find_all('td', {'class' : 'display-title-content views-field views-field-field-display-title'})
+        soup_file_types = soup.find_all(
+            'td', {'class': 'release-number-content views-field views-field-field-release-number is-active'})
+        soup_descriptions = soup.find_all(
+            'td', {'class': 'display-title-content views-field views-field-field-display-title'})
 
         # Load into lists
         file_types = []
@@ -45,9 +39,8 @@ class EdgarFileTypesScraper(scraper.WebScraper):
 
         # Convert lists to pandas
         df = pd.DataFrame({
-            'file_type' : file_types,
-            'description' : file_descriptions,
-            'created_at' : pd.Timestamp.now()
+            'file_type': file_types,
+            'description': file_descriptions
             })
 
         return df

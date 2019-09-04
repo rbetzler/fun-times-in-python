@@ -10,10 +10,10 @@ class YahooStockScraper(scraper.WebScraper):
             tickers = ['AAPL', 'AA', 'KO', 'GE']
 
             for ticker in tickers:
-                urls.append("https://query2.finance.yahoo.com/v8/finance/chart/" \
-                               + ticker + "?formatted=true&crumb=3eIGSD3T5Ul&lang=en-US&region=US&period1=" \
-                               + '34450' + "&period2=" \
-                               + '153145400400' \
+                urls.append("https://query2.finance.yahoo.com/v8/finance/chart/"
+                               + ticker + "?formatted=true&crumb=3eIGSD3T5Ul&lang=en-US&region=US&period1="
+                               + '34450' + "&period2="
+                               + '153145400400'
                                + "&interval=1d&events=div%7Csplit&corsDomain=finance.yahoo.com")
 
             return pd.DataFrame(urls)
@@ -27,7 +27,7 @@ class YahooStockScraper(scraper.WebScraper):
             return 'json'
 
         @property
-        def place_raw_file(self) -> bool:
+        def place_batch_file(self) -> bool:
             return True
 
         @property
