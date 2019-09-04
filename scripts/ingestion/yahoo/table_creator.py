@@ -2,7 +2,7 @@ from scripts.ingestion import table_creator
 from scripts.ingestion.yahoo import ddl
 
 
-class YahooStocksTable(table_creator.TableCreator):
+class StocksTable(table_creator.TableCreator):
 
     @property
     def schema_name(self) -> str:
@@ -14,8 +14,24 @@ class YahooStocksTable(table_creator.TableCreator):
 
     @property
     def table_ddl(self) -> str:
-        return ddl.QUERY
+        return ddl.STOCKS
+
+
+class IncomeStatementsTable(table_creator.TableCreator):
+
+    @property
+    def schema_name(self) -> str:
+        return 'yahoo'
+
+    @property
+    def table_name(self) -> str:
+        return 'income_statements'
+
+    @property
+    def table_ddl(self) -> str:
+        return ddl.INCOME_STATEMENTS
 
 
 if __name__ == '__main__':
-    YahooStocksTable().execute()
+    StocksTable().execute()
+    IncomeStatementsTable().execute()
