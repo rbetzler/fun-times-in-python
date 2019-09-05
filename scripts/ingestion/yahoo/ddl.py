@@ -28,3 +28,23 @@ INCOME_STATEMENTS = """
     dw_created_at       timestamp without time zone
   );
   """
+BALANCE_SHEETS = """
+  CREATE TABLE IF NOT EXISTS yahoo.balance_sheets
+  (
+    date                timestamp without time zone,
+    ticker              text,
+    metric              text,
+    val                 numeric(20,6),
+    dw_created_at       timestamp without time zone
+  );
+  """
+CASH_FLOWS = """
+  CREATE TABLE IF NOT EXISTS yahoo.cash_flows
+  (
+    date                timestamp without time zone,
+    ticker              text,
+    metric              text,
+    val                 numeric(20,6),
+    dw_created_at       timestamp without time zone
+  );
+  """

@@ -5,5 +5,7 @@ pandas
 xgboost
 requests
 psycopg2
+matplotlib
 sqlalchemy
 statsmodels
+scikit-learn

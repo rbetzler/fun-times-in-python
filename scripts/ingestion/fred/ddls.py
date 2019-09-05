@@ -246,6 +246,62 @@ JOBS = f"""
         and (lower_title like '%china%'
             or lower_title like '%japan%'
             or lower_title like '%united states%');
+            
+    --real gdp
+    INSERT INTO fred.jobs(series_id, series_name, category, is_active, dw_created_at)
+    with series as (
+        select *
+            , lower(title) as lower_title
+            , trim(lower(regexp_replace(
+                substring(title, position('for' in title)+4), 
+                '[\s+\-]', '_', 'g'))) as subtitle
+        from fred.series
+        )
+    select distinct
+        id as series_id
+        , regexp_replace(subtitle, '_\([^()]*\)', '') as series_name
+        , 'real_gdp' as category
+        , true as is_active
+        , NOW() as dw_created_at
+    from series
+    where left(title, 31) = 'Real Gross Domestic Product for';
+    
+    --interest rates, govt securities, tbills
+    INSERT INTO fred.jobs(series_id, series_name, category, is_active, dw_created_at)
+    with series as (
+        select *
+            , lower(title) as lower_title
+            , trim(lower(regexp_replace(
+                substring(title, position('for' in title)+4), 
+                '[\s+\-]', '_', 'g'))) as subtitle
+        from fred.series
+        )
+    select distinct
+        id as series_id
+        , subtitle as series_name
+        , 'interest_rates_govt_securities_tbills' as category
+        , true as is_active
+        , NOW() as dw_created_at
+    from series
+    where left(title, 57) = 'Interest Rates, Government Securities, Treasury Bills for';
+    
+    --miscellaneous
+    INSERT INTO fred.jobs(series_id, series_name, category, is_active, dw_created_at)
+    with series as (
+        select *
+            , lower(title) as lower_title
+            , trim(lower(regexp_replace(
+                title, '[\s+\-\:]', '_', 'g'))) as subtitle
+        from fred.series
+        )
+    select distinct
+        id as series_id
+        , regexp_replace(subtitle, '_\([^()]*\)', '') as series_name
+        , 'miscellaneous' as category
+        , true as is_active
+        , NOW() as dw_created_at
+    from series
+    where id in ('DFF', 'CPIAUCSL', 'NROU', 'NROUST', 'TEDRATE');
   """
 SERIES_TEMPLATE = """
   CREATE TABLE IF NOT EXISTS fred._series_template

@@ -1,6 +1,5 @@
 import pandas as pd
 from scripts.ingestion import api_grabber
-from scripts.sql_scripts.queries import td_option_tickers
 
 
 class TDFundamentalsAPI(api_grabber.APIGrabber):
@@ -18,10 +17,15 @@ class TDFundamentalsAPI(api_grabber.APIGrabber):
 
     @property
     def api_calls_query(self) -> str:
-        return td_option_tickers.QUERY.format(
-            batch_size=self.batch_size,
-            batch_start=self.lower_bound
-        )
+        query = """
+            SELECT DISTINCT ticker
+            FROM nasdaq.listed_stocks
+            WHERE ticker !~ '[\^.~]'
+            AND CHARACTER_LENGTH(ticker) BETWEEN 1 AND 4
+            LIMIT {batch_size}
+            OFFSET {batch_start}
+            """
+        return query.format(batch_size=self.batch_size, batch_start=self.lower_bound)
 
     @property
     def api_name(self) -> str:
