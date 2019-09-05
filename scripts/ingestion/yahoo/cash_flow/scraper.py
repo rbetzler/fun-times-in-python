@@ -11,7 +11,7 @@ class CashFlowsScraper(scraper.WebScraper):
 
     @property
     def urls_query(self) -> str:
-        query = f"select ticker from nasdaq.listed_stocks "\
+        query = f"select distinct ticker from nasdaq.listed_stocks "\
                 f"where ticker !~ '[\^.~]' and character_length(ticker) between 1 and 4 limit 10;"
         return query
 
