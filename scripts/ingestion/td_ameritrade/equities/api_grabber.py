@@ -1,8 +1,30 @@
 import pandas as pd
-from scripts.ingestion import api_grabber
+from scripts.ingestion import ingestion
 
 
-class TDOptionsAPI(api_grabber.APIGrabber):
+class TDOptionsAPI(ingestion.Caller):
+    # general
+    @property
+    def api_name(self) -> str:
+        return 'API_TD'
+
+    @property
+    def request_type(self) -> str:
+        return 'api'
+
+    # calls
+    @property
+    def calls_query(self) -> str:
+        query = """
+            SELECT DISTINCT ticker
+            FROM nasdaq.listed_stocks
+            WHERE ticker !~ '[\^.~]'
+            AND CHARACTER_LENGTH(ticker) BETWEEN 1 AND 4
+            LIMIT {batch_size}
+            OFFSET {batch_start}
+            """
+        return query.format(batch_size=self.batch_size, batch_start=self.lower_bound)
+
     def format_api_calls(self, idx, row) -> tuple:
         api_call = 'https://api.tdameritrade.com/v1/marketdata/' \
                    + row.values[0] + '/pricehistory' \
@@ -14,26 +36,7 @@ class TDOptionsAPI(api_grabber.APIGrabber):
         api_name = row.values[0]
         return api_call, api_name
 
-    @property
-    def contract_types(self) -> str:
-        return 'ALL'
-
-    @property
-    def api_calls_query(self) -> str:
-        query = """
-            SELECT DISTINCT ticker
-            FROM nasdaq.listed_stocks
-            WHERE ticker !~ '[\^.~]'
-            AND CHARACTER_LENGTH(ticker) BETWEEN 1 AND 4
-            LIMIT {batch_size}
-            OFFSET {batch_start}
-            """
-        return query.format(batch_size=self.batch_size, batch_start=self.lower_bound)
-
-    @property
-    def api_name(self) -> str:
-        return 'API_TD'
-
+    # call params
     @property
     def period_type(self) -> str:
         return 'year'
@@ -50,10 +53,11 @@ class TDOptionsAPI(api_grabber.APIGrabber):
     def frequency(self) -> str:
         return '1'
 
+    # files
     @property
     def export_folder(self) -> str:
         folder = 'audit/processed/td_ameritrade/equities/' \
-                 + self.run_time.strftime('%Y_%m_%d_%H_%S') \
+                 + self.run_datetime.strftime('%Y_%m_%d_%H_%S') \
                  + '/'
         return folder
 
@@ -65,14 +69,7 @@ class TDOptionsAPI(api_grabber.APIGrabber):
     def place_raw_file(self) -> bool:
         return True
 
-    @property
-    def load_to_db(self) -> bool:
-        return False
-
-    @property
-    def table(self) -> str:
-        return ''
-
+    # parse
     @property
     def n_workers(self) -> int:
         return 15
@@ -81,10 +78,9 @@ class TDOptionsAPI(api_grabber.APIGrabber):
     def len_of_pause(self) -> int:
         return 5
 
+    @property
     def column_renames(self) -> dict:
-        names = {
-            'datetime': 'market_datetime_epoch'
-        }
+        names = {'datetime': 'market_datetime_epoch'}
         return names
 
     def parse(self, res) -> pd.DataFrame:

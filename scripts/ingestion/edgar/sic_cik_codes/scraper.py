@@ -1,9 +1,15 @@
 import pandas as pd
 from string import ascii_lowercase
-import scripts.ingestion.scraper as scraper
+from scripts.ingestion import ingestion
 
 
-class SICCIKCodesScraper(scraper.WebScraper):
+class SICCIKCodesScraper(ingestion.Caller):
+    # general
+    @property
+    def job_name(self) -> str:
+        return 'edgar_sic_cik_codes'
+
+    # calls
     @property
     def py_urls(self) -> str:
         url_prefix = 'https://www.sec.gov/divisions/corpfin/organization/cfia-'
@@ -14,12 +20,11 @@ class SICCIKCodesScraper(scraper.WebScraper):
                 break
             url = url_prefix + letter + url_suffix
             urls.append(url)
-
         for grouped_chars in ['uv', 'wxyz', '123']:
             urls.append(url_prefix + grouped_chars + url_suffix)
-
         return pd.DataFrame(urls)
 
+    # db
     @property
     def load_to_db(self) -> bool:
         return True
@@ -32,6 +37,7 @@ class SICCIKCodesScraper(scraper.WebScraper):
     def schema(self) -> str:
         return 'edgar'
 
+    # parse
     def parse(self, soup) -> pd.DataFrame:
         company_names = []
         ciks = []

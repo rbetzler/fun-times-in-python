@@ -1,17 +1,23 @@
 import datetime
 import pandas as pd
-import scripts.ingestion.scraper as scraper
+from scripts.ingestion import ingestion
 
 
-class FilingsScraper(scraper.WebScraper):
+class FilingsScraper(ingestion.Caller):
     def __init__(self, years=None):
         super().__init__()
         self.years = years
 
+    # general
     @property
     def job_name(self) -> str:
-        return 'filings'
+        return 'edgar_filings'
 
+    @property
+    def request_type(self) -> str:
+        return 'gz'
+
+    # calls
     @property
     def py_urls(self) -> pd.DataFrame:
         urls = []
@@ -30,6 +36,7 @@ class FilingsScraper(scraper.WebScraper):
         df = pd.DataFrame(data=urls, index=names)
         return df
 
+    # db
     @property
     def load_to_db(self) -> bool:
         return True
@@ -42,10 +49,7 @@ class FilingsScraper(scraper.WebScraper):
     def schema(self) -> str:
         return 'edgar'
 
-    @property
-    def request_type(self) -> str:
-        return 'gz'
-
+    # parse
     def parse(self, soup) -> pd.DataFrame:
         soup = str(soup)
         file_header = f'\\n---------------------------------------------------------------------' \

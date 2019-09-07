@@ -1,22 +1,20 @@
 import pandas as pd
-from scripts.ingestion import api_grabber
+from scripts.ingestion import ingestion
 
 
-class TDFundamentalsAPI(api_grabber.APIGrabber):
-    def format_api_calls(self, idx, row) -> tuple:
-        api_call = 'https://api.tdameritrade.com/v1/instruments' \
-                   + '?apikey=' + self.api_secret \
-                   + '&symbol=' + row.values[0] \
-                   + '&projection=' + self.search_type
-        api_name = row.values[0]
-        return api_call, api_name
+class TDFundamentalsAPI(ingestion.Caller):
+    # general
+    @property
+    def request_type(self) -> str:
+        return 'api'
 
     @property
-    def search_type(self) -> str:
-        return 'fundamental'
+    def api_name(self) -> str:
+        return 'API_TD'
 
+    # calls
     @property
-    def api_calls_query(self) -> str:
+    def calls_query(self) -> str:
         query = """
             SELECT DISTINCT ticker
             FROM nasdaq.listed_stocks
@@ -27,14 +25,19 @@ class TDFundamentalsAPI(api_grabber.APIGrabber):
             """
         return query.format(batch_size=self.batch_size, batch_start=self.lower_bound)
 
-    @property
-    def api_name(self) -> str:
-        return 'API_TD'
+    def format_calls(self, idx, row) -> tuple:
+        api_call = 'https://api.tdameritrade.com/v1/instruments' \
+                   + '?apikey=' + self.api_secret \
+                   + '&symbol=' + row.values[0] \
+                   + '&projection=fundamental'
+        api_name = row.values[0]
+        return api_call, api_name
 
+    # files
     @property
     def export_folder(self) -> str:
         folder = 'audit/processed/td_ameritrade/fundamentals/' \
-                 + self.run_time.strftime('%Y_%m_%d_%H_%S') \
+                 + self.run_datetime.strftime('%Y_%m_%d_%H_%S') \
                  + '/'
         return folder
 
@@ -46,6 +49,7 @@ class TDFundamentalsAPI(api_grabber.APIGrabber):
     def place_raw_file(self) -> bool:
         return True
 
+    # parse
     @property
     def n_workers(self) -> int:
         return 15
@@ -105,9 +109,7 @@ class TDFundamentalsAPI(api_grabber.APIGrabber):
 
     def parse(self, res) -> pd.DataFrame:
         res = res.json()
-
         df = pd.DataFrame()
-
         for key in res.keys():
             dictionary = res.get(key)
 
@@ -119,7 +121,6 @@ class TDFundamentalsAPI(api_grabber.APIGrabber):
             temp['asset_type'] = dictionary.get('assetType')
 
             df = df.append(temp)
-
         return df
 
 

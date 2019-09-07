@@ -1,15 +1,25 @@
 import time
 import pandas as pd
 from scripts.utilities import utils
-from scripts.ingestion import api_grabber
+from scripts.ingestion import ingestion
 
 
-class FREDSeriesAPIGrabber(api_grabber.APIGrabber):
+class FREDSeriesAPIGrabber(ingestion.Caller):
+    # general
     @property
-    def api_calls_query(self) -> str:
+    def api_name(self) -> str:
+        return 'API_FRED'
+
+    @property
+    def request_type(self) -> str:
+        return 'api'
+
+    # calls
+    @property
+    def calls_query(self) -> str:
         return "select series_id, series_name, category from fred.jobs where is_active;"
 
-    def format_api_calls(self, idx, row) -> tuple:
+    def format_calls(self, idx, row) -> tuple:
         api_call = 'https://api.stlouisfed.org/fred/series/observations?' \
                    + 'series_id=' + row[0] \
                    + '&api_key=' + self.api_secret \
@@ -19,13 +29,13 @@ class FREDSeriesAPIGrabber(api_grabber.APIGrabber):
         return api_call, api_name, api_category
 
     @property
-    def get_api_calls(self) -> pd.DataFrame:
+    def get_calls(self) -> pd.DataFrame:
         calls = []
         names = []
         categories = []
-        params = utils.query_db(query=self.api_calls_query)
+        params = utils.query_db(query=self.calls_query)
         for idx, row in params.iterrows():
-            api = self.format_api_calls(idx, row)
+            api = self.format_calls(idx, row)
             calls.append(api[0])
             names.append(api[1])
             categories.append(api[2])
@@ -33,10 +43,7 @@ class FREDSeriesAPIGrabber(api_grabber.APIGrabber):
         df[1] = categories
         return df
 
-    @property
-    def api_name(self) -> str:
-        return 'API_FRED'
-
+    # files
     @property
     def place_raw_file(self) -> bool:
         return True
@@ -49,6 +56,7 @@ class FREDSeriesAPIGrabber(api_grabber.APIGrabber):
     def export_file_name(self) -> str:
         return 'fred_'
 
+    # parse
     def parse_helper(self, res) -> pd.DataFrame:
         keys_to_cols = ['realtime_start', 'realtime_end', 'observation_start', 'observation_end', 'units',
                         'output_type', 'file_type', 'order_by', 'sort_order', 'count', 'offset', 'limit']
@@ -68,15 +76,15 @@ class FREDSeriesAPIGrabber(api_grabber.APIGrabber):
         return df
 
     def parallelize(self, api) -> pd.DataFrame:
-        api_response = self.call_api(api[1][0])
-        df = self.parse(api_response, api)
+        response = self.summon(api[1][0])
+        df = self.parse(response, api)
 
         if bool(self.column_mapping):
             df = df.rename(columns=self.column_mapping)
 
         if self.place_raw_file:
             export_file_var = api[1][1] + '_' + api[0]
-            df.to_csv(self.export_file_path(export_file_var), index=self.place_with_index)
+            df.to_csv(self.export_file_path(export_file_var), index=False)
 
         time.sleep(self.len_of_pause)
         return df

@@ -1,13 +1,20 @@
 import pandas as pd
-import scripts.ingestion.scraper as scraper
+from scripts.ingestion import ingestion
 
 
-class EdgarFileTypesScraper(scraper.WebScraper):
+class EdgarFileTypesScraper(ingestion.Caller):
+    # general
     @property
-    def py_urls(self) -> str:
+    def job_name(self) -> str:
+        return 'edgar_file_types'
+
+    # calls
+    @property
+    def py_urls(self) -> pd.DataFrame:
         url = 'https://www.sec.gov/forms'
         return pd.DataFrame([url])
 
+    # db
     @property
     def load_to_db(self) -> bool:
         return True
@@ -20,6 +27,7 @@ class EdgarFileTypesScraper(scraper.WebScraper):
     def schema(self) -> str:
         return 'edgar'
 
+    # parse
     def parse(self, soup) -> pd.DataFrame:
 
         # Use tags to get file types and descriptions

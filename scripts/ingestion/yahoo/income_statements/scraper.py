@@ -1,27 +1,30 @@
 import re
 import time
 import pandas as pd
-import scripts.ingestion.scraper as scraper
+from scripts.ingestion import ingestion
 
 
-class IncomeStatementsScraper(scraper.WebScraper):
+class IncomeStatementsScraper(ingestion.Caller):
+    # general
     @property
     def job_name(self) -> str:
         return 'yahoo_income_statements'
 
+    # calls
     @property
-    def urls_query(self) -> str:
+    def calls_query(self) -> str:
         query = f"select distinct ticker from nasdaq.listed_stocks "\
                 f"where ticker !~ '[\^.~]' and character_length(ticker) between 1 and 4;"
         return query
 
-    def format_urls(self, idx, row) -> tuple:
+    def format_calls(self, idx, row) -> tuple:
         company = row['ticker']
         url_prefix = 'https://finance.yahoo.com/quote/'
         url_suffix = '/financials?p='
         url = url_prefix + company + url_suffix + company
         return url, company
 
+    # db
     @property
     def load_to_db(self) -> bool:
         return True
@@ -34,6 +37,7 @@ class IncomeStatementsScraper(scraper.WebScraper):
     def schema(self) -> str:
         return 'yahoo'
 
+    # parse
     def parse(self, soup, company) -> pd.DataFrame:
         dates = []
         tuples = []
@@ -55,7 +59,7 @@ class IncomeStatementsScraper(scraper.WebScraper):
         return df
 
     def parallelize(self, url) -> pd.DataFrame:
-        soup = self.retrieve_web_page(url[0])
+        soup = self.summon(url[0])
         df = self.parse(soup, url.name)
         time.sleep(self.len_of_pause)
         return df

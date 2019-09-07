@@ -10,13 +10,24 @@ from scripts.utilities import utils
 import zlib
 
 
-class WebScraper(abc.ABC):
+class Caller(abc.ABC):
     def __init__(self,
-                 run_datetime=datetime.datetime.now()):
+                 run_datetime=datetime.datetime.now(),
+                 start_date=datetime.datetime.now().date().strftime('%Y-%m-%d'),
+                 end_date=datetime.datetime.now().date().strftime('%Y-%m-%d'),
+                 lower_bound=0,
+                 batch_size=0):
         self.db_connection = utils.DW_STOCKS
         self.run_datetime = run_datetime.strftime('%Y-%m-%d-%H-%M')
+        self.folder_datetime = run_datetime.strftime('%Y%m%d%H%M%S')
         self.ingest_datetime = run_datetime.strftime("%Y-%m-%d %H:%M:%S")
 
+        self.start_date = start_date
+        self.end_date = end_date
+        self.lower_bound = lower_bound
+        self.batch_size = batch_size
+
+    # general
     @property
     def job_name(self) -> str:
         return ''
@@ -25,37 +36,48 @@ class WebScraper(abc.ABC):
     def batch_name(self) -> str:
         return 'batch'
 
+    # api specific
     @property
-    def get_urls(self) -> pd.DataFrame:
-        if self.urls_query:
-            urls = self.get_urls_from_db
-        else:
-            urls = self.py_urls
-        return urls
-
-    @property
-    def py_urls(self) -> pd.DataFrame:
-        return pd.DataFrame
-
-    @property
-    def urls_query(self) -> str:
+    def api_name(self) -> str:
         return ''
 
     @property
-    def get_urls_from_db(self) -> pd.DataFrame:
-        urls = []
+    def api_secret(self) -> str:
+        return utils.retrieve_secret(self.api_name)
+
+    # calls
+    @property
+    def get_calls(self) -> pd.DataFrame:
+        if self.calls_query:
+            calls = self.get_calls_from_db
+        else:
+            calls = self.py_calls
+        return calls
+
+    @property
+    def py_calls(self) -> pd.DataFrame:
+        return pd.DataFrame
+
+    @property
+    def calls_query(self) -> str:
+        return ''
+
+    @property
+    def get_calls_from_db(self) -> pd.DataFrame:
+        calls = []
         names = []
-        params = utils.query_db(query=self.urls_query)
+        params = utils.query_db(query=self.calls_query)
         for idx, row in params.iterrows():
-            url = self.format_urls(idx, row)
-            urls.append(url[0])
-            names.append(url[1])
-        df = pd.DataFrame(data=urls, index=names)
+            call = self.format_calls(idx, row)
+            calls.append(call[0])
+            names.append(call[1])
+        df = pd.DataFrame(data=call, index=names)
         return df
 
-    def format_urls(self, idx, row) -> tuple:
+    def format_calls(self, idx, row) -> tuple:
         return ()
 
+    # file drop
     @property
     def place_raw_file(self) -> bool:
         return False
@@ -68,14 +90,6 @@ class WebScraper(abc.ABC):
     def export_folder(self) -> str:
         return ''
 
-    def export_file_path(self, batch) -> str:
-        file_path = self.export_folder \
-                    + self.export_file_name \
-                    + batch + '_' \
-                    + self.run_date \
-                    + self.export_file_type
-        return file_path
-
     @property
     def export_file_name(self) -> str:
         return ''
@@ -84,15 +98,15 @@ class WebScraper(abc.ABC):
     def export_file_type(self) -> str:
         return '.csv'
 
-    @property
     def export_file_path(self, batch) -> str:
         file_path = self.export_folder \
                     + self.export_file_name \
                     + batch + '_' \
-                    + self.run_datetime \
+                    + self.folder_datetime \
                     + self.export_file_type
         return file_path
 
+    # db load
     @property
     def load_to_db(self) -> bool:
         return False
@@ -121,10 +135,7 @@ class WebScraper(abc.ABC):
     def append_to_table(self) -> str:
         return 'append'
 
-    @property
-    def parallel_output(self) -> pd.DataFrame:
-        return pd.DataFrame()
-
+    # calling
     @property
     def n_cores(self) -> int:
         return 1
@@ -137,34 +148,50 @@ class WebScraper(abc.ABC):
     def len_of_pause(self) -> int:
         return 0
 
-    def retrieve_web_page(self, url) -> bs4.BeautifulSoup:
+    def summon(self, call) -> bs4.BeautifulSoup:
         if self.request_type == 'text':
-            raw_html = requests.get(url).text
-            soup = bs4.BeautifulSoup(raw_html, features="html.parser")
+            raw_html = requests.get(call).text
+            response = bs4.BeautifulSoup(raw_html, features="html.parser")
         elif self.request_type == 'json':
-            soup = requests.get(url).json()
+            response = requests.get(call).json()
         elif self.request_type == 'gz':
-            soup = zlib.decompress(requests.get(url).content, 16+zlib.MAX_WBITS)
-        return soup
+            response = zlib.decompress(requests.get(call).content, 16+zlib.MAX_WBITS)
+        elif self.request_type == 'api':
+            response = requests.get(call)
+        return response
 
-    def parse(self) -> pd.DataFrame:
+    # parsing
+    @property
+    def parallel_output(self) -> pd.DataFrame:
+        return pd.DataFrame()
+
+    @property
+    def column_mapping(self) -> dict:
+        return {}
+
+    def parse(self, response) -> pd.DataFrame:
         pass
 
-    def parallelize(self, url) -> pd.DataFrame:
-        soup = self.retrieve_web_page(url[0])
-        df = self.parse(soup)
+    # wrapper
+    def parallelize(self, call) -> pd.DataFrame:
+        response = self.summon(call[1][0])
+        df = self.parse(response)
+
+        if bool(self.column_mapping):
+            df = df.rename(columns=self.column_mapping)
 
         if self.place_raw_file:
-            df.to_csv(self.export_file_path(url[1][0]), index=False)
+            df.to_csv(self.export_file_path(call[0]), index=False)
 
         time.sleep(self.len_of_pause)
         return df
 
     def execute(self):
-        urls = self.get_urls
+        utils.create_directory(self.export_folder)
+        calls = self.get_calls
         df = self.parallel_output
-        executor = concurrent.futures.ThreadPoolExecutor(max_workers=self.n_cores)
-        future_to_url = {executor.submit(self.parallelize, row): row for idx, row in urls.iterrows()}
+        executor = concurrent.futures.ProcessPoolExecutor(max_workers=self.n_workers)
+        future_to_url = {executor.submit(self.parallelize, row): row for idx, row in calls.iterrows()}
 
         for future in concurrent.futures.as_completed(future_to_url):
             df = pd.concat([df, future.result()], sort=False)

@@ -1,13 +1,23 @@
 import pandas as pd
-from scripts.ingestion import api_grabber
+from scripts.ingestion import ingestion
 
 
-class FREDSeriesSearchesAPIGrabber(api_grabber.APIGrabber):
+class FREDSeriesSearchesAPIGrabber(ingestion.Caller):
+    # general
     @property
-    def api_calls_query(self) -> str:
+    def api_name(self) -> str:
+        return 'API_FRED'
+
+    @property
+    def request_type(self) -> str:
+        return 'api'
+
+    # calls
+    @property
+    def calls_query(self) -> str:
         return "select search from fred.series_searches where is_active;"
 
-    def format_api_calls(self, idx, row) -> tuple:
+    def format_calls(self, idx, row) -> tuple:
         api_call = 'https://api.stlouisfed.org/fred/series/search' \
                    + '?search_text=' + row[0] \
                    + '&api_key=' + self.api_secret \
@@ -15,10 +25,7 @@ class FREDSeriesSearchesAPIGrabber(api_grabber.APIGrabber):
         api_name = row[0]
         return api_call, api_name
 
-    @property
-    def api_name(self) -> str:
-        return 'API_FRED'
-
+    # files
     @property
     def place_raw_file(self) -> bool:
         return True
@@ -31,6 +38,7 @@ class FREDSeriesSearchesAPIGrabber(api_grabber.APIGrabber):
     def export_file_name(self) -> str:
         return 'fred_series_searches_'
 
+    # parse
     def parse(self, res) -> pd.DataFrame:
         res = res.json()
         series = res.get('seriess')
