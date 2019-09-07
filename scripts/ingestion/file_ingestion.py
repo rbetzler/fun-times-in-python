@@ -14,6 +14,12 @@ class FileIngestion(abc.ABC):
         self.run_datetime = run_datetime.strftime('%Y%m%d%H%M%S')
         self.ingest_datetime = run_datetime.strftime("%Y-%m-%d %H:%M:%S")
 
+    # general
+    @property
+    def job_name(self) -> str:
+        return ''
+
+    # file drops
     @property
     def place_raw_file(self) -> bool:
         return False
@@ -22,14 +28,7 @@ class FileIngestion(abc.ABC):
     def place_batch_file(self) -> bool:
         return False
 
-    @property
-    def job_name(self) -> str:
-        return ''
-
-    @property
-    def place_with_index(self) -> bool:
-        return False
-
+    # import
     @property
     def import_directory(self) -> str:
         return ''
@@ -46,6 +45,7 @@ class FileIngestion(abc.ABC):
     def import_file_date_format(self) -> str:
         return '%Y%m%d%H%M%S'
 
+    # export
     @property
     def export_folder(self) -> str:
         return ''
@@ -70,6 +70,7 @@ class FileIngestion(abc.ABC):
     def export_file_separator(self) -> str:
         return ','
 
+    # db
     @property
     def load_to_db(self) -> bool:
         return False
@@ -90,6 +91,15 @@ class FileIngestion(abc.ABC):
     def append_to_table(self) -> str:
         return 'append'
 
+    # parse
+    @property
+    def data_format(self) -> pd.DataFrame:
+        return pd.DataFrame()
+
+    @property
+    def header_row(self) -> bool:
+        return False
+
     @property
     def column_mapping(self) -> dict:
         return {}
@@ -109,18 +119,10 @@ class FileIngestion(abc.ABC):
         df = df[cols]
         return df
 
-    @property
-    def index(self) -> bool:
-        return False
+    def clean_df(self, df) -> pd.DataFrame:
+        return df
 
-    @property
-    def header_row(self) -> bool:
-        return False
-
-    @property
-    def data_format(self) -> pd.DataFrame:
-        return pd.DataFrame()
-
+    # ingest
     @property
     def get_available_files(self) -> pd.DataFrame:
         files = []
@@ -173,9 +175,6 @@ class FileIngestion(abc.ABC):
         utils.insert_record(query=query)
         return
 
-    def clean_df(self, df) -> pd.DataFrame:
-        return df
-
     def execute(self):
         files = self.get_ingest_files
         df = self.data_format
@@ -195,7 +194,7 @@ class FileIngestion(abc.ABC):
 
             if self.place_batch_file:
                 df.to_csv(self.export_file_path(self.job_name),
-                          index=self.place_with_index,
+                          index=False,
                           header=self.header_row,
                           sep=self.export_file_separator)
                 file = open(self.export_file_path(self.job_name), 'r')
@@ -218,6 +217,6 @@ class FileIngestion(abc.ABC):
                     self.db_engine,
                     schema=self.schema,
                     if_exists=self.append_to_table,
-                    index=self.index)
+                    index=False)
 
             self.insert_audit_record
