@@ -88,25 +88,19 @@ class BlackScholes:
         percent_down = (100 - steps) / 100
         percent_up = (100 + steps) / 100
 
-        if greek == 'delta':
-            param = self.current_stock_price
-            calculator = self.delta
-        elif greek == 'ro':
-            param = self.risk_free_rate
-            calculator = self.ro
-        elif greek == 'theta':
-            param = self.time_to_maturity
-            calculator = self.theta
-        elif greek == 'vega':
-            param = self.volatility
-            calculator = self.vega
+        funcs = {
+            'delta': {'param': self.current_stock_price, 'func': self.delta},
+            'ro': {'param': self.risk_free_rate, 'func': self.ro},
+            'theta': {'param': self.time_to_maturity, 'func': self.theta},
+            'vega': {'param': self.volatility, 'func': self.vega}
+        }
 
-        vals = np.linspace((percent_down * param),
-                           ((1 + percent_up) * param),
+        vals = np.linspace((percent_down * funcs.get(greek).get('param')),
+                           ((1 + percent_up) * funcs.get(greek).get('param')),
                            steps * 2 + 1)
 
         for val in vals:
-            option_price = calculator(val)
+            option_price = funcs.get(greek).get('func')(val)
             daily_diffs.append((val, option_price))
         df = pd.DataFrame(daily_diffs, columns=['val', 'option_price'])
         diff = df['option_price'] - df['option_price'].shift(-1)
