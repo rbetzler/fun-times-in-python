@@ -1,5 +1,3 @@
-import os
-import psycopg2
 import numpy as np
 import pandas as pd
 import scipy.stats as stats
@@ -19,8 +17,8 @@ class BlackScholes:
         self.time_to_maturity = days_to_maturity/365
         self.volatility = volatility
 
-    def model_calculator(self,
-                         current_stock_price,
+    @staticmethod
+    def model_calculator(current_stock_price,
                          strike_price,
                          risk_free_rate,
                          time_to_maturity,
@@ -42,25 +40,14 @@ class BlackScholes:
                                              volatility=self.volatility)
         return option_price
 
-    def delta(self, steps=30):
+    def delta(self, stock_price):
         # the rate of change in an options value as the underlying changes
-        daily_diffs = []
-        percent_diff = (100-steps)/100
-        stock_prices = np.linspace((percent_diff * self.current_stock_price),
-                                   ((1 + percent_diff) * self.current_stock_price),
-                                   steps * 2)
-        for stock_price in stock_prices:
-            option_price = self.model_calculator(current_stock_price=stock_price,
-                                                 strike_price=self.strike_price,
-                                                 risk_free_rate=self.risk_free_rate,
-                                                 time_to_maturity=self.time_to_maturity,
-                                                 volatility=self.volatility)
-            daily_diffs.append((stock_price, option_price))
-        df = pd.DataFrame(daily_diffs, columns=['stock_price', 'option_price'])
-        diff = df['option_price']-df['option_price'].shift(-1)
-        diff = -diff[~diff.isna()]
-        diff.index = diff.index - steps
-        return diff
+        option_price = self.model_calculator(current_stock_price=stock_price,
+                                             strike_price=self.strike_price,
+                                             risk_free_rate=self.risk_free_rate,
+                                             time_to_maturity=self.time_to_maturity,
+                                             volatility=self.volatility)
+        return option_price
 
     def gamma(self, steps=30):
         # the rate of change in an options value as the delta changes
@@ -69,72 +56,70 @@ class BlackScholes:
         diff = -diff[~diff.isna()]
         return diff
 
-    def ro(self, steps=30):
+    def ro(self, rate):
         # the rate of change in an options value as the risk free rate changes
-        daily_diffs = []
-        percent_diff = (100-steps)/100
-        rates = np.linspace((percent_diff * self.risk_free_rate),
-                                   ((1 + percent_diff) * self.risk_free_rate),
-                                   steps * 2)
-        for rate in rates:
-            option_price = self.model_calculator(current_stock_price=self.current_stock_price,
-                                                 strike_price=self.strike_price,
-                                                 risk_free_rate=rate,
-                                                 time_to_maturity=self.time_to_maturity,
-                                                 volatility=self.volatility)
-            daily_diffs.append((rate, option_price))
-        df = pd.DataFrame(daily_diffs, columns=['rate', 'option_price'])
-        diff = df['option_price']-df['option_price'].shift(-1)
-        diff = -diff[~diff.isna()]
-        diff.index = diff.index - steps
-        return diff
+        option_price = self.model_calculator(current_stock_price=self.current_stock_price,
+                                             strike_price=self.strike_price,
+                                             risk_free_rate=rate,
+                                             time_to_maturity=self.time_to_maturity,
+                                             volatility=self.volatility)
+        return option_price
 
-    def theta(self, steps=30):
-        # the rate of change in an options value as time changes
-        daily_diffs = []
-        percent_diff = (100 - steps) / 100
-        days = np.linspace((percent_diff * self.time_to_maturity),
-                                   ((1 + percent_diff) * self.time_to_maturity),
-                                   steps * 2)
-        for day in days:
-            option_price = self.model_calculator(current_stock_price=self.current_stock_price,
-                                                 strike_price=self.strike_price,
-                                                 risk_free_rate=self.risk_free_rate,
-                                                 time_to_maturity=day,
-                                                 volatility=self.volatility)
-            daily_diffs.append((day, option_price))
-        df = pd.DataFrame(daily_diffs, columns=['day', 'option_price'])
-        diff = df['option_price']-df['option_price'].shift(-1)
-        diff = -diff[~diff.isna()]
-        diff.index = diff.index - steps
-        return diff
+    def theta(self, day):
+        # the rate of change in an options value as the time to maturity changes
+        option_price = self.model_calculator(current_stock_price=self.current_stock_price,
+                                             strike_price=self.strike_price,
+                                             risk_free_rate=self.risk_free_rate,
+                                             time_to_maturity=day,
+                                             volatility=self.volatility)
+        return option_price
 
-    def vega(self, steps=30):
+    def vega(self, vol):
         # the rate of change in an options value as volatility changes
+        option_price = self.model_calculator(current_stock_price=self.current_stock_price,
+                                             strike_price=self.strike_price,
+                                             risk_free_rate=self.risk_free_rate,
+                                             time_to_maturity=self.time_to_maturity,
+                                             volatility=vol)
+        return option_price
+
+    def get_greek(self, greek=None, steps=30):
         daily_diffs = []
-        percent_diff = (100 - steps) / 100
-        vols = np.linspace((percent_diff * self.volatility),
-                                   ((1 + percent_diff) * self.volatility),
-                                   steps * 2)
-        for vol in vols:
-            option_price = self.model_calculator(current_stock_price=self.current_stock_price,
-                                                 strike_price=self.strike_price,
-                                                 risk_free_rate=self.risk_free_rate,
-                                                 time_to_maturity=self.time_to_maturity,
-                                                 volatility=vol)
-            daily_diffs.append((vol, option_price))
-        df = pd.DataFrame(daily_diffs, columns=['vol', 'option_price'])
-        diff = df['option_price']-df['option_price'].shift(-1)
+        percent_down = (100 - steps) / 100
+        percent_up = (100 + steps) / 100
+
+        if greek == 'delta':
+            param = self.current_stock_price
+            calculator = self.delta
+        elif greek == 'ro':
+            param = self.risk_free_rate
+            calculator = self.ro
+        elif greek == 'theta':
+            param = self.time_to_maturity
+            calculator = self.theta
+        elif greek == 'vega':
+            param = self.volatility
+            calculator = self.vega
+
+        vals = np.linspace((percent_down * param),
+                           ((1 + percent_up) * param),
+                           steps * 2 + 1)
+
+        for val in vals:
+            option_price = calculator(val)
+            daily_diffs.append((val, option_price))
+        df = pd.DataFrame(daily_diffs, columns=['val', 'option_price'])
+        diff = df['option_price'] - df['option_price'].shift(-1)
         diff = -diff[~diff.isna()]
         diff.index = diff.index - steps
         return diff
 
 
-# if __name__ == '__main__':
-#     var = BlackScholes(
-#         current_stock_price=254,
-#         strike_price=275,
-#         risk_free_rate=.34,
-#         time_to_maturity=(2/365),
-#         volatility=1).delta(steps=10)
-#     print(var)
+if __name__ == '__main__':
+    var = BlackScholes(
+        current_stock_price=356.59,
+        strike_price=385,
+        risk_free_rate=1.025,
+        days_to_maturity=16,
+        volatility=.5).get_greek(greek='delta', steps=10)
+    print(var)
