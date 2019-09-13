@@ -58,3 +58,5 @@ airflow trigger_dag test_dag
 ```
 ##### Start scheduler
  `airflow scheduler`
+##### Start local, undockerized jupyter
+`jupyter notebook --notebook-dir=/Users/rickbetzler/personal/fun-times-in-python/`
