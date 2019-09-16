@@ -10,7 +10,7 @@ from finance.utilities import utils
 
 class ARIMA:
     def __init__(self, series=pd.DataFrame, datetimes=None, forecast_date=None,
-                 alpha=.05, limit=1000, frequency='B', p=1, d=1, q=1):
+                 alpha=.05, limit=100, frequency='B', p=1, d=1, q=1, criterion='mse'):
         self.series = series
         self.datetimes = datetimes
         self.forecast_date = pd.to_datetime(forecast_date)
@@ -20,6 +20,7 @@ class ARIMA:
         self.p = p
         self.d = d
         self.q = q
+        self.criterion = criterion
 
     @property
     def model_df(self):
@@ -34,8 +35,27 @@ class ARIMA:
         df.index.freq = self.frequency
         return df
 
-    @staticmethod
-    def model_forecast_helper(df=None, forecast_date=None, p=0, d=0, q=0, frequency='B') -> tuple:
+    @property
+    def differences(self):
+        df = self.model_df
+        df['diff_one'] = df - df.shift(1)
+        df['diff_two'] = df['vals'] - 2*df['vals'].shift(1) + df['vals'].shift(2)
+        df = df[~df['diff_two'].isnull()]
+        return df
+
+    def differences_plot(self):
+        df = self.differences
+        plt.figure()
+        plt.title('Differences')
+        plt.xlabel('Time')
+        plt.plot(df['diff_one'], linestyle='-', color='b')
+        plt.plot(df['diff_one'], linestyle='-.', color='grey')
+        plt.legend('12')
+        plt.show()
+        pass
+
+    @classmethod
+    def model_forecast_helper(cls, df=None, forecast_date=None, p=0, d=0, q=0, frequency='B') -> tuple:
         training_set = df[df.index < forecast_date]['vals']
         dates = df[df.index < forecast_date].index
         params = p, d, q
@@ -53,31 +73,49 @@ class ARIMA:
                                               d=self.d,
                                               q=self.q,
                                               frequency=self.frequency)
-        return forecast
+        dict_fcst = {'forecast': forecast[0], 'aic': forecast[1], 'bic': forecast[2]}
+        return dict_fcst
 
-    @property
-    def optimal_params(self, criterion='mse') -> pd.DataFrame:
+    @staticmethod
+    def benchmark_params(df, forecast_date, frequency, p, d, q) -> pd.DataFrame:
         performances = []
-        df = self.model_df
-        frequency = self.frequency
-        for forecast_date in utils.iter_date_range(self.forecast_date, df.index.max()):
-            for p in range(0, self.p):
-                for d in range(0, self.d):
-                    for q in range(0, self.q):
-                        forecast, aic, bic = self.model_forecast_helper(df=df, forecast_date=forecast_date,
-                                                                        p=p, d=d, q=q, frequency=frequency)
-                        actual = df[df.index == forecast_date]
-                        performance = {'forecast_date': forecast_date,
-                                       'p': p,
-                                       'd': d,
-                                       'q': q,
+        for date in utils.iter_date_range(forecast_date[0], forecast_date[1]):
+            for p_ in range(p[0], p[1]):
+                for d_ in range(d[0], d[1]):
+                    for q_ in range(q[0], q[1]):
+                        forecast, aic, bic = ARIMA.model_forecast_helper(df=df, forecast_date=date,
+                                                                         p=p_, d=d_, q=q_, frequency=frequency)
+                        actual = df[df.index == date]
+                        performance = {'forecast_date': date,
+                                       'p': p_,
+                                       'd': d_,
+                                       'q': q_,
                                        'aic': aic,
                                        'bic': bic,
+                                       'forecast': forecast,
+                                       'actual': actual.values[0][0],
                                        'mse': mean_squared_error(y_true=actual, y_pred=[forecast]),
                                        'mae': mean_absolute_error(y_true=actual, y_pred=[forecast])}
                         performances.append(performance)
+        performances = pd.DataFrame(performances)
+        return performances
+
+    def benchmark_plot(self):
+        performances = self.benchmark_params(df=self.model_df, forecast_date=self.forecast_date,
+                                             p=self.p, d=self.d, q=self.q, frequency=self.frequency)
+        for var in ['p', 'd', 'q']:
+            if performances[var].nunique() > 1:
+                plt.title('MSE over ' + var.upper())
+                plt.plot(performances.groupby(var).mean()['mse'])
+                plt.show()
+        pass
+
+    @property
+    def optimal_params(self) -> pd.DataFrame:
+        performances = self.benchmark_params(df=self.model_df, forecast_date=self.forecast_date,
+                                             p=self.p, d=self.d, q=self.q, frequency=self.frequency)
         perf_df = pd.DataFrame(performances).groupby(['p', 'd', 'q']).mean()
-        optimal_param = perf_df[perf_df[criterion] == perf_df[criterion].min()]
+        optimal_param = perf_df[perf_df[self.criterion] == perf_df[self.criterion].min()]
         return optimal_param
 
     @property
@@ -86,12 +124,13 @@ class ARIMA:
         return acf
 
     def acf_plot(self):
+        acf = self.acf_vals
         plt.figure()
         plt.title('ACF of ' + self.series.name)
         plt.xlabel('Lags')
-        plt.plot(self.acf_vals[0], linestyle='-', color='b')
-        plt.plot(self.acf_vals[1][:, 0], linestyle='--', color='grey')
-        plt.plot(self.acf_vals[1][:, 1], linestyle='--', color='grey')
+        plt.plot(acf[0], linestyle='-', color='b')
+        plt.plot(acf[1][:, 0], linestyle='--', color='grey')
+        plt.plot(acf[1][:, 1], linestyle='--', color='grey')
         plt.plot([0, 40], [(1.96 / math.sqrt(1000)), (1.96 / math.sqrt(1000))], linestyle='-', color='r')
         plt.show()
         pass
@@ -134,8 +173,6 @@ if __name__ == '__main__':
         order by e.market_datetime
         """
     df = utils.query_db(query=query)
-    var = ARIMA(series=df['open'],
-                datetimes=df['market_datetime'],
-                p=3,
-                forecast_date='2019-09-02').optimal_params
-    print(var)
+    ARIMA(series=df['open'],
+          datetimes=df['market_datetime'], p=(1, 4), d=(0, 1), q=(0, 1),
+          forecast_date=('2019-08-05', '2019-08-09')).benchmark_plot()
