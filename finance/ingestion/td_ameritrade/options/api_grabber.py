@@ -37,8 +37,8 @@ class TDOptionsAPI(ingestion.Caller):
     # files
     @property
     def export_folder(self) -> str:
-        folder = 'audit/processed/td_ameritrade/options/' \
-                 + self.run_datetime.strftime('%Y_%m_%d_%H_%S') \
+        folder = 'audit/td_ameritrade/options/' \
+                 + self.folder_datetime \
                  + '/'
         return folder
 
@@ -113,7 +113,7 @@ class TDOptionsAPI(ingestion.Caller):
                     df = df.append(temp)
         except AttributeError:
             print('ehh')
-        df = df.rename(columns=self.column_renames())
+        df = df.rename(columns=self.column_renames)
         return df
 
     def parse(self, res) -> pd.DataFrame:

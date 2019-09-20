@@ -71,7 +71,7 @@ class Caller(abc.ABC):
             call = self.format_calls(idx, row)
             calls.append(call[0])
             names.append(call[1])
-        df = pd.DataFrame(data=call, index=names)
+        df = pd.DataFrame(data=calls, index=names)
         return df
 
     def format_calls(self, idx, row) -> tuple:
@@ -174,14 +174,14 @@ class Caller(abc.ABC):
 
     # wrapper
     def parallelize(self, call) -> pd.DataFrame:
-        response = self.summon(call[1][0])
+        response = self.summon(call[0])
         df = self.parse(response)
 
         if bool(self.column_mapping):
             df = df.rename(columns=self.column_mapping)
 
         if self.place_raw_file:
-            df.to_csv(self.export_file_path(call[0]), index=False)
+            df.to_csv(self.export_file_path(call.name), index=False)
 
         time.sleep(self.len_of_pause)
         return df

@@ -16,7 +16,7 @@ class ListStocks(file_ingestion.FileIngestion):
     # overriding since this was manually extracted
     @property
     def input_file_path(self) -> str:
-        file_path = 'audit/raw' \
+        file_path = 'audit' \
                     + self.input_folder \
                     + self.input_file_name \
                     + self.input_file_type
@@ -96,7 +96,7 @@ class ListStocks(file_ingestion.FileIngestion):
                 self.db_engine,
                 schema=self.schema,
                 if_exists=self.append_to_table,
-                index=self.index)
+                index=False)
 
 
 class AmexListStocks(ListStocks):
