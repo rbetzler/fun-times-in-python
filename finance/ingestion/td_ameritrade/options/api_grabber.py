@@ -136,8 +136,8 @@ class TDOptionsAPI(ingestion.Caller):
 
 if __name__ == '__main__':
     batch_size = 100
-    n_batches = 2
-    for batch in range(1, n_batches):
+    n_batches = 30
+    for batch in range(10, n_batches):
         lower_bound = (batch-1) * batch_size
         print('Beginning Batch: ' + str(batch))
         TDOptionsAPI(lower_bound=lower_bound, batch_size=batch_size).execute()

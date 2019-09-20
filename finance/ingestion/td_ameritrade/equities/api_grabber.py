@@ -25,7 +25,7 @@ class TDOptionsAPI(ingestion.Caller):
             """
         return query.format(batch_size=self.batch_size, batch_start=self.lower_bound)
 
-    def format_api_calls(self, idx, row) -> tuple:
+    def format_calls(self, idx, row) -> tuple:
         api_call = 'https://api.tdameritrade.com/v1/marketdata/' \
                    + row.values[0] + '/pricehistory' \
                    + '?apikey=' + self.api_secret \
@@ -56,8 +56,8 @@ class TDOptionsAPI(ingestion.Caller):
     # files
     @property
     def export_folder(self) -> str:
-        folder = 'audit/processed/td_ameritrade/equities/' \
-                 + self.run_datetime.strftime('%Y_%m_%d_%H_%S') \
+        folder = 'audit/td_ameritrade/equities/' \
+                 + self.folder_datetime \
                  + '/'
         return folder
 
@@ -98,13 +98,13 @@ class TDOptionsAPI(ingestion.Caller):
         except KeyError:
             print('ehh')
 
-        df = df.rename(columns=self.column_renames())
+        df = df.rename(columns=self.column_renames)
         return df
 
 
 if __name__ == '__main__':
-    batch_size = 100
-    n_batches = 30
+    batch_size = 10
+    n_batches = 3
     for batch in range(1, n_batches):
         lower_bound = (batch-1) * batch_size
         print('Beginning Batch: ' + str(batch))

@@ -36,8 +36,8 @@ class TDFundamentalsAPI(ingestion.Caller):
     # files
     @property
     def export_folder(self) -> str:
-        folder = 'audit/processed/td_ameritrade/fundamentals/' \
-                 + self.run_datetime.strftime('%Y_%m_%d_%H_%S') \
+        folder = 'audit/td_ameritrade/fundamentals/' \
+                 + self.folder_datetime \
                  + '/'
         return folder
 
@@ -125,8 +125,8 @@ class TDFundamentalsAPI(ingestion.Caller):
 
 
 if __name__ == '__main__':
-    batch_size = 100
-    n_batches = 30
+    batch_size = 10
+    n_batches = 3
     for batch in range(1, n_batches):
         lower_bound = (batch-1) * batch_size
         print('Beginning Batch: ' + str(batch))
