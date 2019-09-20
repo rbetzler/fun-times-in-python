@@ -53,6 +53,7 @@ OPTIONS = """
         strike                      numeric(20,6),
         strike_date                 timestamp without time zone,
         days_to_expiration_date     numeric(20,6),
+        file_datetime               timestamp without time zone,
         dw_created_at               timestamp without time zone
     );
     """

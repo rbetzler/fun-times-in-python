@@ -135,7 +135,7 @@ class TDOptionsAPI(ingestion.Caller):
 
 
 if __name__ == '__main__':
-    batch_size = 10
+    batch_size = 100
     n_batches = 2
     for batch in range(1, n_batches):
         lower_bound = (batch-1) * batch_size

@@ -180,6 +180,7 @@ class FileIngestion(abc.ABC):
         df = self.data_format
         for idx, row in files.iterrows():
             raw = pd.read_csv(row['file_paths'])
+            raw['file_datetime'] = row['file_dates']
             df = pd.concat([df, raw], sort=False)
 
         if not df.empty:
