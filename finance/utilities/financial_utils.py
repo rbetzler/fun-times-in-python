@@ -89,12 +89,9 @@ class BlackScholes:
                                                     call_put=self.call_put)
         return option_price
 
-    def gamma(self, steps=30):
+    def gamma(self):
         # the rate of change in an options value as the delta changes
-        diff = self.delta(steps=steps)
-        diff = diff-diff.shift(-1)
-        diff = -diff[~diff.isna()]
-        return diff
+        pass
 
     def ro(self, rate):
         # the rate of change in an options value as the risk free rate changes
@@ -163,5 +160,5 @@ if __name__ == '__main__':
         risk_free_rate=1.025,
         days_to_maturity=60,
         volatility=.5,
-        call_put='call').implied_volatility
+        call_put='call').get_greek(greek='delta')
     print(var)
