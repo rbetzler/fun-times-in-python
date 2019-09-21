@@ -1,20 +1,10 @@
-
-
 from __future__ import print_function
 
-import time
-from builtins import range
-from pprint import pprint
-
-import airflow
 from airflow.models import DAG
 from airflow.operators.bash_operator import BashOperator
-from airflow.operators.python_operator import PythonOperator
 from airflow.operators.docker_operator import DockerOperator
 from datetime import datetime, timedelta
 
-import sys
-import docker
 
 args = {
     'owner': 'airflow',
@@ -46,9 +36,9 @@ task = DockerOperator(
     task_id = 'scrape_yahoo_stocks',
     image = 'py-dw-stocks',
     auto_remove = True,
-    command = 'python /home/py-scripts/web-scraping/yahoo/execute_yahoo.py',
-    volumes = ['/media/nautilus/fun-times-in-python:/usr/src/app', '/media/nautilus/raw-files:/mnt'],
-    network_mode = 'local-network',
+    command = 'python finance/ingestion/yahoo/table_creator.py',
+    volumes = ['/media/nautilus/fun-times-in-python:/usr/src/app', '/media/nautilus/raw_files:/mnt'],
+    network_mode = 'bridge',
     dag = dag
     )
 
