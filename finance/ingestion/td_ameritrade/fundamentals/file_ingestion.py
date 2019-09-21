@@ -9,7 +9,7 @@ class FileIngestion(file_ingestion.FileIngestion):
 
     @property
     def import_directory(self) -> str:
-        return 'audit/processed/td_ameritrade/fundamentals'
+        return 'audit/td_ameritrade/fundamentals'
 
     @property
     def import_file_prefix(self) -> str:
