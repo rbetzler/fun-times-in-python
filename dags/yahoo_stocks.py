@@ -47,7 +47,7 @@ task = DockerOperator(
     image = 'py-dw-stocks',
     auto_remove = True,
     command = 'python /home/py-scripts/web-scraping/yahoo/execute_yahoo.py',
-    volumes = ['/home/nautilus/development/fun-times-in-python:/home', '/media/nautilus/raw-files:/mnt'],
+    volumes = ['/media/nautilus/fun-times-in-python:/usr/src/app', '/media/nautilus/raw-files:/mnt'],
     network_mode = 'local-network',
     dag = dag
     )

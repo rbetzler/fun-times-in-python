@@ -10,3 +10,5 @@ sqlalchemy
 statsmodels
 scikit-learn
 nltk
+apache-airflow
+docker

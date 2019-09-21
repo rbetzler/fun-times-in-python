@@ -22,7 +22,7 @@ default_args = {
 
 container = 'py-temp'
 script = '/home/py-scripts/utilities/test_script.py'
-templated_executor = "python /usr/local/airflow_home/utilities/airflow_container_executor.py " + container + " " + script
+templated_executor = "python /usr/local/airflow_home/utilities/docker_utils.py " + container + " " + script
 
 dag = DAG(
     'operator_bash',
