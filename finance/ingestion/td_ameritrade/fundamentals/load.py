@@ -1,8 +1,8 @@
 import pandas as pd
-from finance.ingestion import file_ingestion
+from finance.ingestion import loader
 
 
-class FileIngestion(file_ingestion.FileIngestion):
+class FileIngestion(loader.FileIngestion):
     @property
     def job_name(self) -> str:
         return 'td_fundamentals_api'

@@ -8,7 +8,7 @@ QUERY = """
       sector            text,
       industry          text,
       exchange          text,
-      dw_created_at     timestamp without time zone,
-      dw_updated_at     timestamp without time zone
+      file_datetime     timestamp without time zone,
+      ingest_datetime   timestamp without time zone
     );
     """

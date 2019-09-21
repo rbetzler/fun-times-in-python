@@ -32,11 +32,21 @@ start_time = BashOperator(
     bash_command = 'date',
     dag = dag)
 
-task = DockerOperator(
+scrape = DockerOperator(
+    task_id='scrape_td_fundamentals',
+    image='py-dw-stocks',
+    auto_remove=True,
+    command='python finance/ingestion/td_ameritrade/fundamentals/scrape.py',
+    volumes=['/media/nautilus/fun-times-in-python:/usr/src/app'],
+    network_mode='bridge',
+    dag=dag
+)
+
+load = DockerOperator(
     task_id = 'load_td_fundamentals',
     image = 'py-dw-stocks',
     auto_remove = True,
-    command = 'python finance/ingestion/td_ameritrade/fundamentals/file_ingestion.py',
+    command = 'python finance/ingestion/td_ameritrade/fundamentals/load.py',
     volumes = ['/media/nautilus/fun-times-in-python:/usr/src/app'],
     network_mode = 'bridge',
     dag = dag
@@ -47,5 +57,6 @@ end_time = BashOperator(
     bash_command = 'date',
     dag = dag)
 
-task.set_upstream(start_time)
-end_time.set_upstream(task)
+scrape.set_upstream(start_time)
+load.set_upstream(scrape)
+end_time.set_upstream(load)

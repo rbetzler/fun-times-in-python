@@ -1,8 +1,8 @@
 import pandas as pd
-from finance.ingestion import ingestion
+from finance.ingestion import scraper
 
 
-class TDFundamentalsAPI(ingestion.Caller):
+class TDFundamentalsAPI(scraper.Caller):
     # general
     @property
     def request_type(self) -> str:
@@ -125,8 +125,8 @@ class TDFundamentalsAPI(ingestion.Caller):
 
 
 if __name__ == '__main__':
-    batch_size = 10
-    n_batches = 3
+    batch_size = 100
+    n_batches = 30
     for batch in range(1, n_batches):
         lower_bound = (batch-1) * batch_size
         print('Beginning Batch: ' + str(batch))

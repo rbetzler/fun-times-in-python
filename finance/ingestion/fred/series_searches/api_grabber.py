@@ -1,8 +1,8 @@
 import pandas as pd
-from finance.ingestion import ingestion
+from finance.ingestion import scraper
 
 
-class FREDSeriesSearchesAPIGrabber(ingestion.Caller):
+class FREDSeriesSearchesAPIGrabber(scraper.Caller):
     # general
     @property
     def api_name(self) -> str:

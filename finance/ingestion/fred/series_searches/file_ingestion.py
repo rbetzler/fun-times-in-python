@@ -1,7 +1,7 @@
-from finance.ingestion import file_ingestion
+from finance.ingestion import loader
 
 
-class FREDSeriesSearchesFileIngestion(file_ingestion.FileIngestion):
+class FREDSeriesSearchesFileIngestion(loader.FileIngestion):
     @property
     def job_name(self) -> str:
         return 'fred_series_searches'

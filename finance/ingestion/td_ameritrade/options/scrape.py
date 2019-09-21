@@ -1,9 +1,9 @@
 import time
 import pandas as pd
-from finance.ingestion import ingestion
+from finance.ingestion import scraper
 
 
-class TDOptionsAPI(ingestion.Caller):
+class TDOptionsAPI(scraper.Caller):
     # general
     @property
     def api_name(self) -> str:
@@ -135,9 +135,9 @@ class TDOptionsAPI(ingestion.Caller):
 
 
 if __name__ == '__main__':
-    batch_size = 100
-    n_batches = 30
-    for batch in range(10, n_batches):
+    batch_size = 1000
+    n_batches = 3
+    for batch in range(0, n_batches):
         lower_bound = (batch-1) * batch_size
         print('Beginning Batch: ' + str(batch))
         TDOptionsAPI(lower_bound=lower_bound, batch_size=batch_size).execute()

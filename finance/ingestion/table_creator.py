@@ -34,14 +34,9 @@ class TableCreator(abc.ABC):
             cursor.execute('CREATE SCHEMA ' + self.schema_name + ' ; ')
             conn.commit()
 
-        table_check = "SELECT EXISTS(SELECT 1 FROM information_schema.tables " \
-                      + " WHERE table_schema = '" + self.schema_name + "'" \
-                      + " AND table_name = '" + self.table_name + "') ;"
-        cursor.execute(table_check)
-        table_exists = cursor.fetchone()[0]
-        if not table_exists:
-            cursor.execute(self.table_ddl)
-            conn.commit()
+        # create tables, partitions, indexes, and views
+        cursor.execute(self.table_ddl)
+        conn.commit()
 
         conn.close()
         cursor.close()

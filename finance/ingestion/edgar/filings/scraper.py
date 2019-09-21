@@ -1,9 +1,9 @@
 import datetime
 import pandas as pd
-from finance.ingestion import ingestion
+from finance.ingestion import scraper
 
 
-class FilingsScraper(ingestion.Caller):
+class FilingsScraper(scraper.Caller):
     def __init__(self, years=None):
         super().__init__()
         self.years = years

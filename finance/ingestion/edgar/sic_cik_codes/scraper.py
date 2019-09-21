@@ -1,9 +1,9 @@
 import pandas as pd
 from string import ascii_lowercase
-from finance.ingestion import ingestion
+from finance.ingestion import scraper
 
 
-class SICCIKCodesScraper(ingestion.Caller):
+class SICCIKCodesScraper(scraper.Caller):
     # general
     @property
     def job_name(self) -> str:

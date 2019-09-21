@@ -1,8 +1,8 @@
 import pandas as pd
-from finance.ingestion import ingestion
+from finance.ingestion import scraper
 
 
-class YahooStockScraper(ingestion.Caller):
+class YahooStockScraper(scraper.Caller):
     # general
     @property
     def job_name(self) -> str:

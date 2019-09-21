@@ -1,5 +1,5 @@
 QUERY = """
-    CREATE TABLE IF NOT EXISTS audit.ingest_load_times
+    CREATE TABLE IF NOT EXISTS audit.ingest_datetimes
     (
       schema_name       text,
       table_name        text,

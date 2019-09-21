@@ -1,10 +1,10 @@
 import time
 import pandas as pd
 from finance.utilities import utils
-from finance.ingestion import ingestion
+from finance.ingestion import scraper
 
 
-class FREDSeriesAPIGrabber(ingestion.Caller):
+class FREDSeriesAPIGrabber(scraper.Caller):
     # general
     @property
     def api_name(self) -> str:

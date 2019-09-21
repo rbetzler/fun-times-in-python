@@ -1,5 +1,5 @@
 from finance.ingestion import table_creator
-from finance.sql_scripts.internals import ddl
+from finance.ingestion.internals import ddl
 
 
 class IngestLoadTimesTable(table_creator.TableCreator):

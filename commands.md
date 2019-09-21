@@ -45,6 +45,8 @@ connect from host: `psql -h 172.17.0.1 -U postgres`
 ```
 sudo docker build . --tag airflow
 sudo docker run --name airflow-prod -p 8080:8080 -v /media/nautilus/fun-times-in-python/dags:/usr/local/airflow/dags -v /media/nautilus/development/fun-times-in-python/py-scripts:/usr/local/airflow_home -v /var/run/docker.sock:/var/run/docker.sock:ro -v /requirements.txt:/requirements.txt -td --network bridge airflow
+
+sudo chmod 777 /var/run/docker.sock
 ```
 ##### Start container, access terminal
 ```

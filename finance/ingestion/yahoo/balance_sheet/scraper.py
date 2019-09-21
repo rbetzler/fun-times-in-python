@@ -1,10 +1,10 @@
 import re
 import time
 import pandas as pd
-from finance.ingestion import ingestion
+from finance.ingestion import scraper
 
 
-class BalanceSheetScraper(ingestion.Caller):
+class BalanceSheetScraper(scraper.Caller):
     # general
     @property
     def job_name(self) -> str:

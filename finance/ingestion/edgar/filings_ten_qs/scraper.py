@@ -1,9 +1,9 @@
 import datetime
 import pandas as pd
-from finance.ingestion import ingestion
+from finance.ingestion import scraper
 
 
-class TenKsScraper(ingestion.Caller):
+class TenKsScraper(scraper.Caller):
     # general
     @property
     def job_name(self) -> str:

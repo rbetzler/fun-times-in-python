@@ -1,8 +1,8 @@
 import pandas as pd
-from finance.ingestion import ingestion
+from finance.ingestion import scraper
 
 
-class TDOptionsAPI(ingestion.Caller):
+class TDOptionsAPI(scraper.Caller):
     # general
     @property
     def api_name(self) -> str:
@@ -76,7 +76,7 @@ class TDOptionsAPI(ingestion.Caller):
 
     @property
     def len_of_pause(self) -> int:
-        return 5
+        return 10
 
     @property
     def column_renames(self) -> dict:
@@ -103,8 +103,8 @@ class TDOptionsAPI(ingestion.Caller):
 
 
 if __name__ == '__main__':
-    batch_size = 10
-    n_batches = 3
+    batch_size = 100
+    n_batches = 30
     for batch in range(1, n_batches):
         lower_bound = (batch-1) * batch_size
         print('Beginning Batch: ' + str(batch))

@@ -3,8 +3,8 @@ FILE_TYPES = """
     (
       file_type       text,
       description     text,
-      dw_updated_at   timestamp without time zone,
-      dw_created_at   timestamp without time zone
+      file_datetime   timestamp without time zone,
+      ingest_datetime timestamp without time zone
     );
     """
 SIC_CIK_CODES = """
@@ -13,7 +13,8 @@ SIC_CIK_CODES = """
       company_name      text,
       cik_code          text,
       sic_code          text,
-      dw_created_at     timestamp without time zone
+      file_datetime     timestamp without time zone,
+      ingest_datetime   timestamp without time zone
     );
 """
 FILINGS = """
@@ -24,6 +25,7 @@ FILINGS = """
         cik_code            text,
         date                timestamp without time zone,
         url                 text,
-        dw_created_at       timestamp without time zone
+        file_datetime       timestamp without time zone,
+        ingest_datetime     timestamp without time zone
     );
 """

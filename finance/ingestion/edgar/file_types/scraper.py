@@ -1,8 +1,8 @@
 import pandas as pd
-from finance.ingestion import ingestion
+from finance.ingestion import scraper
 
 
-class EdgarFileTypesScraper(ingestion.Caller):
+class EdgarFileTypesScraper(scraper.Caller):
     # general
     @property
     def job_name(self) -> str:

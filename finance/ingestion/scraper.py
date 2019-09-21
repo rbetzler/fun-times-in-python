@@ -200,8 +200,8 @@ class Caller(abc.ABC):
             df.to_csv(self.export_file_path(self.batch_name), index=False)
 
         if self.load_to_db:
-            if 'dw_created_at' not in df:
-                df['dw_created_at'] = self.ingest_datetime
+            if 'ingest_datetime' not in df:
+                df['ingest_datetime'] = self.ingest_datetime
             df.to_sql(
                 self.table,
                 self.db_engine,

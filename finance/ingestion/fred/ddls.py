@@ -8,8 +8,8 @@ RELEASES = """
     realtime_end    date,
     realtime_start  date,
     source_id       numeric,
-    dw_created_at   timestamp without time zone,
-    dw_updated_at   timestamp without time zone
+    file_datetime   timestamp without time zone,
+    ingest_datetime timestamp without time zone
   );
   """
 SERIES = """
@@ -31,7 +31,8 @@ SERIES = """
       popularity                    text,
       group_popularity              text,
       notes                         text,
-      dw_created_at                 timestamp without time zone
+      file_datetime                 timestamp without time zone,
+      ingest_datetime               timestamp without time zone
   );
   """
 SOURCES = """
@@ -42,8 +43,8 @@ SOURCES = """
     name              text,
     realtime_end      date,
     realtime_start    date,
-    dw_created_at     timestamp without time zone,
-    dw_updated_at     timestamp without time zone
+    file_datetime     timestamp without time zone,
+    ingest_datetime   timestamp without time zone
   );
   """
 SERIES_SEARCHES = """
@@ -51,7 +52,8 @@ SERIES_SEARCHES = """
   (
     search          text,
     is_active       boolean,
-    dw_created_at   timestamp without time zone
+    file_datetime   timestamp without time zone,
+    ingest_datetime timestamp without time zone
   );
    INSERT INTO fred.series_searches(search, is_active, dw_created_at) VALUES 
   ('inflation', True, NOW()),
@@ -66,11 +68,12 @@ JOBS = f"""
     series_name     text,
     category        text,
     is_active       boolean,
-    dw_created_at   timestamp without time zone
+    file_datetime   timestamp without time zone,
+    ingest_datetime timestamp without time zone
   );
   
   --inflation
-  INSERT INTO fred.jobs(series_id, series_name, category, is_active, dw_created_at)
+  INSERT INTO fred.jobs(series_id, series_name, category, is_active, ingest_datetime)
     with series as (
     select *
         , lower(title) as lower_title
@@ -84,7 +87,7 @@ JOBS = f"""
         , subtitle as series_name
         , 'inflation' as category
         , true as is_active
-        , NOW() as dw_created_at
+        , NOW() as ingest_datetime
     from series
     where lower(title) like '%inflation%'
     and left(title, 30) = 'Inflation, consumer prices for'
@@ -110,7 +113,7 @@ JOBS = f"""
         or lower_title like '%oecd%');
         
     --central government debt
-    INSERT INTO fred.jobs(series_id, series_name, category, is_active, dw_created_at)
+    INSERT INTO fred.jobs(series_id, series_name, category, is_active, ingest_datetime)
     with series as (
         select *
             , lower(title) as lower_title
@@ -124,7 +127,7 @@ JOBS = f"""
         , subtitle as series_name
         , 'central_government_debt' as category
         , true as is_active
-        , NOW() as dw_created_at
+        , NOW() as ingest_datetime
     from series
     where left(title, 45) = 'Central government debt, total (% of GDP) for'
     and not lower(title) like '%discontinued%'
@@ -137,7 +140,7 @@ JOBS = f"""
         or lower_title like '%united states%');
         
     --household debt to gdp
-    INSERT INTO fred.jobs(series_id, series_name, category, is_active, dw_created_at)
+    INSERT INTO fred.jobs(series_id, series_name, category, is_active, ingest_datetime)
     with series as (
         select *
             , lower(title) as lower_title
@@ -151,7 +154,7 @@ JOBS = f"""
         , subtitle as series_name
         , 'household_debt_to_gdp' as category
         , true as is_active
-        , NOW() as dw_created_at
+        , NOW() as ingest_datetime
     from series
     where left(title, 25) = 'Household Debt to GDP for'
     and frequency = 'Quarterly'
@@ -164,7 +167,7 @@ JOBS = f"""
         or lower_title like '%republic of korea%');
 
     --real gdp per capita
-    INSERT INTO fred.jobs(series_id, series_name, category, is_active, dw_created_at)
+    INSERT INTO fred.jobs(series_id, series_name, category, is_active, ingest_datetime)
     with series as (
         select *
             , lower(title) as lower_title
@@ -178,7 +181,7 @@ JOBS = f"""
         , subtitle as series_name
         , 'real_gdp_per_capita' as category
         , true as is_active
-        , NOW() as dw_created_at
+        , NOW() as ingest_datetime
     from series
     where left(title, 27) = 'Constant GDP per capita for'
         and (lower_title like '%germany%'
@@ -198,7 +201,7 @@ JOBS = f"""
             or lower_title like '%world%');
          
     --stock market capitalization to gdp
-    INSERT INTO fred.jobs(series_id, series_name, category, is_active, dw_created_at)   
+    INSERT INTO fred.jobs(series_id, series_name, category, is_active, ingest_datetime)   
     with series as (
         select *
             , lower(title) as lower_title
@@ -212,7 +215,7 @@ JOBS = f"""
         , subtitle as series_name
         , 'stock_market_capitalization_to_gdp' as category
         , true as is_active
-        , NOW() as dw_created_at
+        , NOW() as ingest_datetime
     from series
     where left(title, 38) = 'Stock Market Capitalization to GDP for'
         and (lower_title like '%germany%'
@@ -226,7 +229,7 @@ JOBS = f"""
             or lower_title like '%russian federation%');
 
     --central bank assets to gdp
-    INSERT INTO fred.jobs(series_id, series_name, category, is_active, dw_created_at)
+    INSERT INTO fred.jobs(series_id, series_name, category, is_active, ingest_datetime)
     with series as (
             select *
                 , lower(title) as lower_title
@@ -240,7 +243,7 @@ JOBS = f"""
             , subtitle as series_name
             , 'central_bank_assets_to_gdp' as category
             , true as is_active
-            , NOW() as dw_created_at
+            , NOW() as ingest_datetime
         from series
         where left(title, 30) = 'Central Bank Assets to GDP for'
         and (lower_title like '%china%'
@@ -248,7 +251,7 @@ JOBS = f"""
             or lower_title like '%united states%');
             
     --real gdp
-    INSERT INTO fred.jobs(series_id, series_name, category, is_active, dw_created_at)
+    INSERT INTO fred.jobs(series_id, series_name, category, is_active, ingest_datetime)
     with series as (
         select *
             , lower(title) as lower_title
@@ -262,12 +265,12 @@ JOBS = f"""
         , regexp_replace(subtitle, '_\([^()]*\)', '') as series_name
         , 'real_gdp' as category
         , true as is_active
-        , NOW() as dw_created_at
+        , NOW() as ingest_datetime
     from series
     where left(title, 31) = 'Real Gross Domestic Product for';
     
     --interest rates, govt securities, tbills
-    INSERT INTO fred.jobs(series_id, series_name, category, is_active, dw_created_at)
+    INSERT INTO fred.jobs(series_id, series_name, category, is_active, ingest_datetime)
     with series as (
         select *
             , lower(title) as lower_title
@@ -281,12 +284,12 @@ JOBS = f"""
         , subtitle as series_name
         , 'interest_rates_govt_securities_tbills' as category
         , true as is_active
-        , NOW() as dw_created_at
+        , NOW() as ingest_datetime
     from series
     where left(title, 57) = 'Interest Rates, Government Securities, Treasury Bills for';
     
     --miscellaneous
-    INSERT INTO fred.jobs(series_id, series_name, category, is_active, dw_created_at)
+    INSERT INTO fred.jobs(series_id, series_name, category, is_active, ingest_datetime)
     with series as (
         select *
             , lower(title) as lower_title
@@ -299,7 +302,7 @@ JOBS = f"""
         , regexp_replace(subtitle, '_\([^()]*\)', '') as series_name
         , 'miscellaneous' as category
         , true as is_active
-        , NOW() as dw_created_at
+        , NOW() as ingest_datetime
     from series
     where id in ('DFF', 'CPIAUCSL', 'NROU', 'NROUST', 'TEDRATE');
   """
@@ -322,11 +325,11 @@ SERIES_TEMPLATE = """
     value               numeric(20,6),
     country             text,
     series              text,
-    dw_created_at       timestamp without time zone
+    ingest_datetime       timestamp without time zone
   );
-  CREATE TABLE fred.inflation AS (select * from fred._series_template);
-  CREATE TABLE fred.central_government_debt AS (select * from fred._series_template);
-  CREATE TABLE fred.household_debt_to_gdp AS (select * from fred._series_template);
-  CREATE TABLE fred.real_gdp_per_capita AS (select * from fred._series_template);
-  CREATE TABLE fred.stock_market_capitalization_to_gdp AS (select * from fred._series_template);
+  CREATE TABLE IF NOT EXISTS fred.inflation AS (select * from fred._series_template);
+  CREATE TABLE IF NOT EXISTS fred.central_government_debt AS (select * from fred._series_template);
+  CREATE TABLE IF NOT EXISTS fred.household_debt_to_gdp AS (select * from fred._series_template);
+  CREATE TABLE IF NOT EXISTS fred.real_gdp_per_capita AS (select * from fred._series_template);
+  CREATE TABLE IF NOT EXISTS fred.stock_market_capitalization_to_gdp AS (select * from fred._series_template);
   """

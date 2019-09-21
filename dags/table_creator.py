@@ -22,7 +22,7 @@ args = {
 }
 
 dag = DAG(
-    dag_id='td_options',
+    dag_id='table_creator',
     default_args=args,
     schedule_interval=None,
 )
@@ -32,31 +32,33 @@ start_time = BashOperator(
     bash_command = 'date',
     dag = dag)
 
-scrape = DockerOperator(
-    task_id='scrape_td_options',
-    image='py-dw-stocks',
-    auto_remove=True,
-    command='python finance/ingestion/td_ameritrade/options/scrape.py',
-    volumes=['/media/nautilus/fun-times-in-python:/usr/src/app'],
-    network_mode='bridge',
-    dag=dag
-)
-
-load = DockerOperator(
-    task_id = 'load_td_options',
-    image = 'py-dw-stocks',
-    auto_remove = True,
-    command = 'python finance/ingestion/td_ameritrade/options/load.py',
-    volumes = ['/media/nautilus/fun-times-in-python:/usr/src/app'],
-    network_mode = 'bridge',
-    dag = dag
-    )
-
 end_time = BashOperator(
     task_id = 'end_pipeline',
     bash_command = 'date',
     dag = dag)
 
-scrape.set_upstream(start_time)
-load.set_upstream(scrape)
-end_time.set_upstream(load)
+tasks = {}
+command_prefix = 'python finance/ingestion/'
+command_suffix = '/table_creator.py'
+jobs = ['edgar', 'fred', 'internals', 'td_ameritrade', 'yahoo']
+for job in jobs:
+    tasks.update({job: command_prefix + job + command_suffix})
+
+prior_task = ''
+for task in tasks:
+    task_id = 'create_tables_' + task
+    dock_task = DockerOperator(
+        task_id = task_id,
+        image = 'py-dw-stocks',
+        auto_remove = True,
+        command = tasks.get(task),
+        volumes = ['/media/nautilus/fun-times-in-python:/usr/src/app'],
+        network_mode = 'bridge',
+        dag = dag
+        )
+    if prior_task:
+        dock_task.set_upstream(prior_task)
+    else: dock_task.set_upstream(start_time)
+    prior_task = dock_task
+
+end_time.set_upstream(dock_task)

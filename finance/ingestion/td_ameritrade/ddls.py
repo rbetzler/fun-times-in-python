@@ -54,8 +54,17 @@ OPTIONS = """
         strike_date                 timestamp without time zone,
         days_to_expiration_date     numeric(20,6),
         file_datetime               timestamp without time zone,
-        dw_created_at               timestamp without time zone
-    );
+        ingest_datetime             timestamp without time zone
+    ) PARTITION BY RANGE (file_datetime);
+    CREATE TABLE IF NOT EXISTS td.options_2019_1 PARTITION OF td.options 
+        FOR VALUES FROM ('2019-01-01') TO ('2019-07-01');
+    CREATE TABLE IF NOT EXISTS td.options_2019_2 PARTITION OF td.options 
+        FOR VALUES FROM ('2019-07-01') TO ('2020-01-01');
+    CREATE TABLE IF NOT EXISTS td.options_2020_1 PARTITION OF td.options 
+        FOR VALUES FROM ('2020-01-01') TO ('2020-07-01');
+    CREATE TABLE IF NOT EXISTS td.options_2020_2 PARTITION OF td.options 
+        FOR VALUES FROM ('2020-07-01') TO ('2021-01-01');
+    -- CREATE INDEX ON td.options (symbol);
     """
 
 EQUITIES = """
@@ -69,8 +78,24 @@ EQUITIES = """
         market_datetime_epoch   text,
         empty                   boolean,
         market_datetime         timestamp without time zone,
-        dw_created_at           timestamp without time zone
-    );
+        file_datetime           timestamp without time zone,
+        ingest_datetime         timestamp without time zone
+    ) PARTITION BY RANGE (market_datetime);
+    CREATE TABLE IF NOT EXISTS td.equities_1990 PARTITION OF td.equities 
+        FOR VALUES FROM ('1990-01-01') TO ('1995-01-01');
+    CREATE TABLE IF NOT EXISTS td.equities_1995 PARTITION OF td.equities 
+        FOR VALUES FROM ('1995-01-01') TO ('2000-01-01');
+    CREATE TABLE IF NOT EXISTS td.equities_2000 PARTITION OF td.equities 
+        FOR VALUES FROM ('2000-01-01') TO ('2005-01-01');
+    CREATE TABLE IF NOT EXISTS td.equities_2005 PARTITION OF td.equities 
+        FOR VALUES FROM ('2005-01-01') TO ('2010-01-01');
+    CREATE TABLE IF NOT EXISTS td.equities_2010 PARTITION OF td.equities 
+        FOR VALUES FROM ('2010-01-01') TO ('2015-01-01');
+    CREATE TABLE IF NOT EXISTS td.equities_2015 PARTITION OF td.equities 
+        FOR VALUES FROM ('2015-01-01') TO ('2020-01-01');    
+    CREATE TABLE IF NOT EXISTS td.equities_2020 PARTITION OF td.equities 
+        FOR VALUES FROM ('2020-01-01') TO ('2025-01-01');
+    -- CREATE INDEX ON td.equities (symbol);
     """
 
 FUNDAMENTALS = """
@@ -124,6 +149,10 @@ FUNDAMENTALS = """
         description             text,
         exchange                text,
         asset_type              text,
-        dw_created_at           timestamp without time zone
-    );
+        file_datetime           timestamp without time zone,
+        ingest_datetime         timestamp without time zone
+    ) PARTITION BY RANGE (file_datetime);
+    -- CREATE INDEX ON td.fundamentals (symbol);
+    CREATE TABLE IF NOT EXISTS td.fundamentals_2019 PARTITION OF td.fundamentals 
+        FOR VALUES FROM ('2019-01-01') TO ('2020-01-01');
     """

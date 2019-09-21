@@ -1,9 +1,9 @@
 import datetime
 import pandas as pd
-from finance.ingestion import file_ingestion
+from finance.ingestion import loader
 
 
-class ListStocks(file_ingestion.FileIngestion):
+class ListStocks(loader.FileIngestion):
     @property
     def input_folder(self) -> str:
         return '/nasdaq/'

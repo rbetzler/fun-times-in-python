@@ -153,7 +153,7 @@ class FileIngestion(abc.ABC):
     @property
     def get_ingest_audit(self) -> pd.DataFrame:
         query = f" select coalesce(max(ingest_datetime), '1900-01-01') as ingest_datetime" \
-                + f" from audit.ingest_load_times" \
+                + f" from audit.ingest_datetimes" \
                 + f" where schema_name = '{self.schema}'" \
                 + f" and table_name = '{self.table}'" \
                 + f" and job_name = '{self.job_name}'"
@@ -169,7 +169,7 @@ class FileIngestion(abc.ABC):
 
     @property
     def insert_audit_record(self):
-        query = f" INSERT INTO audit.ingest_load_times" \
+        query = f" INSERT INTO audit.ingest_datetimes" \
                 + f" (schema_name, table_name, job_name, ingest_datetime)" \
                 + f" VALUES ('{self.schema}', '{self.table}', '{self.job_name}', '{self.ingest_datetime}')"
         utils.insert_record(query=query)
@@ -177,19 +177,20 @@ class FileIngestion(abc.ABC):
 
     def execute(self):
         files = self.get_ingest_files
-        df = self.data_format
+        raw_dfs = []
         for idx, row in files.iterrows():
             raw = pd.read_csv(row['file_paths'])
             raw['file_datetime'] = row['file_dates']
-            df = pd.concat([df, raw], sort=False)
+            raw_dfs.append(raw)
+        df = pd.concat(raw_dfs, sort=False)
 
         if not df.empty:
             df = self.clean_df(df)
             if bool(self.column_mapping):
                 df = df.rename(columns=self.column_mapping)
 
-            if 'dw_created_at' not in df:
-                df['dw_created_at'] = self.ingest_datetime
+            if 'ingest_datetime' not in df:
+                df['ingest_datetime'] = self.ingest_datetime
 
             df = self.add_and_order_columns(df)
 

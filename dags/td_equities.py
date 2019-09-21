@@ -22,7 +22,7 @@ args = {
 }
 
 dag = DAG(
-    dag_id='td_options',
+    dag_id='td_equities',
     default_args=args,
     schedule_interval=None,
 )
@@ -33,20 +33,20 @@ start_time = BashOperator(
     dag = dag)
 
 scrape = DockerOperator(
-    task_id='scrape_td_options',
+    task_id='scrape_td_equities',
     image='py-dw-stocks',
     auto_remove=True,
-    command='python finance/ingestion/td_ameritrade/options/scrape.py',
+    command='python finance/ingestion/td_ameritrade/equities/scrape.py',
     volumes=['/media/nautilus/fun-times-in-python:/usr/src/app'],
     network_mode='bridge',
     dag=dag
 )
 
 load = DockerOperator(
-    task_id = 'load_td_options',
+    task_id = 'load_td_equities',
     image = 'py-dw-stocks',
     auto_remove = True,
-    command = 'python finance/ingestion/td_ameritrade/options/load.py',
+    command = 'python finance/ingestion/td_ameritrade/equities/load.py',
     volumes = ['/media/nautilus/fun-times-in-python:/usr/src/app'],
     network_mode = 'bridge',
     dag = dag
