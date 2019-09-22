@@ -55,7 +55,8 @@ SERIES_SEARCHES = """
     file_datetime   timestamp without time zone,
     ingest_datetime timestamp without time zone
   );
-   INSERT INTO fred.series_searches(search, is_active, dw_created_at) VALUES 
+  TRUNCATE fred.series_searches;
+  INSERT INTO fred.series_searches(search, is_active, dw_created_at) VALUES 
   ('inflation', True, NOW()),
   ('gdp', True, NOW()),
   ('gross', True, NOW()),
@@ -71,6 +72,8 @@ JOBS = f"""
     file_datetime   timestamp without time zone,
     ingest_datetime timestamp without time zone
   );
+  
+  TRUNCATE fred.jobs;
   
   --inflation
   INSERT INTO fred.jobs(series_id, series_name, category, is_active, ingest_datetime)

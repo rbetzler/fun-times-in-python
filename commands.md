@@ -28,7 +28,7 @@ sudo docker exec -it py-temp bash
 ##### Docker build is too painful
 ```
 sudo docker pull postgres
-sudo docker run -d -p 5432:5432 --name dw-stocks -e POSTGRES_PASSWORD=password -v /media/nautilus/docks/postgres:/var/lib/postgresql/data --network bridge postgres
+sudo docker run -d -p 5432:5432 --name dw-stocks -e POSTGRES_PASSWORD=password -v /media/nautilus/docks/postgres:/var/lib/postgresql/data -v /media/nautilus/fun-times-in-python:/mnt --network bridge postgres
 docker run -d -p 5432:5432 --name dw-stocks -e POSTGRES_PASSWORD=password -v /Users/rickbetzler/personal/docks/postgres:/var/lib/postgresql/data --network local-network postgres
 ```
 ##### Start postgres, access terminal and db

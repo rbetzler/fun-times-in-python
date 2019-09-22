@@ -96,6 +96,14 @@ EQUITIES = """
     CREATE TABLE IF NOT EXISTS td.equities_2020 PARTITION OF td.equities 
         FOR VALUES FROM ('2020-01-01') TO ('2025-01-01');
     -- CREATE INDEX ON td.equities (symbol);
+    CREATE OR REPLACE VIEW td.equities_view AS (
+        with partitioned as (
+            select *, row_number() over(partition by symbol, market_datetime order by file_datetime desc) as rn
+            from td.equities
+        )
+        select *
+        from partitioned
+        where rn = 1);
     """
 
 FUNDAMENTALS = """

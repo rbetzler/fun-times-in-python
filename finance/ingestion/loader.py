@@ -28,6 +28,10 @@ class FileIngestion(abc.ABC):
     def place_batch_file(self) -> bool:
         return False
 
+    @property
+    def batch_quote_char(self) -> str:
+        return '"'
+
     # import
     @property
     def import_directory(self) -> str:
@@ -203,11 +207,10 @@ class FileIngestion(abc.ABC):
 
                 conn = psycopg2.connect(self.db_connection)
                 cursor = conn.cursor()
-                cursor.copy_from(file,
-                                 table=f'{self.schema}.{self.table}',
-                                 sep=self.export_file_separator,
-                                 null='')
-
+                copy_command = f"COPY {self.schema}.{self.table} " \
+                               f"FROM STDIN " \
+                               f"DELIMITER ',' QUOTE '{self.batch_quote_char}' CSV "
+                cursor.copy_expert(copy_command, file=open(self.export_file_path(self.job_name)))
                 conn.commit()
                 cursor.close()
                 conn.close()

@@ -137,7 +137,7 @@ class TDOptionsAPI(scraper.Caller):
 if __name__ == '__main__':
     batch_size = 1000
     n_batches = 3
-    for batch in range(0, n_batches):
+    for batch in range(1, n_batches):
         lower_bound = (batch-1) * batch_size
         print('Beginning Batch: ' + str(batch))
         TDOptionsAPI(lower_bound=lower_bound, batch_size=batch_size).execute()
