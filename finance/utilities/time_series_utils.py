@@ -166,7 +166,7 @@ if __name__ == '__main__':
             , f.pe_ratio
             , f.quick_ratio
             , f.current_ratio
-        from td.equities as e
+        from td.equities_view as e
         left join td.fundamentals as f
             on f.symbol = e.symbol
         where e.symbol = 'BA'
@@ -174,5 +174,5 @@ if __name__ == '__main__':
         """
     df = utils.query_db(query=query)
     ARIMA(series=df['open'],
-          datetimes=df['market_datetime'], p=(1, 4), d=(0, 1), q=(0, 1),
-          forecast_date=('2019-08-05', '2019-08-09')).benchmark_plot()
+          datetimes=df['market_datetime'],
+          p=3, d=2, forecast_date='2019-09-02').optimal_params
