@@ -65,6 +65,14 @@ OPTIONS = """
     CREATE TABLE IF NOT EXISTS td.options_2020_2 PARTITION OF td.options 
         FOR VALUES FROM ('2020-07-01') TO ('2021-01-01');
     -- CREATE INDEX ON td.options (symbol);
+    CREATE OR REPLACE VIEW td.options_view AS (
+        with partitioned as (
+            select *, row_number() over(partition by symbol, date(file_datetime) order by ingest_datetime desc) as rn
+            from td.options
+        )
+        select *
+        from partitioned
+        where rn = 1);
     """
 
 EQUITIES = """
