@@ -67,7 +67,7 @@ OPTIONS = """
     -- CREATE INDEX ON td.options (symbol);
     CREATE OR REPLACE VIEW td.options_view AS (
         with partitioned as (
-            select *, row_number() over(partition by symbol, date(file_datetime) order by ingest_datetime desc) as rn
+            select *, dense_rank() over(partition by symbol, date(file_datetime) order by ingest_datetime desc) as rn
             from td.options
         )
         select *
