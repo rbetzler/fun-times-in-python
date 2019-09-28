@@ -72,7 +72,7 @@ class BlackScholes:
         return diff
 
     @property
-    def implied_volatility(self, lower_bound=-10, upper_bound=10):
+    def implied_volatility(self, lower_bound=-15, upper_bound=15):
         imp_vol = opt.brentq(self.implied_volatility_helper, lower_bound, upper_bound)
         return imp_vol
 
