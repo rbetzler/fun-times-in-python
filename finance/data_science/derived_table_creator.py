@@ -20,8 +20,7 @@ class DerivedTableCreator(abc.ABC):
     def query(self) -> str:
         pass
 
-    @staticmethod
-    def apply_logic(df) -> pd.DataFrame:
+    def apply_logic(self, df) -> pd.DataFrame:
         return df
 
     @property
@@ -41,7 +40,9 @@ class DerivedTableCreator(abc.ABC):
         return create_engine(self.db_connection)
 
     def execute(self):
+        print('Querying db ' + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         raw_df = self.get_data
+        print('Got data ' + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         df = self.apply_logic(raw_df)
 
         if self.load_to_db:
