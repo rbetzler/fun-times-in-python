@@ -43,13 +43,23 @@ scrape = DockerOperator(
 )
 
 load = DockerOperator(
-    task_id = 'load_td_options',
-    image = 'py-dw-stocks',
-    auto_remove = True,
-    command = 'python finance/ingestion/td_ameritrade/options/load.py',
-    volumes = ['/media/nautilus/fun-times-in-python:/usr/src/app'],
-    network_mode = 'bridge',
-    dag = dag
+    task_id='load_td_options',
+    image='py-dw-stocks',
+    auto_remove=True,
+    command='python finance/ingestion/td_ameritrade/options/load.py',
+    volumes=['/media/nautilus/fun-times-in-python:/usr/src/app'],
+    network_mode='bridge',
+    dag=dag
+    )
+
+table_creator = DockerOperator(
+    task_id='update_td_options_table',
+    image='py-dw-stocks',
+    auto_remove=True,
+    command='python finance/ingestion/td_ameritrade/options/table_creator.py',
+    volumes=['/media/nautilus/fun-times-in-python:/usr/src/app'],
+    network_mode='bridge',
+    dag=dag
     )
 
 end_time = BashOperator(
@@ -59,4 +69,5 @@ end_time = BashOperator(
 
 scrape.set_upstream(start_time)
 load.set_upstream(scrape)
-end_time.set_upstream(load)
+table_creator.set_upstream(load)
+end_time.set_upstream(table_creator)

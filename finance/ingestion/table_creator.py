@@ -1,7 +1,6 @@
 import abc
 import psycopg2
 from finance.utilities import utils
-from finance.ingestion.yahoo import ddl
 
 
 class TableCreator(abc.ABC):
@@ -12,15 +11,19 @@ class TableCreator(abc.ABC):
 
     @property
     def schema_name(self) -> str:
-        return ''
+        pass
 
     @property
     def table_name(self) -> str:
-        return ''
+        pass
 
     @property
     def table_ddl(self) -> str:
-        return ddl.ddl
+        pass
+
+    @property
+    def sql_script(self) -> str:
+        pass
 
     def execute(self):
         conn = psycopg2.connect(self.db_connection)
@@ -34,9 +37,13 @@ class TableCreator(abc.ABC):
             cursor.execute('CREATE SCHEMA ' + self.schema_name + ' ; ')
             conn.commit()
 
-        # create tables, partitions, indexes, and views
-        cursor.execute(self.table_ddl)
-        conn.commit()
+        if self.table_ddl:
+            cursor.execute(self.table_ddl)
+            conn.commit()
+
+        if self.sql_script:
+            cursor.execute(self.sql_script)
+            conn.commit()
 
         conn.close()
         cursor.close()

@@ -28,9 +28,9 @@ dag = DAG(
 )
 
 start_time = BashOperator(
-    task_id = 'start_pipeline',
-    bash_command = 'date',
-    dag = dag)
+    task_id='start_pipeline',
+    bash_command='date',
+    dag=dag)
 
 scrape = DockerOperator(
     task_id='scrape_td_fundamentals',
@@ -43,20 +43,31 @@ scrape = DockerOperator(
 )
 
 load = DockerOperator(
-    task_id = 'load_td_fundamentals',
-    image = 'py-dw-stocks',
-    auto_remove = True,
-    command = 'python finance/ingestion/td_ameritrade/fundamentals/load.py',
-    volumes = ['/media/nautilus/fun-times-in-python:/usr/src/app'],
-    network_mode = 'bridge',
-    dag = dag
+    task_id='load_td_fundamentals',
+    image='py-dw-stocks',
+    auto_remove=True,
+    command='python finance/ingestion/td_ameritrade/fundamentals/load.py',
+    volumes=['/media/nautilus/fun-times-in-python:/usr/src/app'],
+    network_mode='bridge',
+    dag=dag
+    )
+
+table_creator = DockerOperator(
+    task_id='update_td_fundamentals_table',
+    image='py-dw-stocks',
+    auto_remove=True,
+    command='python finance/ingestion/td_ameritrade/fundamentals/table_creator.py',
+    volumes=['/media/nautilus/fun-times-in-python:/usr/src/app'],
+    network_mode='bridge',
+    dag=dag
     )
 
 end_time = BashOperator(
-    task_id = 'end_pipeline',
-    bash_command = 'date',
-    dag = dag)
+    task_id='end_pipeline',
+    bash_command='date',
+    dag=dag)
 
 scrape.set_upstream(start_time)
 load.set_upstream(scrape)
-end_time.set_upstream(load)
+table_creator.set_upstream(load)
+end_time.set_upstream(table_creator)
