@@ -5,7 +5,7 @@ from finance.ingestion import loader
 class ABCFREDSeriesFileIngestion(loader.FileIngestion):
     @property
     def import_directory(self) -> str:
-        return 'audit/processed/fred/series'
+        return 'audit/fred/series'
 
     @property
     def schema(self) -> str:

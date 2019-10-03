@@ -50,7 +50,7 @@ class FREDSeriesAPIGrabber(scraper.Caller):
 
     @property
     def export_folder(self) -> str:
-        return 'audit/processed/fred/series/'
+        return 'audit/fred/series/'
 
     @property
     def export_file_name(self) -> str:
@@ -72,18 +72,18 @@ class FREDSeriesAPIGrabber(scraper.Caller):
         df = df.merge(obs)
         # this might simplifiable using json definition
         df['country'] = api[0]
-        df['series'] = api[1][1]
+        df['series'] = api[1]
         return df
 
     def parallelize(self, api) -> pd.DataFrame:
-        response = self.summon(api[1][0])
+        response = self.summon(api[0])
         df = self.parse(response, api)
 
         if bool(self.column_mapping):
             df = df.rename(columns=self.column_mapping)
 
         if self.place_raw_file:
-            export_file_var = api[1][1] + '_' + api[0]
+            export_file_var = api[1] + '_'
             df.to_csv(self.export_file_path(export_file_var), index=False)
 
         time.sleep(self.len_of_pause)

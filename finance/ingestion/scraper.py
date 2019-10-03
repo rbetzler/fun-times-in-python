@@ -137,7 +137,7 @@ class Caller(abc.ABC):
 
     # calling
     @property
-    def n_cores(self) -> int:
+    def n_workers(self) -> int:
         return 1
 
     @property
