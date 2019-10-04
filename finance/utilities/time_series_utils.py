@@ -166,7 +166,7 @@ if __name__ == '__main__':
             , f.pe_ratio
             , f.quick_ratio
             , f.current_ratio
-        from td.equities_view as e
+        from td.equities as e
         left join td.fundamentals as f
             on f.symbol = e.symbol
         where e.symbol = 'BA'
