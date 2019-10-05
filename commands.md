@@ -63,3 +63,7 @@ airflow trigger_dag test_dag
 ##### Start local, undockerized jupyter
 `jupyter notebook --notebook-dir=/Users/rickbetzler/personal/fun-times-in-python/`
 `jupyter notebook --notebook-dir=/media/nautilus/fun-times-in-python/`
+
+
+sudo docker build . --tag stocks-tensorflow
+sudo docker run -d --name tensor --network bridge stocks-tensorflow

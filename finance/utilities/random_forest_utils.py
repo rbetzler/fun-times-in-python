@@ -203,13 +203,18 @@ if __name__ == '__main__':
         order by e.market_datetime
         """
     df = utils.query_db(query=query)
-    train = df.head(1000)
-    train_x = train.drop('open', axis=1)
-    train_y = train['open']
 
-    test = df.tail(1000)
-    test_x = test.drop('open', axis=1)
-    test_y = test['open']
+    temp = df[['market_datetime', 'open', 'high', 'low', 'close', 'volume']].copy()
+    temp['market_datetime'] = temp['market_datetime'].astype(int)
+
+    x = temp.drop('open', axis=1)
+    y = temp['open'].shift(-1)
+
+    train_x = x.iloc[1:1000]
+    test_x = x.iloc[1010:1100]
+
+    train_y = y.iloc[1:1000]
+    test_y = y.iloc[1010:1100]
 
     boost = XGBooster(train_x=train_x, train_y=train_y,
                       test_x=test_x, test_y=test_y, max_depth=5)
