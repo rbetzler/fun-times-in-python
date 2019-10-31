@@ -8,7 +8,7 @@ class FREDSeriesSearchesFileIngestion(loader.FileIngestion):
 
     @property
     def import_directory(self) -> str:
-        return 'audit/processed/fred/series_searches'
+        return 'audit/fred/series_searches'
 
     @property
     def import_file_prefix(self) -> str:

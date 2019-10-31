@@ -25,7 +25,7 @@ class FileIngestion(loader.FileIngestion):
 
     @property
     def table(self) -> str:
-        return 'options'
+        return 'options_detail'
 
     @property
     def schema(self) -> str:

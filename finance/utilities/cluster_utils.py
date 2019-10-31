@@ -49,6 +49,25 @@ class KMeans:
         plt.show()
 
 
+def encode_one_hot(df, column):
+    for val in df[column].unique():
+        df[val] = 0
+        df.loc[df[column] == val, val] = 1
+    return df
+
+
+def normalize(df, column, subset=None):
+    if subset:
+        for val in df[subset].unique():
+            df.loc[df[subset] == val, column] = (df.loc[df[subset] == val, column] -
+                                                 df.loc[df[subset] == val, column].min()) \
+                                                / (df.loc[df[subset] == val, column].max() -
+                                                   df.loc[df[subset] == val, column].min())
+    else:
+        df[column] = (df[column] - df[column].min()) / (df[column].max() - df[column].min())
+    return df
+
+
 if __name__ == '__main__':
     query = """
         select distinct

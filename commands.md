@@ -63,3 +63,8 @@ airflow trigger_dag test_dag
 ##### Start local, undockerized jupyter
 `jupyter notebook --notebook-dir=/Users/rickbetzler/personal/fun-times-in-python/`
 `jupyter notebook --notebook-dir=/media/nautilus/fun-times-in-python/`
+
+#### Tensorflow + Jupyter
+`sudo docker pull tensorflow/tensorflow:latest-gpu-jupyter --tag tensorflow-stocks`
+`sudo docker run -d --name tensor --gpus all -v /media/nautilus/fun-times-in-python:/tf --network bridge tensorflow-stocks`
+`jupyter notebook list`

@@ -32,7 +32,7 @@ class FREDSeriesSearchesAPIGrabber(scraper.Caller):
 
     @property
     def export_folder(self) -> str:
-        return 'audit/processed/fred/series_searches/'
+        return 'audit/fred/series_searches/'
 
     @property
     def export_file_name(self) -> str:

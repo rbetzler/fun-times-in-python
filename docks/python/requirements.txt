@@ -12,3 +12,4 @@ scikit-learn
 nltk
 apache-airflow
 docker
+torch
