@@ -9,7 +9,6 @@ from datetime import datetime, timedelta
 args = {
     'owner': 'airflow',
     'depends_on_past': False,
-    'start_date': datetime(2015, 6, 1),
     'email': ['rbetzler94@gmail.com'],
     'email_on_failure': True,
     'email_on_retry': True,
@@ -24,13 +23,15 @@ args = {
 dag = DAG(
     dag_id='td_equities',
     default_args=args,
-    schedule_interval=None,
+    start_date=datetime(2019, 10, 29),
+    schedule_interval='0 10 * * 5',
+    catchup=False
 )
 
 start_time = BashOperator(
-    task_id = 'start_pipeline',
-    bash_command = 'date',
-    dag = dag)
+    task_id='start_pipeline',
+    bash_command='date',
+    dag=dag)
 
 scrape = DockerOperator(
     task_id='scrape_td_equities',

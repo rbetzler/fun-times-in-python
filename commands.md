@@ -60,6 +60,11 @@ airflow trigger_dag test_dag
 ```
 ##### Start scheduler
  `airflow scheduler`
+
+#### Pytorch
+`sudo docker build . --tag pytorch` or `docker pull anibali/pytorch:cuda-8.0`
+`docker run -it --name pytorch-gpu --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=all -v /media/nautilus/fun-times-in-python:/app --network bridge pytorch`
+
 ##### Start local, undockerized jupyter
 `jupyter notebook --notebook-dir=/Users/rickbetzler/personal/fun-times-in-python/`
 `jupyter notebook --notebook-dir=/media/nautilus/fun-times-in-python/`

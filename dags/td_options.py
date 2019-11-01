@@ -12,8 +12,8 @@ args = {
     'email': ['rbetzler94@gmail.com'],
     'email_on_failure': True,
     'email_on_retry': True,
-    'retries': 1,
-    'retry_delay': timedelta(minutes=5)
+    'retries': 3,
+    'retry_delay': timedelta(minutes=30)
 }
 
 dag = DAG(
