@@ -14,7 +14,7 @@ args = {
     'email_on_failure': True,
     'email_on_retry': True,
     'retries': 1,
-    'retry_delay': timedelta(minutes = 1),
+    'retry_delay': timedelta(minutes=1),
     # 'queue': 'bash_queue',
     # 'pool': 'backfill',
     # 'priority_weight': 10,
@@ -28,24 +28,24 @@ dag = DAG(
 )
 
 start_time = BashOperator(
-    task_id = 'start_pipeline',
-    bash_command = 'date',
-    dag = dag)
+    task_id='start_pipeline',
+    bash_command='date',
+    dag=dag)
 
 task = DockerOperator(
-    task_id = 'scrape_yahoo_stocks',
-    image = 'py-dw-stocks',
-    auto_remove = True,
-    command = 'python finance/ingestion/yahoo/table_creator.py',
-    volumes = ['/media/nautilus/fun-times-in-python:/usr/src/app', '/media/nautilus/raw_files:/mnt'],
-    network_mode = 'bridge',
-    dag = dag
+    task_id='scrape_yahoo_stocks',
+    image='py-dw-stocks',
+    auto_remove=True,
+    command='python finance/ingestion/yahoo/table_creator.py',
+    volumes=['/media/nautilus/fun-times-in-python:/usr/src/app', '/media/nautilus/raw_files:/mnt'],
+    network_mode='bridge',
+    dag=dag
     )
 
 end_time = BashOperator(
-    task_id = 'end_pipeline',
-    bash_command = 'date',
-    dag = dag)
+    task_id='end_pipeline',
+    bash_command='date',
+    dag=dag)
 
 task.set_upstream(start_time)
 end_time.set_upstream(task)
