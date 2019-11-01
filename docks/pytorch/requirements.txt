@@ -1,0 +1,11 @@
+numpy
+scipy
+pandas
+xgboost
+requests
+matplotlib
+sqlalchemy
+statsmodels
+scikit-learn
+nltk
+torch
