@@ -3,6 +3,7 @@ scipy
 pandas
 xgboost
 requests
+psycopg2-binary
 matplotlib
 sqlalchemy
 statsmodels

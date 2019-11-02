@@ -74,9 +74,20 @@ RUN sudo apt-get update && sudo apt-get install -y --no-install-recommends \
 RUN conda install -y -c menpo opencv3=3.1.0 \
  && conda clean -ya
 
+## RICK -- install postgres tools
+#RUN sudo apt-get update
+#RUN sudo apt-get install -y curl
+#RUN sudo apt-get install -y libpq-dev
+
 # RICK -- added requirements file
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
+
+# RICK -- install jupyter notebook
+RUN conda install jupyter notebook
+
+# RICK -- set python path
+ENV PYTHONPATH=$PYTHONPATH:/usr/src/app
 
 # RICK -- set working directory to where i want
 WORKDIR /usr/src/app
