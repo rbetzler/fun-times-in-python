@@ -7,9 +7,15 @@ from finance.data_science.utilities import cluster_utils
 
 
 class TorchNN:
-    def __init__(self, train_x=pd.DataFrame, train_y=pd.DataFrame,
-                 test_x=pd.DataFrame, test_y=pd.DataFrame, learning_rate=0,
-                 momentum=.9, hidden_size=None, out_features=1):
+    def __init__(self,
+                 train_x=pd.DataFrame,
+                 train_y=pd.DataFrame,
+                 test_x=pd.DataFrame,
+                 test_y=pd.DataFrame,
+                 learning_rate=0,
+                 momentum=.9,
+                 hidden_size=None,
+                 out_features=1):
         self.train_x = torch.tensor(train_x.values).float().view(1, -1)
         self.train_y = torch.tensor(train_y.values).float()
         # self.test_x = torch.tensor(test_x)
@@ -21,9 +27,7 @@ class TorchNN:
         self.linear_two = nn.Linear(in_features=hidden_size[0], out_features=out_features).float()
 
     def forward(self):
-        # output = self.linear_one(self.train_x.view(-1, 1))
         output = self.linear_one(self.train_x.view(self.train_x.size(0), -1))
-        # output = self.linear_one(self.train_x)
         output = functional.F.relu(output)
         output = self.linear_two(output)
         return output
@@ -42,7 +46,8 @@ class TorchNN:
 
             self.optimizer.zero_grad()
             net_out = model(data)
-            loss = self.loss_criterion(net_out, target)
+            loss = self.loss_criterion
+            loss(net_out, target)
             loss.backward()
 
             self.optimizer.step()
