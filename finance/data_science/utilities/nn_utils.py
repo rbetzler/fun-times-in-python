@@ -1,11 +1,9 @@
-import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from sklearn import cluster as skcluster
 import torch
 from torch import nn, functional, optim, autograd
 
-from finance.utilities import utils, cluster_utils
+from finance.utilities import utils
+from finance.data_science.utilities import cluster_utils
 
 
 class TorchNN:
