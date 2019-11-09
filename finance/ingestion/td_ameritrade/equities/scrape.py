@@ -39,11 +39,11 @@ class TDOptionsAPI(scraper.Caller):
     # call params
     @property
     def period_type(self) -> str:
-        return 'year'
+        return 'month'
 
     @property
     def period(self) -> str:
-        return '20'
+        return '1'
 
     @property
     def frequency_type(self) -> str:

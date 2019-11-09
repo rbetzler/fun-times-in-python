@@ -11,6 +11,14 @@
             </list>
           </settings>
         </remote-mappings>
+        <remote-mappings server-id="python@docker://pytorch:latest/python">
+          <settings>
+            <list>
+              <mapping local-root=" /raw_files" remote-root="/mnt" />
+              <mapping local-root="/fun-times-in-python" remote-root="/usr/src/app" />
+            </list>
+          </settings>
+        </remote-mappings>
       </list>
     </list>
   </component>

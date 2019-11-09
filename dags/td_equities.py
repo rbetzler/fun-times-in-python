@@ -24,7 +24,7 @@ dag = DAG(
     dag_id='td_equities',
     default_args=args,
     start_date=datetime(2019, 10, 29),
-    schedule_interval='0 10 * * 5',
+    schedule_interval='0 10 * * 7',
     catchup=False
 )
 

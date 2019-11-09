@@ -21,7 +21,8 @@ class XGBooster:
                  gamma=0,
                  min_child_weight=1,
                  max_delta_step=0,
-                 random_state=0
+                 random_state=0,
+                 objective='reg:linear'
                  ):
         # self._train_x = self.clean_data(train_x)
         self._train_x = train_x
@@ -39,6 +40,7 @@ class XGBooster:
         self._min_child_weight = min_child_weight
         self._max_delta_step = max_delta_step
         self._random_state = random_state
+        self._objective = objective
 
     # Data
     @property
@@ -62,10 +64,9 @@ class XGBooster:
         for col in df.columns:
             if df[col].dtypes is not int or float or bool:
                 try:
-                    df[col] = df[col].astype(int)
-                except Exception:
-                    print(col + ' could not be coerced from ' + str(df[col].dtypes) + ' to int')
-                    df = df.drop(col, axis=1)
+                    df[col] = df[col].astype(float)
+                except TypeError:
+                    col + ' could not be coerced from ' + str(df[col].dtypes) + ' to float'
         return df
 
     # Tree params
@@ -112,7 +113,7 @@ class XGBooster:
         objective (string or callable) – Specify the learning task and the corresponding learning objective or a custom
         objective function to be used (see note below).
         """
-        return 'reg:linear'
+        return self._objective
 
     @property
     def n_jobs(self) -> int:
@@ -176,8 +177,15 @@ class XGBooster:
     def plot_prediction(self, prediction):
         plt.figure()
         plt.title('Random Forest Prediction versus Actuals')
-        plt.plot(self.test_y)
-        plt.plot(self.test_y.index, prediction)
+        plt.plot(self.test_y, label='Actual')
+        plt.plot(self.test_y.index, prediction, label='Predicted')
+        plt.legend()
+        plt.show()
+
+    def plot_prediction_error(self, prediction):
+        plt.figure()
+        plt.title('Random Forest Prediction Errors')
+        plt.plot(self.test_y.index, self.test_y - prediction)
         plt.show()
 
     @staticmethod

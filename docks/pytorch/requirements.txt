@@ -2,6 +2,7 @@ numpy
 scipy
 pandas
 xgboost
+graphviz
 requests
 psycopg2-binary
 matplotlib
