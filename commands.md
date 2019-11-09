@@ -35,4 +35,4 @@ sudo docker exec -it airflow-prod bash
 #### Pytorch
 `sudo docker build . --tag pytorch`
 `docker run -it --name pytorch-gpu --runtime=nvidia -p 8888:8888 -e NVIDIA_VISIBLE_DEVICES=all -v /media/nautilus/fun-times-in-python:/usr/src/app --network bridge pytorch`
-`jupyter notebook --ip=0.0.0.0 --port=8888 --notebook-dir=/usr/src/app`
+`jupyter lab --ip=0.0.0.0 --port=8888 --notebook-dir=/usr/src/app`

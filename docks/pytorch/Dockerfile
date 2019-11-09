@@ -84,7 +84,10 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 # RICK -- install jupyter notebook
-RUN conda install jupyter notebook
+RUN conda install -c conda-forge jupyterlab
+
+# RICK -- install graphviz later
+RUN conda install graphviz
 
 # RICK -- set python path
 ENV PYTHONPATH=$PYTHONPATH:/usr/src/app

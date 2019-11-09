@@ -182,12 +182,6 @@ class XGBooster:
         plt.legend()
         plt.show()
 
-    def plot_prediction_error(self, prediction):
-        plt.figure()
-        plt.title('Random Forest Prediction Errors')
-        plt.plot(self.test_y.index, self.test_y - prediction)
-        plt.show()
-
     @staticmethod
     def plot_tree(model, n_trees=2):
         xgb.plot_tree(model, num_trees=n_trees)
