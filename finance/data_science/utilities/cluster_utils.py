@@ -49,10 +49,10 @@ class KMeans:
         plt.show()
 
 
-def encode_one_hot(df, column):
-    for val in df[column].unique():
-        df[val] = 0
-        df.loc[df[column] == val, val] = 1
+def encode_one_hot(df, columns, drop_columns=False):
+    for column in columns:
+        one_hot_encoding = pd.get_dummies(df[column], prefix=column)
+        df = df.join(one_hot_encoding)
     return df
 
 
@@ -66,6 +66,24 @@ def normalize(df, column, subset=None):
     else:
         df[column] = (df[column] - df[column].min()) / (df[column].max() - df[column].min())
     return df
+
+
+def groupby_plot(df, groupby, column, title='Groupby Plot', plot_type='line', n_lines=10):
+    plt.plot()
+    plt.title(title)
+    
+    n = 0
+    for label, group in df.groupby(groupby):
+        if plot_type == 'line':
+            plt.plot(group[column], label=label)
+        elif plot_type == 'histogram':
+            plt.hist(group[column], histtype='step', label=label)
+        n += 1
+        if n > n_lines:
+            break
+
+    plt.legend()
+    plt.show()
 
 
 if __name__ == '__main__':
