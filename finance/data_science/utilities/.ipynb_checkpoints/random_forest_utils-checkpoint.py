@@ -22,7 +22,8 @@ class XGBooster:
                  min_child_weight=1,
                  max_delta_step=0,
                  random_state=0,
-                 objective='reg:linear'
+                 objective='reg:linear',
+                 columns_to_ignore=[]
                  ):
         # self._train_x = self.clean_data(train_x)
         self._train_x = train_x
@@ -41,11 +42,12 @@ class XGBooster:
         self._max_delta_step = max_delta_step
         self._random_state = random_state
         self._objective = objective
+        self.columns_to_ignore = columns_to_ignore
 
     # Data
     @property
     def train_x(self) -> pd.DataFrame:
-        return self._train_x
+        return self._train_x.drop(self.columns_to_ignore, axis=1)
 
     @property
     def train_y(self) -> pd.DataFrame:
@@ -53,7 +55,7 @@ class XGBooster:
 
     @property
     def test_x(self) -> pd.DataFrame:
-        return self._test_x
+        return self._test_x.drop(self.columns_to_ignore, axis=1)
 
     @property
     def test_y(self) -> pd.DataFrame:
@@ -165,30 +167,79 @@ class XGBooster:
             max_delta_step=self.max_delta_step,
             random_state=self.random_state
         ).fit(X=self.train_x, y=self.train_y)
-        return model
+        self.model = model
 
-    def predict(self, model):
-        return model.predict(data=self.test_x)
+    def predict(self):
+        self.prediction = self.model.predict(data=self.test_x)
 
-    def evaluate(self, prediction):
-        df = metrics.mean_squared_error(y_pred=prediction, y_true=self.test_y)
+    @property
+    def mse(self):
+        return metrics.mean_squared_error(y_pred=self.prediction, y_true=self.test_y)
+    
+    @property
+    def output(self):
+        prediction = pd.Series(self.prediction, name='prediction')
+        df = pd.merge(self._test_x.reset_index(), 
+                      prediction,
+                      left_index=True,
+                      right_index=True)
         return df
 
-    def plot_prediction(self, prediction):
+    def plot_prediction(self):
         plt.figure()
         plt.title('Random Forest Prediction versus Actuals')
         plt.plot(self.test_y, label='Actual')
-        plt.plot(self.test_y.index, prediction, label='Predicted')
+        plt.plot(self.test_y.index, self.prediction, label='Predicted')
         plt.legend()
         plt.show()
 
-    @staticmethod
-    def plot_tree(model, n_trees=2):
-        xgb.plot_tree(model, num_trees=n_trees)
+    def plot_prediction_error(self):
+        plt.figure()
+        plt.title('Random Forest Prediction Errors')
+        plt.plot(self.test_y.index, self.test_y - self.prediction)
+        plt.hlines(0, xmin=self.test_y.index.min(), xmax=self.test_y.index.max())
+        plt.show()
+       
+    def plot_prediction_groupby(self, 
+                                groupby,
+                                prediction='prediction',
+                                actuals=None,
+                                title='Prediction Groupby Plot', 
+                                n_plots=10,
+                                n_ticks=10,
+                                error_plot=False,
+                                df=None
+                               ):
+        n = 0
+        df = self.output if df is None else df
+        actuals = self.test_y.name if actuals is None else actuals
+        
+        plt.plot()
+        for label, group in df.groupby(groupby):
+            plt.title(title + ' ' + label)
+            if not error_plot:
+                plt.plot(group[prediction], 
+                         label='Prediction ' + label)
+                plt.plot(group[actuals],
+                         label='Actual ' + label)
+            else:
+                plt.plot(group[prediction]-group[actuals], 
+                         label='Error ' + label)
+                plt.hlines(0, xmin=group.index.min(), xmax=group.index.max())
+#             plt.xticks(ticks=group.index,
+#                        labels=group['market_datetime'].dt.strftime('%m/%y'))
+#             plt.locator_params(axis='x', nbins=n_ticks)
+            plt.legend()
+            plt.show()
+            n += 1
+            if n > n_plots:
+                break
 
-    @staticmethod
-    def plot_importance(model):
-        xgb.plot_importance(model)
+    def plot_tree(self, n_trees=2):
+        xgb.plot_tree(self.model, num_trees=n_trees)
+
+    def plot_importance(self):
+        xgb.plot_importance(self.model)
 
 
 if __name__ == '__main__':
