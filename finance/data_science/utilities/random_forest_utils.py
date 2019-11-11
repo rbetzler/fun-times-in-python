@@ -197,6 +197,7 @@ class XGBooster:
         plt.figure()
         plt.title('Random Forest Prediction Errors')
         plt.plot(self.test_y.index, self.test_y - self.prediction)
+        plt.hlines(0, xmin=self.test_y.index.min(), xmax=self.test_y.index.max())
         plt.show()
        
     def plot_prediction_groupby(self, 
@@ -204,7 +205,8 @@ class XGBooster:
                                 prediction='prediction',
                                 actuals=None,
                                 title='Prediction Groupby Plot', 
-                                n_lines=10, 
+                                n_plots=10,
+                                n_ticks=10,
                                 error_plot=False,
                                 df=None
                                ):
@@ -223,10 +225,14 @@ class XGBooster:
             else:
                 plt.plot(group[prediction]-group[actuals], 
                          label='Error ' + label)
+                plt.hlines(0, xmin=group.index.min(), xmax=group.index.max())
+#             plt.xticks(ticks=group.index,
+#                        labels=group['market_datetime'].dt.strftime('%m/%y'))
+#             plt.locator_params(axis='x', nbins=n_ticks)
             plt.legend()
             plt.show()
             n += 1
-            if n > n_lines:
+            if n > n_plots:
                 break
 
     def plot_tree(self, n_trees=2):
