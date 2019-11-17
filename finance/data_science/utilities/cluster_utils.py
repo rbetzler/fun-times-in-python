@@ -68,7 +68,7 @@ def normalize(df, column, subset=None):
     return df
 
 
-def groupby_plot(df, groupby, column, title='Groupby Plot', plot_type='line', n_lines=10):
+def groupby_plot(df, groupby, column, title='Groupby Plot', plot_type='line', n_lines=10, bins=10):
     plt.plot()
     plt.title(title)
     
@@ -77,7 +77,7 @@ def groupby_plot(df, groupby, column, title='Groupby Plot', plot_type='line', n_
         if plot_type == 'line':
             plt.plot(group[column], label=label)
         elif plot_type == 'histogram':
-            plt.hist(group[column], histtype='step', label=label)
+            plt.hist(group[column], histtype='step', bins=bins, label=label)
         n += 1
         if n > n_lines:
             break
