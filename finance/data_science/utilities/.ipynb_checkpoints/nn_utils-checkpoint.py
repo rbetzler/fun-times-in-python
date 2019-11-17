@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from matplotlib import pyplot as plt
 
 import torch
 from torch import nn, functional, optim, autograd
@@ -85,6 +86,8 @@ class TorchLSTM(nn.Module):
     def __init__(self, 
                  train_x,
                  train_y,
+                 test_x,
+                 test_y,
                  n_layers=2,
                  hidden_shape=16,
                  output_shape=1,
@@ -108,10 +111,20 @@ class TorchLSTM(nn.Module):
                                    ).to(self.device).float().detach().requires_grad_(True)
         self.train_y = torch.tensor(train_y.values
                                    ).to(self.device).float()
+        
+        self.test_x = torch.tensor(test_x.values
+                                   ).to(self.device).float().detach().requires_grad_(True)
+        self.test_y = torch.tensor(test_y.values
+                                   ).to(self.device).float()
 
         self.lstm = nn.LSTM(self.input_shape, self.hidden_shape, self.n_layers).to(self.device)
         self.linear_one = nn.Linear(self.hidden_shape, self.hidden_shape).to(self.device)
         self.linear_two = nn.Linear(self.hidden_shape, self.output_shape).to(self.device)
+    
+    def reset_network(self):
+        self.lstm.reset_parameters()
+        self.linear_one.reset_parameters()
+        self.linear_two.reset_parameters()
    
     @property
     def loss_function(self):
@@ -122,17 +135,22 @@ class TorchLSTM(nn.Module):
         return optim.Adam(self.parameters(), lr=self.learning_rate)
 
     def create_hidden_states(self):
-        hidden_states = (
-            torch.zeros(self.n_layers, self.batch_size, self.hidden_shape).to(self.device),
-            torch.zeros(self.n_layers, self.batch_size, self.hidden_shape).to(self.device),
-            torch.zeros(self.n_layers, self.batch_size, self.hidden_shape).to(self.device)
-        )
-        return hidden_states
+        # short term memory
+        hidden = torch.zeros(self.n_layers, self.batch_size, self.hidden_shape).to(self.device)
+        
+        # long term memory
+        cell = torch.zeros(self.n_layers, self.batch_size, self.hidden_shape).to(self.device)
+        return hidden, cell
 
-    def forward(self):
+    def forward(self, train=True):
+        if train:
+            data = self.train_x.view(len(self.train_x), self.batch_size, -1)
+        else: 
+            data = self.test_x.view(len(self.test_x), self.batch_size, -1)
+        
 #         output: Tensor[len(self.train_x), 1, self.hidden_size]
 #         self.hidden: tuple(Tensor[n_layers, 1, self.hidden_size])
-        output, self.hidden = self.lstm(self.train_x.view(len(self.train_x), self.batch_size, -1))
+        output, self.hidden = self.lstm(data, self.hidden)
         
         # output: last of len(self.train_x) output
         output = self.linear_one(output)
@@ -142,6 +160,8 @@ class TorchLSTM(nn.Module):
     def execute(self):
         optimizer = self.optimizer
         history = np.zeros(self.n_epochs)
+        
+        self.lstm.weight_hh_l0.data.fill_(0)
 
         for epoch in range(self.n_epochs):
             self.zero_grad()
@@ -150,7 +170,7 @@ class TorchLSTM(nn.Module):
             prediction = self.forward()
 
             loss = self.loss_function(prediction, self.train_y)
-            if epoch % 10 == 0:
+            if epoch % int(self.n_epochs/10) == 0:
                 print("Epoch ", epoch, "MSE: ", loss.item())
             
             history[epoch] = loss.item()
@@ -158,6 +178,34 @@ class TorchLSTM(nn.Module):
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+    
+    def predict(self):
+        return self.forward(train=False)
+
+    def plot_prediction_train(self):
+        plt.title('Prediction v Actual - Train')
+        plt.plot(self.train_y.cpu().numpy(), color='b')
+        plt.plot(self.forward().view(-1).cpu().detach().numpy(), color='r')
+        plt.show()
+    
+    def plot_prediction_train_error(self):
+        plt.title('Prediction Error - Test')
+        plt.plot(self.forward().view(-1).cpu().detach().numpy() 
+                 - self.train_y.cpu().detach().numpy())
+        plt.show()
+
+    
+    def plot_prediction_test(self):
+        plt.title('Prediction v Actuals - Test')
+        plt.plot(self.test_y.cpu().detach().numpy(), color='b')
+        plt.plot(self.predict().view(-1).cpu().detach().numpy(), color='r')
+        plt.show()
+    
+    def plot_prediction_test_error(self):
+        plt.title('Prediction Error - Test')
+        plt.plot(self.predict().view(-1).cpu().detach().numpy() 
+                 - self.test_y.cpu().detach().numpy())
+        plt.show()
 
             
             
