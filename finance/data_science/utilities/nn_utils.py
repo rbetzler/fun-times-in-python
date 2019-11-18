@@ -119,6 +119,7 @@ class TorchLSTM(nn.Module):
 
         self.lstm = nn.LSTM(self.input_shape, self.hidden_shape, self.n_layers).to(self.device)
         self.linear_one = nn.Linear(self.hidden_shape, self.hidden_shape).to(self.device)
+        self.relu = nn.ReLU()
         self.linear_two = nn.Linear(self.hidden_shape, self.output_shape).to(self.device)
     
     def reset_network(self):
@@ -128,7 +129,9 @@ class TorchLSTM(nn.Module):
    
     @property
     def loss_function(self):
-        return nn.MSELoss(reduction='sum').to(self.device)
+#         loss = nn.MSELoss(reduction='sum').to(self.device)
+        loss = nn.L1Loss(reduction='sum').to(self.device)
+        return loss
     
     @property
     def optimizer(self):
@@ -136,10 +139,10 @@ class TorchLSTM(nn.Module):
 
     def create_hidden_states(self):
         # short term memory
-        hidden = torch.zeros(self.n_layers, self.batch_size, self.hidden_shape).to(self.device)
+        hidden = torch.randn(self.n_layers, self.batch_size, self.hidden_shape).to(self.device)
         
         # long term memory
-        cell = torch.zeros(self.n_layers, self.batch_size, self.hidden_shape).to(self.device)
+        cell = torch.randn(self.n_layers, self.batch_size, self.hidden_shape).to(self.device)
         return hidden, cell
 
     def forward(self, train=True):
@@ -154,6 +157,7 @@ class TorchLSTM(nn.Module):
         
         # output: last of len(self.train_x) output
         output = self.linear_one(output)
+        output = self.relu(output)
         output = self.linear_two(output)
         return output
     

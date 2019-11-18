@@ -188,7 +188,7 @@ class XGBooster:
     def hyperparameter_optimization(self, 
                                     max_depths = [1, 2, 3, 5, 10],
                                     n_estimators = [10, 25, 50], #, 100, 200],
-                                    gammas = [0, .1, .05, .1, .25, .5]
+                                    gammas = [.01, .05, .1, .25, .5]
                                    ):
         mses = []
         max_depths = [1, 2, 3, 5, 10]
