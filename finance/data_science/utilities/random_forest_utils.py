@@ -184,6 +184,36 @@ class XGBooster:
                       left_index=True,
                       right_index=True)
         return df
+    
+    def hyperparameter_optimization(self, 
+                                    max_depths = [1, 2, 3, 5, 10],
+                                    n_estimators = [10, 25, 50], #, 100, 200],
+                                    gammas = [.01, .05, .1, .25, .5]
+                                   ):
+        mses = []
+        max_depths = [1, 2, 3, 5, 10]
+        for depth in max_depths:
+            for estimator in n_estimators:
+                for gamma in gammas:
+                    self._max_depth = depth
+                    self._n_estimators = estimator
+                    self._gamma = gamma
+                    
+                    print(depth)
+                    print(self.max_depth)
+                    
+                    self.fit()
+                    self.predict()
+                    
+                    mse = self.mse
+                    mses.append((depth, estimator, gamma, mse))
+                    print('Finished fitting tree')
+                    
+        self.hyperparameter_mses = pd.DataFrame(mses, 
+                                                columns=['max_depth', 
+                                                         'n_estimators', 
+                                                         'gamma', 
+                                                         'mse'])
 
     def plot_prediction(self):
         plt.figure()
@@ -238,40 +268,17 @@ class XGBooster:
     def plot_tree(self, n_trees=2):
         xgb.plot_tree(self.model, num_trees=n_trees)
 
-    def plot_importance(self):
-        xgb.plot_importance(self.model)
-
-
-if __name__ == '__main__':
-    query = """
-        select
-            extract(epoch from e.market_datetime) as market_datetime
-            , e.open
-            , e.high
-            , e.low
-            , e.close
-            , e.volume
-        from td.equities as e
-        where e.symbol = 'BA'
-        order by e.market_datetime
-        """
-    df = utils.query_db(query=query)
-
-    temp = df[['market_datetime', 'open', 'high', 'low', 'close', 'volume']].copy()
-    temp['market_datetime'] = temp['market_datetime'].astype(int)
-
-    x = temp.drop('open', axis=1)
-    y = temp['open'].shift(-1)
-
-    train_x = x.iloc[1:1000]
-    test_x = x.iloc[1010:1100]
-
-    train_y = y.iloc[1:1000]
-    test_y = y.iloc[1010:1100]
-
-    boost = XGBooster(train_x=train_x, train_y=train_y,
-                      test_x=test_x, test_y=test_y, max_depth=5)
-    fit_model = boost.fit()
-    prediction = boost.predict(model=fit_model)
-    mse = boost.evaluate(prediction=prediction)
-    print(test_y)
+    def plot_importance(self, max_num_features=20):
+        xgb.plot_importance(self.model, max_num_features=max_num_features)
+        
+    def plot_hyperparameters(self, measure='mean'):
+        for param in ['max_depth', 'n_estimators', 'gamma']:
+            if measure == 'mean':
+                df = self.hyperparameter_mses.groupby(param).mean()
+            elif measure == 'max':
+                df = self.hyperparameter_mses.groupby(param).max()
+            elif measure == 'min':
+                df = self.hyperparameter_mses.groupby(param).min()
+            plt.title(measure + ' mse over ' + param)
+            plt.plot(df.index, df.mse)
+            plt.show()
