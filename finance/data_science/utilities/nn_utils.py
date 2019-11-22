@@ -89,6 +89,8 @@ class TorchLSTM(nn.Module):
                  test_x,
                  test_y,
                  n_layers=2,
+                 bias=True,
+                 dropout=0,
                  hidden_shape=16,
                  output_shape=1,
                  batch_size=1,
@@ -99,6 +101,8 @@ class TorchLSTM(nn.Module):
         super(TorchLSTM, self).__init__()
                 
         self.n_layers = n_layers
+        self.bias = bias
+        self.dropout = dropout
         self.input_shape = train_x.shape[1]
         self.hidden_shape = hidden_shape
         self.output_shape = output_shape
@@ -117,9 +121,14 @@ class TorchLSTM(nn.Module):
         self.test_y = torch.tensor(test_y.values
                                    ).to(self.device).float()
 
-        self.lstm = nn.LSTM(self.input_shape, self.hidden_shape, self.n_layers).to(self.device)
+        self.lstm = nn.LSTM(input_size=self.input_shape, 
+                            hidden_size=self.hidden_shape, 
+                            num_layers=self.n_layers,
+                            bias=self.bias,
+                            dropout=self.dropout).to(self.device)
         self.linear_one = nn.Linear(self.hidden_shape, self.hidden_shape).to(self.device)
-        self.relu = nn.ReLU()
+#         self.relu = nn.ReLU()
+        self.tanh = nn.Tanh()
         self.linear_two = nn.Linear(self.hidden_shape, self.output_shape).to(self.device)
     
     def reset_network(self):
@@ -129,8 +138,9 @@ class TorchLSTM(nn.Module):
    
     @property
     def loss_function(self):
-#         loss = nn.MSELoss(reduction='sum').to(self.device)
+        # loss = nn.MSELoss(reduction='sum').to(self.device)
         loss = nn.L1Loss(reduction='sum').to(self.device)
+        # loss = nn.KLDivLoss(reduction='sum').to(self.device)
         return loss
     
     @property
@@ -139,10 +149,14 @@ class TorchLSTM(nn.Module):
 
     def create_hidden_states(self):
         # short term memory
-        hidden = torch.randn(self.n_layers, self.batch_size, self.hidden_shape).to(self.device)
+        hidden = torch.randn(self.n_layers, 
+                             self.batch_size, 
+                             self.hidden_shape).to(self.device)
         
         # long term memory
-        cell = torch.randn(self.n_layers, self.batch_size, self.hidden_shape).to(self.device)
+        cell = torch.randn(self.n_layers, 
+                           self.batch_size,
+                           self.hidden_shape).to(self.device)
         return hidden, cell
 
     def forward(self, train=True):
@@ -156,8 +170,9 @@ class TorchLSTM(nn.Module):
         output, self.hidden = self.lstm(data, self.hidden)
         
         # output: last of len(self.train_x) output
-        output = self.linear_one(output)
-        output = self.relu(output)
+#         output = self.linear_one(output)
+#         output = self.relu(output)
+#         output = self.tanh(output)
         output = self.linear_two(output)
         return output
     
@@ -175,7 +190,7 @@ class TorchLSTM(nn.Module):
 
             loss = self.loss_function(prediction, self.train_y)
             if epoch % int(self.n_epochs/10) == 0:
-                print("Epoch ", epoch, "MSE: ", loss.item())
+                print("Epoch ", epoch, "Error: ", loss.item())
             
             history[epoch] = loss.item()
 
