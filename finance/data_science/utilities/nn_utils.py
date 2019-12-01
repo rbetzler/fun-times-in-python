@@ -127,7 +127,7 @@ class TorchLSTM(nn.Module):
                             bias=self.bias,
                             dropout=self.dropout).to(self.device)
         self.linear_one = nn.Linear(self.hidden_shape, self.hidden_shape).to(self.device)
-#         self.relu = nn.ReLU()
+        self.relu = nn.ReLU()
         self.tanh = nn.Tanh()
         self.linear_two = nn.Linear(self.hidden_shape, self.output_shape).to(self.device)
     
@@ -148,12 +148,10 @@ class TorchLSTM(nn.Module):
         return optim.Adam(self.parameters(), lr=self.learning_rate)
 
     def create_hidden_states(self):
-        # short term memory
         hidden = torch.randn(self.n_layers, 
                              self.batch_size, 
                              self.hidden_shape).to(self.device)
-        
-        # long term memory
+
         cell = torch.randn(self.n_layers, 
                            self.batch_size,
                            self.hidden_shape).to(self.device)
@@ -164,23 +162,15 @@ class TorchLSTM(nn.Module):
             data = self.train_x.view(len(self.train_x), self.batch_size, -1)
         else: 
             data = self.test_x.view(len(self.test_x), self.batch_size, -1)
-        
-#         output: Tensor[len(self.train_x), 1, self.hidden_size]
-#         self.hidden: tuple(Tensor[n_layers, 1, self.hidden_size])
+
         output, self.hidden = self.lstm(data, self.hidden)
-        
-        # output: last of len(self.train_x) output
-#         output = self.linear_one(output)
-#         output = self.relu(output)
-#         output = self.tanh(output)
+        output = self.relu(output)
         output = self.linear_two(output)
         return output
     
     def execute(self):
         optimizer = self.optimizer
         history = np.zeros(self.n_epochs)
-        
-        self.lstm.weight_hh_l0.data.fill_(0)
 
         for epoch in range(self.n_epochs):
             self.zero_grad()
@@ -208,11 +198,10 @@ class TorchLSTM(nn.Module):
         plt.show()
     
     def plot_prediction_train_error(self):
-        plt.title('Prediction Error - Test')
+        plt.title('Prediction Error - Train')
         plt.plot(self.forward().view(-1).cpu().detach().numpy() 
                  - self.train_y.cpu().detach().numpy())
         plt.show()
-
     
     def plot_prediction_test(self):
         plt.title('Prediction v Actuals - Test')
@@ -226,92 +215,3 @@ class TorchLSTM(nn.Module):
                  - self.test_y.cpu().detach().numpy())
         plt.show()
 
-            
-            
-            
-            
-            
-            
-            
-            
-# # Here we define our model as a class
-# class LSTM(nn.Module):
-
-#     def __init__(self, 
-#                  input_dim, 
-#                  hidden_dim, 
-#                  batch_size, 
-#                  output_dim=1,
-#                  num_layers=2):
-        
-#         super(LSTM, self).__init__()
-#         self.input_dim = input_dim
-#         self.hidden_dim = hidden_dim
-#         self.batch_size = batch_size
-#         self.num_layers = num_layers
-#         self.device = 'cuda'
-
-#         # Define the LSTM layer
-#         self.lstm = nn.LSTM(self.input_dim, self.hidden_dim, self.num_layers).to(self.device)
-
-#         # Define the output layer
-#         self.linear = nn.Linear(self.hidden_dim, output_dim).to(self.device)
-
-#     def init_hidden(self):
-#         # This is what we'll initialise our hidden state as
-#         return (torch.zeros(self.num_layers, self.batch_size, self.hidden_dim).to(self.device),
-#                 torch.zeros(self.num_layers, self.batch_size, self.hidden_dim).to(self.device))
-
-#     def forward(self, input):
-#         # Forward pass through LSTM layer
-#         # shape of lstm_out: [input_size, batch_size, hidden_dim]
-#         # shape of self.hidden: (a, b), where a and b both 
-#         # have shape (num_layers, batch_size, hidden_dim).
-#         lstm_out, self.hidden = self.lstm(input.view(len(input), self.batch_size, -1))
-        
-#         # Only take the output from the final timetep
-#         # Can pass on the entirety of lstm_out to the next layer if it is a seq2seq prediction
-#         y_pred = self.linear(lstm_out[-1].view(self.batch_size, -1))
-#         return y_pred.view(-1)
-
-# train_x_temp = train_x.drop(cols_to_ignore, axis=1)
-# model = LSTM(input_dim=train_x_temp.shape[0]*train_x_temp.shape[1],
-#              hidden_dim=4,
-#              batch_size=1, 
-#              output_dim=1, 
-#              num_layers=30)
-
-# x_train = torch.tensor(train_x_temp.values).to('cuda').float().view(1, -1).detach().requires_grad_(True)
-
-# y_train = torch.tensor(train_y.values).to('cuda').float()
-
-# loss_fn = nn.MSELoss(size_average=False).to('cuda')
-# optimiser = optim.Adam(model.parameters(), lr=2)
-
-# num_epochs=10
-# hist = np.zeros(num_epochs)
-
-# for t in range(num_epochs):
-#     # Clear stored gradient
-#     model.zero_grad()
-    
-#     # Initialise hidden state
-#     # Don't do this if you want your LSTM to be stateful
-#     model.hidden = model.init_hidden()
-    
-#     # Forward pass
-#     y_pred = model(x_train)
-
-#     loss = loss_fn(y_pred, y_train)
-#     if t % 1 == 0:
-#         print("Epoch ", t, "MSE: ", loss.item())
-#     hist[t] = loss.item()
-
-#     # Zero out gradient, else they will accumulate between epochs
-#     optimiser.zero_grad()
-
-#     # Backward pass
-#     loss.backward()
-
-#     # Update parameters
-#     optimiser.step()
