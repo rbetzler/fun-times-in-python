@@ -133,7 +133,7 @@ class TorchLSTM(nn.Module):
                  dropout=0,
                  hidden_shape=16,
                  output_shape=1,
-                 batch_size=1,
+                 batch_size=None,
                  n_epochs=10,
                  learning_rate=.0001,
                  device='cuda'
@@ -146,7 +146,7 @@ class TorchLSTM(nn.Module):
         self.input_shape = train_x.shape[1]
         self.hidden_shape = hidden_shape
         self.output_shape = output_shape
-        self.batch_size = len(train_x)
+        
         self.n_epochs = n_epochs
         self.learning_rate = learning_rate
         self.device = device
@@ -160,7 +160,19 @@ class TorchLSTM(nn.Module):
                                    ).to(self.device).float().detach().requires_grad_(True)
         self.test_y = torch.tensor(test_y.values
                                    ).to(self.device).float()
-
+        
+        self.batch_size = batch_size if batch_size else len(self.test_x)
+        self.train_input = (
+            int(self.train_x.shape[0]/self.batch_size), 
+            self.batch_size, 
+            self.input_shape
+        )
+        self.test_input = (
+            int(self.test_x.shape[0]/self.batch_size), 
+            self.batch_size, 
+            self.input_shape
+        )
+        
         self.lstm = nn.LSTM(input_size=self.input_shape, 
                             hidden_size=self.hidden_shape, 
                             num_layers=self.n_layers,
@@ -179,7 +191,7 @@ class TorchLSTM(nn.Module):
     def loss_function(self):
         loss = nn.MSELoss(reduction='sum').to(self.device)
 #         loss = nn.L1Loss(reduction='sum').to(self.device)
-        # loss = nn.KLDivLoss(reduction='sum').to(self.device)
+#         loss = nn.KLDivLoss(reduction='sum').to(self.device)
         return loss
     
     @property
@@ -198,9 +210,9 @@ class TorchLSTM(nn.Module):
 
     def forward(self, train=True):
         if train:
-            data = self.train_x.view(-1, self.batch_size, self.input_shape)
+            data = self.train_x.view(self.train_input)
         else: 
-            data = self.test_x.view(-1, self.batch_size, self.input_shape)
+            data = self.test_x.view(self.test_input)
 
         output, self.hidden = self.lstm(data, self.hidden)
 #         output = self.relu(output)
@@ -216,7 +228,7 @@ class TorchLSTM(nn.Module):
 
             prediction = self.forward()
 
-            loss = self.loss_function(prediction, self.train_y)
+            loss = self.loss_function(prediction.view(-1), self.train_y.view(-1))
             if epoch % int(self.n_epochs/10) == 0:
                 print("Epoch ", epoch, "Error: ", loss.item())
             
