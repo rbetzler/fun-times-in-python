@@ -150,8 +150,3 @@ class BlackScholes:
         diff = -diff[~diff.isna()]
         diff.index = diff.index - steps
         return diff
-
-
-def kelly_criterion(predicted_win, predicted_loss, p_win, p_loss):
-    bet_size = (predicted_win * p_win - predicted_loss * p_loss) / predicted_win
-    return bet_size
