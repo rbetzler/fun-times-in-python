@@ -97,17 +97,15 @@ def greedy_kelly_diversified(
 
     positions_dfs = []
     budgets = [budget]
-    cnt = 1
     for idx, day in df.groupby(time):
         allocation = budget / df[dimensions].nunique()
         daily_positions = pd.DataFrame()
         for idx, dimension in day.groupby(dimensions):
-            stocks = dimension[dimension[kelly] > 0].copy()
+            stocks = dimension[dimension[kelly] > 0]
             positions = stocks.loc[stocks.sort_values(by=kelly, ascending=False)[kelly].cumsum() < 1].copy()
             positions['n_shares'] = ((positions[kelly] * allocation.values)/positions[price]).astype(int)
             positions['position'] = positions['n_shares'] * positions[price]
             daily_positions = daily_positions.append(positions)
-            cnt += 1
         budget += sum(daily_positions['n_shares'] * daily_positions[profits])
         budgets.append(budget)
         positions_dfs.append(daily_positions)
