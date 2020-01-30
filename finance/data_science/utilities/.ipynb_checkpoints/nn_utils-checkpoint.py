@@ -23,12 +23,15 @@ class TorchLSTM(nn.Module):
                  batch_size=None,
                  n_epochs=10,
                  learning_rate=.0001,
-                 device='cuda'
+                 device='cuda',
+                 seed=3,
+                 deterministic=True,
+                 benchmark=False
                 ):
         super(TorchLSTM, self).__init__()
-        torch.manual_seed(3)
-        torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = False
+        torch.manual_seed(seed)
+        torch.backends.cudnn.deterministic = deterministic
+        torch.backends.cudnn.benchmark = benchmark
         
         # Network params
         self.n_layers = n_layers
