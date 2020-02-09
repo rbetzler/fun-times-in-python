@@ -48,3 +48,18 @@ CASH_FLOWS = """
     dw_created_at       timestamp without time zone
   );
   """
+SP_INDEX = """
+    CREATE TABLE IF NOT EXISTS yahoo.sp_index
+    (
+        index_name          text,
+        market_datetime     timestamp without time zone,
+        open                numeric,
+        high                numeric,
+        low                 numeric,
+        close               numeric,
+        adj_close           numeric,
+        volume              bigint,
+        file_datetime       timestamp without time zone,
+        ingest_datetime     timestamp without time zone
+    )
+    """
