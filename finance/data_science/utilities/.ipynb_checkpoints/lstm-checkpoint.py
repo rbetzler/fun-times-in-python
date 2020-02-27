@@ -43,7 +43,7 @@ class TorchLSTM(nn.Module):
         self.n_training_batches = n_training_batches
         self.train_input = (
             int(len(train_x)/self.batch_size/self.n_training_batches),
-            self.batch_size, 
+            self.batch_size,
             self.input_shape
         )
         self.test_input = (
@@ -107,15 +107,15 @@ class TorchLSTM(nn.Module):
     def forward(self, data):
         # TODO: figure out what these hidden states actually do
         # output, self.hidden = self.lstm(data, self.hidden)
-        output, (a, b) = self.lstm(data, None)
+        output, (h, c) = self.lstm(data, None)
         output = self.relu(output)
         output = self.linear(output)
         return output
-   
+
     def fit(self):
         optimizer = self.optimizer
         history = []
-        
+
         batch = 0
         for data in self.training_data():
             batch += 1
@@ -123,7 +123,7 @@ class TorchLSTM(nn.Module):
             y = torch.tensor(data[1].values).to(self.device).float()
 
             for epoch in range(self.n_epochs):
-                self.hidden = self.create_hidden_states()
+                # self.hidden = self.create_hidden_states()
 
                 prediction = self.forward(x)
 
@@ -141,12 +141,18 @@ class TorchLSTM(nn.Module):
         
         plt.title('Cumulative Loss by Epoch')
         plt.plot(df_history.groupby('epoch').sum()['loss'])
-    
+
     def predict(self):
         self.eval()
         x = torch.tensor(self.test_x.values).to(self.device).float().detach().view(self.test_input)
         prediction = self.forward(x)
         return prediction
+
+    @property
+    def prediction_df(self):
+        df = self.test_x.copy()
+        df['prediction'] = self.predict().view(-1).cpu().detach().numpy()
+        return df
 
     # TODO:
     #   Add and refined basic performance features
