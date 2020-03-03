@@ -56,7 +56,7 @@ class TorchLSTM(nn.Module):
         self.n_epochs = n_epochs
         self.learning_rate = learning_rate
         self.device = device
-
+        
         # Data
         self.train_x = train_x
         self.train_y = train_y
@@ -71,6 +71,10 @@ class TorchLSTM(nn.Module):
                             dropout=dropout).to(self.device)
         self.relu = nn.ReLU()
         self.linear = nn.Linear(self.hidden_shape, self.output_shape).to(self.device)
+        
+        self.lstm = nn.DataParallel(self.lstm)
+        self.relu = nn.DataParallel(self.relu)
+        self.linear = nn.DataParallel(self.linear)
     
     def reset_network(self):
         self.lstm.reset_parameters()
@@ -94,20 +98,22 @@ class TorchLSTM(nn.Module):
     def optimizer(self):
         return optim.Adam(self.parameters(), lr=self.learning_rate)
 
-    def create_hidden_states(self):
-        hidden = torch.zeros(self.n_layers, 
-                             self.batch_size, 
-                             self.hidden_shape).to(self.device)
+#     def create_hidden_states(self):
+#         hidden = torch.zeros(self.n_layers, 
+#                              self.batch_size, 
+#                              self.hidden_shape).to(self.device)
 
-        cell = torch.zeros(self.n_layers, 
-                           self.batch_size,
-                           self.hidden_shape).to(self.device)
-        return hidden, cell
+#         cell = torch.zeros(self.n_layers, 
+#                            self.batch_size,
+#                            self.hidden_shape).to(self.device)
+#         return hidden, cell
 
     def forward(self, data):
-        # TODO: figure out what these hidden states actually do
-        # output, self.hidden = self.lstm(data, self.hidden)
-        output, (h, c) = self.lstm(data, None)
+#         TODO: figure out what these hidden states actually do
+#         output, self.hidden = self.lstm(data, self.hidden)
+
+        self.lstm.module.flatten_parameters()
+        output, _ = self.lstm(data, None)
         output = self.relu(output)
         output = self.linear(output)
         return output
@@ -123,8 +129,6 @@ class TorchLSTM(nn.Module):
             y = torch.tensor(data[1].values).to(self.device).float()
 
             for epoch in range(self.n_epochs):
-                # self.hidden = self.create_hidden_states()
-
                 prediction = self.forward(x)
 
                 loss = self.loss_function(prediction.view(-1), y.view(-1))
@@ -136,7 +140,7 @@ class TorchLSTM(nn.Module):
                 loss.backward()
                 optimizer.step()
                 optimizer.zero_grad()
-        
+                
         df_history = pd.DataFrame(history, columns=['batch', 'epoch', 'loss'])
         
         plt.title('Cumulative Loss by Epoch')
