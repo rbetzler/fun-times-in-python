@@ -111,3 +111,22 @@ def greedy_kelly_diversified(
         positions_dfs.append(daily_positions)
 
     return pd.concat(positions_dfs), budgets
+
+
+def portfolio_performance(
+    df,
+    time: str='market_datetime',
+    symbol: str='symbol',
+    profits: str='profits',
+    predicted_profits: str='predicted_profits',
+    trade_direction: str='trade',
+    positions: str='positions'
+):
+    args = {
+        symbol: 'nunique',
+        profits: ['sum', 'mean'],
+        predicted_profits: ['sum', 'mean'],
+        trade_direction: 'count',
+        positions: 'sum',
+    }
+    df.groupby([time, symbol]).agg(args)
