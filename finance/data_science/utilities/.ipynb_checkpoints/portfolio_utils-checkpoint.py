@@ -3,6 +3,7 @@ import pandas as pd
 import scipy.stats as stats
 import scipy.optimize as opt
 
+from matplotlib import pyplot as plt
 
 def annualized_return(start_price, end_price, n_days):
     annual_return = (1+((end_price-start_price)/start_price))**(365/n_days)-1
@@ -119,14 +120,71 @@ def portfolio_performance(
     symbol: str='symbol',
     profits: str='profits',
     predicted_profits: str='predicted_profits',
-    trade_direction: str='trade',
-    positions: str='positions'
+    trade: str='trade',
+    position: str='position',
+    window_size: int=100,
+    budget: int=1000
 ):
+    df['trade_profits'] = df[profits] * df['n_shares']
+    
+    # Performance by day
     args = {
         symbol: 'nunique',
         profits: ['sum', 'mean'],
         predicted_profits: ['sum', 'mean'],
-        trade_direction: 'count',
-        positions: 'sum',
+        trade: 'count',
+        position: 'sum',
+        'trade_profits': 'sum'
     }
-    df.groupby([time, symbol]).agg(args)
+    daily = df.groupby(time).agg(args)
+
+    daily['mad'] = (
+        daily['trade_profits']['sum'] 
+        - daily['trade_profits']['sum'].rolling(window_size, min_periods=1).mean()
+    ).abs().rolling(window_size, min_periods=1).mean()
+        
+    plt.title('Number of Trades')
+    plt.plot(daily['trade']['count'])
+    plt.show()
+    
+    plt.title('Number of Trades')
+    plt.hist(daily['trade']['count'])
+    plt.show()
+    
+    plt.title('Trading Profits')
+    plt.plot(daily['trade_profits']['sum'].cumsum())
+    plt.show()
+    
+    plt.title('Profit MAD')
+    plt.plot(daily['mad'].tail(len(daily) - window_size))
+    plt.show()
+    
+    plt.title('Max Daily Change')
+    plt.plot(daily['trade_profits']['sum'].abs().cummax())
+    plt.show()
+
+    plt.title('Distribution of Daily % Change')
+    plt.hist(
+        ((budget+daily['trade_profits']['sum'].cumsum())
+        /(budget+daily['trade_profits']['sum'].cumsum().shift(1))).dropna(),
+        bins=35)
+    plt.show()
+    
+    # Performance by stock     
+    args = {
+        trade: 'count',
+        profits: ['sum', 'mean'],
+        predicted_profits: ['sum', 'mean'],
+        'trade_profits': 'sum'
+    }
+    stocks = df.groupby(symbol).agg(args)
+    
+    plt.title('Distribution of Trades By Stocks')
+    plt.hist(stocks['trade']['count'], bins=25)
+    plt.show()
+
+    plt.title('Distribution of Profits By Stocks')
+    plt.hist(stocks['trade_profits']['sum'], bins=25)
+    plt.show()
+    
+    return daily, stocks
