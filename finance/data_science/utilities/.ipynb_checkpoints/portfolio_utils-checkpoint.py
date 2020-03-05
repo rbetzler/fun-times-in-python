@@ -5,6 +5,7 @@ import scipy.optimize as opt
 
 from matplotlib import pyplot as plt
 
+
 def annualized_return(start_price, end_price, n_days):
     annual_return = (1+((end_price-start_price)/start_price))**(365/n_days)-1
     return annual_return
@@ -23,13 +24,13 @@ def get_estimated_loss(df,
     df['is_profitable'] = False
     df.loc[df[profits] > 0, 'is_profitable'] = True
 
-    df['profit_rate'] = (df['is_profitable'].rolling(window_size).sum()
-                          /df['is_profitable'].rolling(window_size).count())
+    df['profit_rate'] = (df['is_profitable'].rolling(window_size, min_periods=1).sum()
+                          /df['is_profitable'].rolling(window_size, min_periods=1).count())
     
     if loss == 'mean':
-        df['estimated_loss'] = abs(df[profits]).rolling(window_size).mean()
+        df['estimated_loss'] = abs(df[profits]).rolling(window_size, min_periods=1).mean()
     elif loss == 'median':
-        df['estimated_loss'] = abs(df[profits]).rolling(window_size).median()
+        df['estimated_loss'] = abs(df[profits]).rolling(window_size, min_periods=1).median()
 
     return df.drop(['is_profitable'], axis=1)
 
@@ -126,6 +127,15 @@ def portfolio_performance(
     budget: int=1000
 ):
     df['trade_profits'] = df[profits] * df['n_shares']
+
+    # Performance by stock     
+    args = {
+        trade: 'count',
+        profits: ['sum', 'mean'],
+        predicted_profits: ['sum', 'mean'],
+        'trade_profits': 'sum'
+    }
+    stocks = df.groupby(symbol).agg(args)
     
     # Performance by day
     args = {
@@ -137,54 +147,46 @@ def portfolio_performance(
         'trade_profits': 'sum'
     }
     daily = df.groupby(time).agg(args)
-
+    trades = df.groupby(trade).agg(args)
+    
     daily['mad'] = (
         daily['trade_profits']['sum'] 
         - daily['trade_profits']['sum'].rolling(window_size, min_periods=1).mean()
     ).abs().rolling(window_size, min_periods=1).mean()
-        
-    plt.title('Number of Trades')
-    plt.plot(daily['trade']['count'])
-    plt.show()
     
-    plt.title('Number of Trades')
-    plt.hist(daily['trade']['count'])
-    plt.show()
-    
-    plt.title('Trading Profits')
-    plt.plot(daily['trade_profits']['sum'].cumsum())
-    plt.show()
-    
-    plt.title('Profit MAD')
-    plt.plot(daily['mad'].tail(len(daily) - window_size))
-    plt.show()
-    
-    plt.title('Max Daily Change')
-    plt.plot(daily['trade_profits']['sum'].abs().cummax())
-    plt.show()
-
-    plt.title('Distribution of Daily % Change')
-    plt.hist(
-        ((budget+daily['trade_profits']['sum'].cumsum())
-        /(budget+daily['trade_profits']['sum'].cumsum().shift(1))).dropna(),
-        bins=35)
-    plt.show()
-    
-    # Performance by stock     
-    args = {
-        trade: 'count',
-        profits: ['sum', 'mean'],
-        predicted_profits: ['sum', 'mean'],
-        'trade_profits': 'sum'
+    plots = {
+        'Number of Trades': daily['trade']['count'],
+        'Trading Profits': daily['trade_profits']['sum'].cumsum(),
+        'Profit MAD': daily['mad'].tail(len(daily) - window_size),
+        'Max Daily Change': daily['trade_profits']['sum'].abs().cummax(),
     }
-    stocks = df.groupby(symbol).agg(args)
+    for plot in plots:
+        plt.title(plot)
+        plt.plot(plots.get(plot))
+        plt.show()
     
-    plt.title('Distribution of Trades By Stocks')
-    plt.hist(stocks['trade']['count'], bins=25)
-    plt.show()
-
-    plt.title('Distribution of Profits By Stocks')
-    plt.hist(stocks['trade_profits']['sum'], bins=25)
-    plt.show()
+    hists = {
+        'Daily Trades': daily['trade']['count'],
+        'Daily % Change': (
+            (budget+daily['trade_profits']['sum'].cumsum())
+            /(budget+daily['trade_profits']['sum'].cumsum().shift(1))).dropna(),
+        'Trades By Stocks': stocks['trade']['count'],
+        'Profits By Stocks': stocks['trade_profits']['sum'],
+    }
+    for hist in hists:
+        plt.title(hist)
+        plt.hist(hists.get(hist))
+        plt.show()
+    
+    bars = {
+        'Trades By Direction': trades['trade']['count'],
+        'Profits By Direction': trades['trade_profits']['sum'],
+        'Position Size By Direction': trades[position]['sum'],
+    }
+    for bar in bars:
+        data = bars.get(bar)
+        plt.title(bar)
+        plt.bar(data.index, data.values)
+        plt.show()
     
     return daily, stocks
