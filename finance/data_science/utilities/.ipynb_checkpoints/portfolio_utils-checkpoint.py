@@ -5,6 +5,8 @@ import scipy.optimize as opt
 
 from matplotlib import pyplot as plt
 
+from finance.utilities import utils
+
 
 def annualized_return(start_price, end_price, n_days):
     annual_return = (1+((end_price-start_price)/start_price))**(365/n_days)-1
@@ -17,20 +19,20 @@ def kelly_criterion(predicted_win, predicted_loss, p_win):
 
 
 def get_estimated_loss(df, 
-                       profits: str='profits',
+                       profit: str='profit',
                        window_size: int=100,
                        loss: str='median'
                       ):
     df['is_profitable'] = False
-    df.loc[df[profits] > 0, 'is_profitable'] = True
+    df.loc[df[profit] > 0, 'is_profitable'] = True
 
     df['profit_rate'] = (df['is_profitable'].rolling(window_size, min_periods=1).sum()
                           /df['is_profitable'].rolling(window_size, min_periods=1).count())
     
     if loss == 'mean':
-        df['estimated_loss'] = abs(df[profits]).rolling(window_size, min_periods=1).mean()
+        df['estimated_loss'] = abs(df[profit]).rolling(window_size, min_periods=1).mean()
     elif loss == 'median':
-        df['estimated_loss'] = abs(df[profits]).rolling(window_size, min_periods=1).median()
+        df['estimated_loss'] = abs(df[profit]).rolling(window_size, min_periods=1).median()
 
     return df.drop(['is_profitable'], axis=1)
 
@@ -39,7 +41,7 @@ def greedy_kelly(df,
                  level: str='market_datetime',
                  kelly: str='kelly',
                  price: str='open',
-                 profits: str='profits',
+                 profit: str='profit',
                  budget: float=1000,
                 ):
     df['position'] = 0
@@ -52,7 +54,8 @@ def greedy_kelly(df,
         positions = stocks.loc[stocks.sort_values(by=kelly, ascending=False)[kelly].cumsum() < 1].copy()
         positions['n_shares'] = ((positions[kelly] * budget)/positions[price]).astype(int)
         positions['position'] = positions['n_shares'] * positions[price]
-        budget += sum(positions['n_shares'] * positions[profits])
+        positions['trade_profit'] = positions['n_shares'] * positions[profit]
+        budget += sum(positions['trade_profit'])
         budgets.append(budget)
         positions_dfs.append(positions)
 
@@ -119,46 +122,46 @@ def portfolio_performance(
     df,
     time: str='market_datetime',
     symbol: str='symbol',
-    profits: str='profits',
-    predicted_profits: str='predicted_profits',
+    profit: str='profit',
+    profit_pred: str='profit_pred',
+    trade_profit: str='trade_profit',
     trade: str='trade',
     position: str='position',
     window_size: int=100,
     budget: int=1000
 ):
-    df['trade_profits'] = df[profits] * df['n_shares']
 
     # Performance by stock     
     args = {
         trade: 'count',
-        profits: ['sum', 'mean'],
-        predicted_profits: ['sum', 'mean'],
-        'trade_profits': 'sum'
+        profit: ['sum', 'mean'],
+        profit_pred: ['sum', 'mean'],
+        trade_profit: 'sum'
     }
     stocks = df.groupby(symbol).agg(args)
     
     # Performance by day
     args = {
         symbol: 'nunique',
-        profits: ['sum', 'mean'],
-        predicted_profits: ['sum', 'mean'],
+        profit: ['sum', 'mean'],
+        profit_pred: ['sum', 'mean'],
         trade: 'count',
         position: 'sum',
-        'trade_profits': 'sum'
+        trade_profit: 'sum'
     }
     daily = df.groupby(time).agg(args)
     trades = df.groupby(trade).agg(args)
     
     daily['mad'] = (
-        daily['trade_profits']['sum'] 
-        - daily['trade_profits']['sum'].rolling(window_size, min_periods=1).mean()
+        daily[trade_profit, 'sum'] 
+        - daily[trade_profit, 'sum'].rolling(window_size, min_periods=1).mean()
     ).abs().rolling(window_size, min_periods=1).mean()
     
     plots = {
-        'Number of Trades': daily['trade']['count'],
-        'Trading Profits': daily['trade_profits']['sum'].cumsum(),
+        'Number of Trades': daily[trade, 'count'],
+        'Trading Profits': daily[trade_profit, 'sum'].cumsum(),
         'Profit MAD': daily['mad'].tail(len(daily) - window_size),
-        'Max Daily Change': daily['trade_profits']['sum'].abs().cummax(),
+        'Max Daily Change': daily[trade_profit, 'sum'].abs().cummax(),
     }
     for plot in plots:
         plt.title(plot)
@@ -166,12 +169,12 @@ def portfolio_performance(
         plt.show()
     
     hists = {
-        'Daily Trades': daily['trade']['count'],
+        'Daily Trades': daily[trade]['count'],
         'Daily % Change': (
-            (budget+daily['trade_profits']['sum'].cumsum())
-            /(budget+daily['trade_profits']['sum'].cumsum().shift(1))).dropna(),
-        'Trades By Stocks': stocks['trade']['count'],
-        'Profits By Stocks': stocks['trade_profits']['sum'],
+            (budget+daily[trade_profit, 'sum'].cumsum())
+            /(budget+daily[trade_profit, 'sum'].cumsum().shift(1))).dropna(),
+        'Trades By Stocks': stocks[trade, 'count'],
+        'Profits By Stocks': stocks[trade_profit, 'sum'],
     }
     for hist in hists:
         plt.title(hist)
@@ -179,9 +182,9 @@ def portfolio_performance(
         plt.show()
     
     bars = {
-        'Trades By Direction': trades['trade']['count'],
-        'Profits By Direction': trades['trade_profits']['sum'],
-        'Position Size By Direction': trades[position]['sum'],
+        'Trades By Direction': trades[trade, 'count'],
+        'Profits By Direction': trades[trade_profit, 'sum'],
+        'Position Size By Direction': trades[position, 'sum'],
     }
     for bar in bars:
         data = bars.get(bar)
@@ -189,4 +192,42 @@ def portfolio_performance(
         plt.bar(data.index, data.values)
         plt.show()
     
-    return daily, stocks
+    return daily, stocks, trades
+
+
+def sp_comparison(
+    daily=None,
+    date_start='2000-01-01',
+    date_end='2010-01-01'
+):
+
+    query = f"""
+        with raw as (
+            select 
+                market_datetime::date
+                , 100 * (1 - open/lag(open) over(order by market_datetime)) as sp_return
+            from yahoo.sp_index
+            where market_datetime between '{date_start}'::date - interval '1 day' and '{date_end}')
+        select *
+        from raw
+        where market_datetime >= '{date_start}'
+        """
+    sp = utils.query_db(query=query)
+    
+    df = pd.DataFrame(100 * (daily['trade_profit', 'sum'] / daily['position', 'sum']), columns=['portfolio_return'])
+    df['day_date'] = df.index.date
+    df = sp.merge(df[['day_date', 'portfolio_return']], how='inner', left_on='market_datetime', right_on='day_date')
+    
+    plt.title('SP & Portfolio Returns')
+    plt.plot(df['market_datetime'], df['sp_return'], color='r', label='SP')
+    plt.plot(df['market_datetime'], df['portfolio_return'], color='g', label='Portfolio')
+    plt.hlines(0, xmin=df['market_datetime'].min(), xmax=df['market_datetime'].max())
+    plt.legend()
+    plt.show()
+    
+    plt.title('Portfolio Over SP Returns')
+    plt.plot(df['market_datetime'], df['portfolio_return'] - df['sp_return'])
+    plt.hlines(0, xmin=df['market_datetime'].min(), xmax=df['market_datetime'].max())
+    plt.show()
+    
+    return df
