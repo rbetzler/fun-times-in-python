@@ -198,7 +198,8 @@ def portfolio_performance(
 def sp_comparison(
     daily=None,
     date_start='2000-01-01',
-    date_end='2010-01-01'
+    date_end='2010-01-01',
+    window_size=100
 ):
 
     query = f"""
@@ -228,6 +229,24 @@ def sp_comparison(
     plt.title('Portfolio Over SP Returns')
     plt.plot(df['market_datetime'], df['portfolio_return'] - df['sp_return'])
     plt.hlines(0, xmin=df['market_datetime'].min(), xmax=df['market_datetime'].max())
+    plt.show()
+    
+    plt.title('Max Daily Drawdown')
+    plt.plot(df['sp_return'].cummin(), label='SP')
+    plt.plot(df['portfolio_return'].cummin(), label='Portfolio')
+    plt.legend()
+    plt.show()
+
+    for col in ['sp_return', 'portfolio_return']:
+        df[col + '_mad'] = (
+            df[col]
+            - df[col].rolling(window_size, min_periods=1).mean()
+        ).abs().rolling(window_size, min_periods=1).mean()
+    
+    plt.title('Portfolio v SP MAD')
+    plt.plot(df['sp_return_mad'].tail(len(df) - window_size), label='SP')
+    plt.plot(df['portfolio_return_mad'].tail(len(df) - window_size), label='Portfolio')
+    plt.legend()
     plt.show()
     
     return df
