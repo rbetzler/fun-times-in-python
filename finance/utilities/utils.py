@@ -27,8 +27,9 @@ def insert_record(db_connection=DW_STOCKS, query=None):
 def retrieve_secret(var, pwd=''):
     secrets = open('audit/babylon.env').read().split()
     for secret in secrets:
-        if var == secret.split('=')[0]:
-            pwd = secret.split('=')[1]
+        _var, _, _pwd = secret.partition('=')
+        if var == _var:
+            pwd = _pwd
     return pwd
 
 
