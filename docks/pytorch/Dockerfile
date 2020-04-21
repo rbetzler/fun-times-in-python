@@ -20,11 +20,11 @@ RUN adduser --disabled-password --gecos '' --shell /bin/bash user \
 RUN echo "user ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/90-user
 USER user
 
-# All users can use /home/user as their home directory
+# Set home
 ENV HOME=/home/user
 RUN chmod 777 /home/user
 
-# Install Miniconda
+# Install miniconda
 RUN curl -so ~/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-4.5.11-Linux-x86_64.sh \
  && chmod +x ~/miniconda.sh \
  && ~/miniconda.sh -b -p ~/miniconda \
@@ -32,7 +32,7 @@ RUN curl -so ~/miniconda.sh https://repo.continuum.io/miniconda/Miniconda3-4.5.1
 ENV PATH=/home/user/miniconda/bin:$PATH
 ENV CONDA_AUTO_UPDATE_CONDA=false
 
-# Create a Python 3.6 environment
+# Create py env
 RUN /home/user/miniconda/bin/conda install conda-build \
  && /home/user/miniconda/bin/conda create -y --name py36 python=3.6.5 \
  && /home/user/miniconda/bin/conda clean -ya
@@ -48,25 +48,19 @@ RUN conda install -y -c pytorch \
     torchvision=0.2.1 \
  && conda clean -ya
 
-# Install HDF5 Python bindings
+# Install hdf5 bindings
 RUN conda install -y h5py=2.8.0 \
  && conda clean -ya
 RUN pip install h5py-cache==1.0
 
-# Install Torchnet, a high-level framework for PyTorch
+# Install torchnet
 RUN pip install torchnet==0.0.4
 
-# Install Requests, a Python library for making HTTP requests
+# Install requests
 RUN conda install -y requests=2.19.1 \
  && conda clean -ya
 
-# RICK -- commented this out
-# Install Graphviz
-#RUN conda install -y graphviz=2.38.0 \
-# && conda clean -ya
-#RUN pip install graphviz==0.8.4
-
-# Install OpenCV3 Python bindings
+# Install opencv3 bindings
 RUN sudo apt-get update && sudo apt-get install -y --no-install-recommends \
     libgtk2.0-0 \
     libcanberra-gtk-module \
@@ -79,20 +73,20 @@ RUN conda install -y -c menpo opencv3=3.1.0 \
 #RUN sudo apt-get install -y curl
 #RUN sudo apt-get install -y libpq-dev
 
-# RICK -- added requirements file
+# Added requirements file
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-# RICK -- install jupyter notebook
+# Install jupyter notebook
 RUN conda install -c conda-forge jupyterlab
 
-# RICK -- install graphviz later
+# Install graphviz later
 RUN conda install graphviz
 
-# RICK -- set python path
+# Set python path
 ENV PYTHONPATH=$PYTHONPATH:/usr/src/app
 
-# RICK -- set working directory to where i want
+# Set working directory to where i want
 WORKDIR /usr/src/app
 
 # Set the default command to python3

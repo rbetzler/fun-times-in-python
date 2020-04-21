@@ -51,6 +51,6 @@ jupyter lab --ip=0.0.0.0 --port=8888 --notebook-dir=/usr/src/app
 #### Jupyter Sans GPU
 ```
 sudo docker build . --tag jupyter
-docker run -it --name jupyter-explorer -p 8888:8888 -v /media/nautilus/fun-times-in-python:/usr/src/app --network bridge jupyter
-jupyter lab --ip=0.0.0.0 --port=8888 --notebook-dir=/usr/src/app
+docker run -it --name jupyter-explorer -p 8888:8888 -v ~/personal/fun-times-in-python:/usr/src/app --network bridge jupyter
+jupyter lab --ip=0.0.0.0 --port=8888 --notebook-dir=/usr/src/app --allow-root
 ```
