@@ -1,7 +1,4 @@
-import numpy as np
 import pandas as pd
-import scipy.stats as stats
-import scipy.optimize as opt
 
 from matplotlib import pyplot as plt
 
@@ -18,11 +15,12 @@ def kelly_criterion(predicted_win, predicted_loss, p_win):
     return bet_size
 
 
-def get_estimated_loss(df, 
-                       profit: str='profit',
-                       window_size: int=100,
-                       loss: str='median'
-                      ):
+def get_estimated_loss(
+        df,
+        profit: str='profit',
+        window_size: int=100,
+        loss: str='median'
+):
     df['is_profitable'] = False
     df.loc[df[profit] > 0, 'is_profitable'] = True
 
@@ -37,13 +35,14 @@ def get_estimated_loss(df,
     return df.drop(['is_profitable'], axis=1)
 
 
-def greedy_kelly(df,
-                 level: str='market_datetime',
-                 kelly: str='kelly',
-                 price: str='open',
-                 profit: str='profit',
-                 budget: float=1000,
-                ):
+def greedy_kelly(
+        df,
+        level: str='market_datetime',
+        kelly: str='kelly',
+        price: str='open',
+        profit: str='profit',
+        budget: float=1000,
+):
     df['position'] = 0
     df['n_shares'] = 0
 
@@ -62,14 +61,15 @@ def greedy_kelly(df,
     return pd.concat(positions_dfs), budgets
 
 
-def n_largest_kelly(df,
-                    n_stocks: int=3,
-                    level: str='market_datetime',
-                    kelly: str='kelly',
-                    price: str='open',
-                    profits: str='profits',
-                    budget: float=1000,
-                   ):
+def n_largest_kelly(
+        df,
+        n_stocks: int=3,
+        level: str='market_datetime',
+        kelly: str='kelly',
+        price: str='open',
+        profits: str='profits',
+        budget: float=1000,
+):
     df['position'] = 0
     df['n_shares'] = 0
     df[kelly + '_adj'] = 0
@@ -89,7 +89,6 @@ def n_largest_kelly(df,
 
 def greedy_kelly_diversified(
     df,
-    n_stocks: int=3,
     time: str='market_datetime',
     dimensions: list=[],
     kelly: str='kelly',
