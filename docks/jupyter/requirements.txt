@@ -1,0 +1,15 @@
+bs4
+numpy
+scipy
+pandas
+xgboost
+requests
+psycopg2
+matplotlib
+sqlalchemy
+statsmodels
+scikit-learn
+nltk
+apache-airflow
+docker
+torch

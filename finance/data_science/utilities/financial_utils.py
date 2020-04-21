@@ -41,7 +41,7 @@ class BlackScholes:
             option_price = current_stock_price * stats.norm.cdf(d_one, 0, 1) \
                            - strike_price * np.exp(1)**(-risk_free_rate*time_to_maturity) \
                            * stats.norm.cdf(d_two, 0, 1)
-        elif call_put == 'put':
+        else:
             option_price = strike_price * np.exp(1) ** (-risk_free_rate * time_to_maturity) \
                            * stats.norm.cdf(-d_two, 0, 1) \
                            - current_stock_price * stats.norm.cdf(-d_one, 0, 1)
