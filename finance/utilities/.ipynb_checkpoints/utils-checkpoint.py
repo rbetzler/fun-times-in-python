@@ -3,10 +3,13 @@ import psycopg2
 import pandas as pd
 import datetime
 
+absolute_path = os.path.dirname(__file__)
+relative_path = 'audit/babylon.env'
+full_path = os.path.join(absolute_path, relative_path)
 
 # Secrets
 def retrieve_secret(var, pwd=''):
-    secrets = open('audit/babylon.env').read().split()
+    secrets = open(full_path).read().split()
     for secret in secrets:
         _var, _, _pwd = secret.partition('=')
         if var == _var:
