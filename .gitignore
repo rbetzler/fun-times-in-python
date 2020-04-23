@@ -1,6 +1,7 @@
 # Ignore audit folder
 audit/
 .idea/
+finance/data_science/exploration/.ipynb_checkpoints
 
 # Ignore
 *.xml

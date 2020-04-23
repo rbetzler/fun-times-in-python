@@ -4,9 +4,19 @@ import pandas as pd
 import datetime
 
 
-# DW_STOCKS = 'postgresql://postgres:password@172.18.0.2:5432/dw_stocks'
-DW_STOCKS = 'postgresql://postgres:password@172.17.0.3:5432/dw_stocks'
-DW_STOCKS_JUPYTER = 'postgresql://postgres:password@localhost:5432/dw_stocks'
+# Secrets
+def retrieve_secret(var, pwd=''):
+    secrets = open('audit/babylon.env').read().split()
+    for secret in secrets:
+        _var, _, _pwd = secret.partition('=')
+        if var == _var:
+            pwd = _pwd
+    return pwd
+
+
+# Db utils
+DW_STOCKS = retrieve_secret('DW_STOCKS')
+DW_STOCKS_JUPYTER = retrieve_secret('DW_STOCKS_JUPYTER')
 
 
 def query_db(db_connection=DW_STOCKS, query=None):
@@ -24,15 +34,7 @@ def insert_record(db_connection=DW_STOCKS, query=None):
     conn.close()
 
 
-def retrieve_secret(var, pwd=''):
-    secrets = open('audit/babylon.env').read().split()
-    for secret in secrets:
-        _var, _, _pwd = secret.partition('=')
-        if var == _var:
-            pwd = _pwd
-    return pwd
-
-
+# Other
 def create_directory(directory):
     if not os.path.exists(directory):
         os.mkdir(directory)
