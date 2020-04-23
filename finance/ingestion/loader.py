@@ -8,11 +8,15 @@ from finance.utilities import utils
 
 
 class FileIngestion(abc.ABC):
-    def __init__(self,
-                 run_datetime=datetime.datetime.now()):
+    def __init__(
+            self,
+            run_datetime=datetime.datetime.now(),
+            n_files_to_process=0
+    ):
         self.db_connection = utils.DW_STOCKS
         self.run_datetime = run_datetime.strftime('%Y%m%d%H%M%S')
         self.ingest_datetime = run_datetime.strftime("%Y-%m-%d %H:%M:%S")
+        self.n_files_to_process = n_files_to_process
 
     # general
     @property
@@ -169,13 +173,17 @@ class FileIngestion(abc.ABC):
         available_files = self.get_available_files
         last_ingest_datetime = self.get_ingest_audit
         df = available_files[available_files['file_dates'] > last_ingest_datetime]
+        df = df.sort_values(by=['file_dates'])
+        if self.n_files_to_process > 0:
+            df = df.head(self.n_files_to_process)
         return df
 
-    @property
-    def insert_audit_record(self):
-        query = f" INSERT INTO audit.ingest_datetimes" \
-                + f" (schema_name, table_name, job_name, ingest_datetime)" \
-                + f" VALUES ('{self.schema}', '{self.table}', '{self.job_name}', '{self.ingest_datetime}')"
+    def insert_audit_record(self, ingest_datetime: str):
+        query = f"""
+            INSERT INTO audit.ingest_datetimes
+            (schema_name, table_name, job_name, ingest_datetime)
+            VALUES ('{self.schema}', '{self.table}', '{self.job_name}', '{ingest_datetime}')
+            """
         utils.insert_record(query=query)
         return
 
@@ -224,4 +232,4 @@ class FileIngestion(abc.ABC):
                     if_exists=self.append_to_table,
                     index=False)
 
-            self.insert_audit_record
+            self.insert_audit_record(ingest_datetime=files['file_dates'].max())
