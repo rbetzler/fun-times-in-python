@@ -189,6 +189,8 @@ class FileIngestion(abc.ABC):
 
     def execute(self):
         files = self.get_ingest_files
+        print(f'{len(files)} files to ingest')
+
         raw_dfs = []
         for idx, row in files.iterrows():
             raw = pd.read_csv(row['file_paths'])
@@ -199,20 +201,24 @@ class FileIngestion(abc.ABC):
         if not df.empty:
             df = self.clean_df(df)
             if bool(self.column_mapping):
+                print('renaming columns')
                 df = df.rename(columns=self.column_mapping)
 
             if 'ingest_datetime' not in df:
+                print('adding ingest_datetime')
                 df['ingest_datetime'] = self.ingest_datetime
 
             df = self.add_and_order_columns(df)
 
             if self.place_batch_file:
+                print('placing batch file')
                 df.to_csv(self.export_file_path(self.job_name),
                           index=False,
                           header=self.header_row,
                           sep=self.export_file_separator)
                 file = open(self.export_file_path(self.job_name), 'r')
 
+                print('copying to db')
                 conn = psycopg2.connect(self.db_connection)
                 cursor = conn.cursor()
                 copy_command = f"COPY {self.schema}.{self.table} " \
@@ -225,6 +231,7 @@ class FileIngestion(abc.ABC):
                 file.close()
 
             elif self.load_to_db:
+                print('loading straight to db')
                 df.to_sql(
                     self.table,
                     self.db_engine,
