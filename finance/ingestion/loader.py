@@ -191,52 +191,56 @@ class FileIngestion(abc.ABC):
         files = self.get_ingest_files
         print(f'{len(files)} files to ingest')
 
-        raw_dfs = []
-        for idx, row in files.iterrows():
-            raw = pd.read_csv(row['file_paths'])
-            raw['file_datetime'] = row['file_dates']
-            raw_dfs.append(raw)
-        df = pd.concat(raw_dfs, sort=False)
+        if not files.empty:
+            raw_dfs = []
+            for idx, row in files.iterrows():
+                raw = pd.read_csv(row['file_paths'])
+                raw['file_datetime'] = row['file_dates']
+                raw_dfs.append(raw)
+            df = pd.concat(raw_dfs, sort=False)
 
-        if not df.empty:
-            df = self.clean_df(df)
-            if bool(self.column_mapping):
-                print('renaming columns')
-                df = df.rename(columns=self.column_mapping)
+            if not df.empty:
+                df = self.clean_df(df)
+                if bool(self.column_mapping):
+                    print('renaming columns')
+                    df = df.rename(columns=self.column_mapping)
 
-            if 'ingest_datetime' not in df:
-                print('adding ingest_datetime')
-                df['ingest_datetime'] = self.ingest_datetime
+                if 'ingest_datetime' not in df:
+                    print('adding ingest_datetime')
+                    df['ingest_datetime'] = self.ingest_datetime
 
-            df = self.add_and_order_columns(df)
+                df = self.add_and_order_columns(df)
 
-            if self.place_batch_file:
-                print('placing batch file')
-                df.to_csv(self.export_file_path(self.job_name),
-                          index=False,
-                          header=self.header_row,
-                          sep=self.export_file_separator)
-                file = open(self.export_file_path(self.job_name), 'r')
+                if self.place_batch_file:
+                    print('placing batch file')
+                    df.to_csv(self.export_file_path(self.job_name),
+                              index=False,
+                              header=self.header_row,
+                              sep=self.export_file_separator)
+                    file = open(self.export_file_path(self.job_name), 'r')
 
-                print('copying to db')
-                conn = psycopg2.connect(self.db_connection)
-                cursor = conn.cursor()
-                copy_command = f"COPY {self.schema}.{self.table} " \
-                               f"FROM STDIN " \
-                               f"DELIMITER ',' QUOTE '{self.batch_quote_char}' CSV "
-                cursor.copy_expert(copy_command, file=open(self.export_file_path(self.job_name)))
-                conn.commit()
-                cursor.close()
-                conn.close()
-                file.close()
+                    print('copying to db')
+                    conn = psycopg2.connect(self.db_connection)
+                    cursor = conn.cursor()
+                    copy_command = f"COPY {self.schema}.{self.table} " \
+                                   f"FROM STDIN " \
+                                   f"DELIMITER ',' QUOTE '{self.batch_quote_char}' CSV "
+                    cursor.copy_expert(copy_command, file=open(self.export_file_path(self.job_name)))
+                    conn.commit()
+                    cursor.close()
+                    conn.close()
+                    file.close()
 
-            elif self.load_to_db:
-                print('loading straight to db')
-                df.to_sql(
-                    self.table,
-                    self.db_engine,
-                    schema=self.schema,
-                    if_exists=self.append_to_table,
-                    index=False)
+                elif self.load_to_db:
+                    print('loading straight to db')
+                    df.to_sql(
+                        self.table,
+                        self.db_engine,
+                        schema=self.schema,
+                        if_exists=self.append_to_table,
+                        index=False)
 
-            self.insert_audit_record(ingest_datetime=files['file_dates'].max())
+                self.insert_audit_record(ingest_datetime=files['file_dates'].max())
+
+        else:
+            print('no files to ingest')
