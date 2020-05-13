@@ -156,6 +156,8 @@ class FileIngestion(abc.ABC):
 
         df['file_dates'] = df['file_names'].str.rpartition('_')[2].str.partition(self.import_file_extension)[0]
         df['file_dates'] = pd.to_datetime(df['file_dates'], format=self.import_file_date_format)
+        df['file_modified_datetime'] = df['file_paths'].apply(os.path.getmtime)
+        df['file_modified_datetime'] = pd.to_datetime(df['file_modified_datetime'], unit='s')
         return df
 
     @property
@@ -172,8 +174,8 @@ class FileIngestion(abc.ABC):
     def get_ingest_files(self) -> pd.DataFrame:
         available_files = self.get_available_files
         last_ingest_datetime = self.get_ingest_audit
-        df = available_files[available_files['file_dates'] > last_ingest_datetime]
-        df = df.sort_values(by=['file_dates'])
+        df = available_files[available_files['file_modified_datetime'] >= last_ingest_datetime]
+        df = df.sort_values(by=['file_modified_datetime'])
         if self.n_files_to_process > 0:
             df = df.head(self.n_files_to_process)
         return df
@@ -240,7 +242,7 @@ class FileIngestion(abc.ABC):
                         if_exists=self.append_to_table,
                         index=False)
 
-                self.insert_audit_record(ingest_datetime=files['file_dates'].max())
+                self.insert_audit_record(ingest_datetime=files['file_modified_datetime'].max())
 
         else:
             print('no files to ingest')
