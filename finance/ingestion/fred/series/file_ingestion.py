@@ -20,7 +20,7 @@ class ABCFREDSeriesFileIngestion(loader.FileIngestion):
         return df
 
 
-class FREDInflationFileIngestion(ABCFREDSeriesFileIngestion):
+class FREDInflation(ABCFREDSeriesFileIngestion):
     @property
     def job_name(self) -> str:
         return 'fred_series_inflation'
@@ -34,7 +34,7 @@ class FREDInflationFileIngestion(ABCFREDSeriesFileIngestion):
         return 'inflation'
 
 
-class FREDGovernmentDebtFileIngestion(ABCFREDSeriesFileIngestion):
+class FREDGovernmentDebt(ABCFREDSeriesFileIngestion):
     @property
     def job_name(self) -> str:
         return 'fred_series_central_government_debt'
@@ -48,7 +48,7 @@ class FREDGovernmentDebtFileIngestion(ABCFREDSeriesFileIngestion):
         return 'central_government_debt'
 
 
-class FREDHouseholdDebtFileIngestion(ABCFREDSeriesFileIngestion):
+class FREDHouseholdDebt(ABCFREDSeriesFileIngestion):
     @property
     def job_name(self) -> str:
         return 'fred_series_household_debt_to_gdp'
@@ -62,7 +62,7 @@ class FREDHouseholdDebtFileIngestion(ABCFREDSeriesFileIngestion):
         return 'household_debt_to_gdp'
 
 
-class FREDRealGDPPerCapitaFileIngestion(ABCFREDSeriesFileIngestion):
+class FREDRealGDPPerCapita(ABCFREDSeriesFileIngestion):
     @property
     def job_name(self) -> str:
         return 'fred_series_real_gdp_per_capita'
@@ -76,7 +76,7 @@ class FREDRealGDPPerCapitaFileIngestion(ABCFREDSeriesFileIngestion):
         return 'real_gdp_per_capita'
 
 
-class FREDStockMarketCapitalizationFileIngestion(ABCFREDSeriesFileIngestion):
+class FREDStockMarketCapitalization(ABCFREDSeriesFileIngestion):
     @property
     def job_name(self) -> str:
         return 'fred_series_stock_market_capitalization_to_gdp'
@@ -90,10 +90,54 @@ class FREDStockMarketCapitalizationFileIngestion(ABCFREDSeriesFileIngestion):
         return 'stock_market_capitalization_to_gdp'
 
 
-if __name__ == '__main__':
-    FREDInflationFileIngestion().execute()
-    FREDGovernmentDebtFileIngestion().execute()
-    FREDHouseholdDebtFileIngestion().execute()
-    FREDRealGDPPerCapitaFileIngestion().execute()
-    FREDStockMarketCapitalizationFileIngestion().execute()
+class FREDTreasuriesOneYear(ABCFREDSeriesFileIngestion):
+    @property
+    def job_name(self) -> str:
+        return 'fred_1_year_treasury_bill'
 
+    @property
+    def import_file_prefix(self) -> str:
+        return 'fred_1_year_treasury_bill_'
+
+    @property
+    def table(self) -> str:
+        return 'treasuries_one_year'
+
+
+class FREDTreasuriesSixMonth(ABCFREDSeriesFileIngestion):
+    @property
+    def job_name(self) -> str:
+        return 'fred_6_month_treasury_bill'
+
+    @property
+    def import_file_prefix(self) -> str:
+        return 'fred_6_month_treasury_bill_'
+
+    @property
+    def table(self) -> str:
+        return 'treasuries_six_month'
+
+
+class FREDTreasuriesThreeMonth(ABCFREDSeriesFileIngestion):
+    @property
+    def job_name(self) -> str:
+        return 'fred_3_month_treasury_bill'
+
+    @property
+    def import_file_prefix(self) -> str:
+        return 'fred_3_month_treasury_bill_'
+
+    @property
+    def table(self) -> str:
+        return 'treasuries_three_month'
+
+
+if __name__ == '__main__':
+    FREDInflation().execute()
+    FREDGovernmentDebt().execute()
+    FREDHouseholdDebt().execute()
+    FREDRealGDPPerCapita().execute()
+    FREDStockMarketCapitalization().execute()
+    FREDTreasuriesOneYear().execute()
+    FREDTreasuriesSixMonth().execute()
+    FREDTreasuriesThreeMonth().execute()

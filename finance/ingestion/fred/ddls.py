@@ -308,6 +308,22 @@ JOBS = f"""
         , NOW() as ingest_datetime
     from series
     where id in ('DFF', 'CPIAUCSL', 'NROU', 'NROUST', 'TEDRATE');
+    
+    --treasuries
+    INSERT INTO fred.jobs(series_id, series_name, category, is_active, ingest_datetime)
+    select distinct
+        id as series_id
+        , lower(regexp_replace(trim(left(title, position('Bill' in title)+3)), '[\s+\-]', '_', 'g')) as series_name
+        , 'treasuries' as category
+        , true as is_active
+        , NOW() as ingest_datetime
+    from fred.series
+    where frequency = 'Daily' 
+    and title in (
+        '3-Month Treasury Bill: Secondary Market Rate',
+        '6-Month Treasury Bill: Secondary Market Rate',
+        '1-Year Treasury Bill: Secondary Market Rate'
+        );
   """
 SERIES_TEMPLATE = """
   CREATE TABLE IF NOT EXISTS fred._series_template
@@ -328,11 +344,14 @@ SERIES_TEMPLATE = """
     value               numeric(20,6),
     country             text,
     series              text,
-    ingest_datetime       timestamp without time zone
+    ingest_datetime     timestamp without time zone
   );
   CREATE TABLE IF NOT EXISTS fred.inflation AS (select * from fred._series_template);
   CREATE TABLE IF NOT EXISTS fred.central_government_debt AS (select * from fred._series_template);
   CREATE TABLE IF NOT EXISTS fred.household_debt_to_gdp AS (select * from fred._series_template);
   CREATE TABLE IF NOT EXISTS fred.real_gdp_per_capita AS (select * from fred._series_template);
   CREATE TABLE IF NOT EXISTS fred.stock_market_capitalization_to_gdp AS (select * from fred._series_template);
+  CREATE TABLE IF NOT EXISTS fred.treasuries_one_year AS (select * from fred._series_template);
+  CREATE TABLE IF NOT EXISTS fred.treasuries_six_month AS (select * from fred._series_template);
+  CREATE TABLE IF NOT EXISTS fred.treasuries_three_month AS (select * from fred._series_template);
   """

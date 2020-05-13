@@ -3,6 +3,10 @@ from finance.ingestion import scraper
 
 
 class FREDSeriesSearchesAPIGrabber(scraper.Caller):
+    """
+    Hits FRED API for series which contain words found in fred.series_searches
+    """
+
     # general
     @property
     def api_name(self) -> str:

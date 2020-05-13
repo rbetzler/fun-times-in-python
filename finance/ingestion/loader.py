@@ -156,6 +156,8 @@ class FileIngestion(abc.ABC):
 
         df['file_dates'] = df['file_names'].str.rpartition('_')[2].str.partition(self.import_file_extension)[0]
         df['file_dates'] = pd.to_datetime(df['file_dates'], format=self.import_file_date_format)
+        df['file_modified_datetime'] = df['file_paths'].apply(os.path.getmtime)
+        df['file_modified_datetime'] = pd.to_datetime(df['file_modified_datetime'], unit='s')
         return df
 
     @property
@@ -172,8 +174,8 @@ class FileIngestion(abc.ABC):
     def get_ingest_files(self) -> pd.DataFrame:
         available_files = self.get_available_files
         last_ingest_datetime = self.get_ingest_audit
-        df = available_files[available_files['file_dates'] > last_ingest_datetime]
-        df = df.sort_values(by=['file_dates'])
+        df = available_files[available_files['file_modified_datetime'] >= last_ingest_datetime]
+        df = df.sort_values(by=['file_modified_datetime'])
         if self.n_files_to_process > 0:
             df = df.head(self.n_files_to_process)
         return df
@@ -189,47 +191,58 @@ class FileIngestion(abc.ABC):
 
     def execute(self):
         files = self.get_ingest_files
-        raw_dfs = []
-        for idx, row in files.iterrows():
-            raw = pd.read_csv(row['file_paths'])
-            raw['file_datetime'] = row['file_dates']
-            raw_dfs.append(raw)
-        df = pd.concat(raw_dfs, sort=False)
+        print(f'{len(files)} files to ingest')
 
-        if not df.empty:
-            df = self.clean_df(df)
-            if bool(self.column_mapping):
-                df = df.rename(columns=self.column_mapping)
+        if not files.empty:
+            raw_dfs = []
+            for idx, row in files.iterrows():
+                raw = pd.read_csv(row['file_paths'])
+                raw['file_datetime'] = row['file_dates']
+                raw_dfs.append(raw)
+            df = pd.concat(raw_dfs, sort=False)
 
-            if 'ingest_datetime' not in df:
-                df['ingest_datetime'] = self.ingest_datetime
+            if not df.empty:
+                df = self.clean_df(df)
+                if bool(self.column_mapping):
+                    print('renaming columns')
+                    df = df.rename(columns=self.column_mapping)
 
-            df = self.add_and_order_columns(df)
+                if 'ingest_datetime' not in df:
+                    print('adding ingest_datetime')
+                    df['ingest_datetime'] = self.ingest_datetime
 
-            if self.place_batch_file:
-                df.to_csv(self.export_file_path(self.job_name),
-                          index=False,
-                          header=self.header_row,
-                          sep=self.export_file_separator)
-                file = open(self.export_file_path(self.job_name), 'r')
+                df = self.add_and_order_columns(df)
 
-                conn = psycopg2.connect(self.db_connection)
-                cursor = conn.cursor()
-                copy_command = f"COPY {self.schema}.{self.table} " \
-                               f"FROM STDIN " \
-                               f"DELIMITER ',' QUOTE '{self.batch_quote_char}' CSV "
-                cursor.copy_expert(copy_command, file=open(self.export_file_path(self.job_name)))
-                conn.commit()
-                cursor.close()
-                conn.close()
-                file.close()
+                if self.place_batch_file:
+                    print('placing batch file')
+                    df.to_csv(self.export_file_path(self.job_name),
+                              index=False,
+                              header=self.header_row,
+                              sep=self.export_file_separator)
+                    file = open(self.export_file_path(self.job_name), 'r')
 
-            elif self.load_to_db:
-                df.to_sql(
-                    self.table,
-                    self.db_engine,
-                    schema=self.schema,
-                    if_exists=self.append_to_table,
-                    index=False)
+                    print('copying to db')
+                    conn = psycopg2.connect(self.db_connection)
+                    cursor = conn.cursor()
+                    copy_command = f"COPY {self.schema}.{self.table} " \
+                                   f"FROM STDIN " \
+                                   f"DELIMITER ',' QUOTE '{self.batch_quote_char}' CSV "
+                    cursor.copy_expert(copy_command, file=open(self.export_file_path(self.job_name)))
+                    conn.commit()
+                    cursor.close()
+                    conn.close()
+                    file.close()
 
-            self.insert_audit_record(ingest_datetime=files['file_dates'].max())
+                elif self.load_to_db:
+                    print('loading straight to db')
+                    df.to_sql(
+                        self.table,
+                        self.db_engine,
+                        schema=self.schema,
+                        if_exists=self.append_to_table,
+                        index=False)
+
+                self.insert_audit_record(ingest_datetime=files['file_modified_datetime'].max())
+
+        else:
+            print('no files to ingest')
