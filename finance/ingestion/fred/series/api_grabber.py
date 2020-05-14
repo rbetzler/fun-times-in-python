@@ -39,7 +39,7 @@ class FREDSeriesAPIGrabber(scraper.Caller):
         return 'fred_'
 
     # parse
-    def parse(self, res) -> pd.DataFrame:
+    def parse(self, res, call) -> pd.DataFrame:
         res = res.json()
 
         keys_to_cols = [

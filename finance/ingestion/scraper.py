@@ -169,19 +169,19 @@ class Caller(abc.ABC):
     def column_mapping(self) -> dict:
         return {}
 
-    def parse(self, response) -> pd.DataFrame:
+    def parse(self, response, call) -> pd.DataFrame:
         pass
 
     # wrapper
     def parallelize(self, call) -> pd.DataFrame:
-        response = self.summon(call[0])
-        df = self.parse(response)
+        response = self.summon(call[1].values[0])
+        df = self.parse(response, call[0])
 
         if bool(self.column_mapping):
             df = df.rename(columns=self.column_mapping)
 
         if self.place_raw_file:
-            df.to_csv(self.export_file_path(call.name), index=False)
+            df.to_csv(self.export_file_path(call[0]), index=False)
 
         time.sleep(self.len_of_pause)
         return df
@@ -191,7 +191,7 @@ class Caller(abc.ABC):
         calls = self.get_calls
         df = self.parallel_output
         executor = concurrent.futures.ProcessPoolExecutor(max_workers=self.n_workers)
-        future_to_url = {executor.submit(self.parallelize, row): row for idx, row in calls.iterrows()}
+        future_to_url = {executor.submit(self.parallelize, call): call for call in calls.iterrows()}
 
         for future in concurrent.futures.as_completed(future_to_url):
             df = pd.concat([df, future.result()], sort=False)

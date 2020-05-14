@@ -99,7 +99,7 @@ class TDOptionsAPI(scraper.Caller):
         }
         return names
 
-    def parse_chain(self, chain) -> pd.DataFrame:
+    def parse_chain(self, chain, call) -> pd.DataFrame:
         df = pd.DataFrame()
         try:
             for date in chain.keys():
@@ -112,19 +112,19 @@ class TDOptionsAPI(scraper.Caller):
                     temp['days_to_expiration_date'] = date.partition(':')[2]
                     df = df.append(temp)
         except AttributeError:
-            print('ehh')
+            print(call)
         df = df.rename(columns=self.column_renames)
         return df
 
-    def parse(self, res) -> pd.DataFrame:
+    def parse(self, res, call) -> pd.DataFrame:
         res = res.json()
 
         symbol = res.get('symbol')
         volatility = res.get('volatility')
         n_contracts = res.get('numberOfContracts')
         interest_rate = res.get('interestRate')
-        calls = self.parse_chain(res.get('callExpDateMap'))
-        puts = self.parse_chain(res.get('putExpDateMap'))
+        calls = self.parse_chain(res.get('callExpDateMap'), call)
+        puts = self.parse_chain(res.get('putExpDateMap'), call)
 
         df = calls.append(puts)
         df['symbol'] = symbol

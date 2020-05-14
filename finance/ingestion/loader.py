@@ -190,6 +190,7 @@ class FileIngestion(abc.ABC):
         return
 
     def execute(self):
+        print('Getting list of files to ingest')
         files = self.get_ingest_files
         print(f'{len(files)} files to ingest')
 
