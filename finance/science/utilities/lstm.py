@@ -6,7 +6,7 @@ import torch
 from torch import nn, functional, optim, autograd
 
 from finance.utilities import utils
-from finance.data_science.utilities import cluster_utils
+from finance.science.utilities import cluster_utils
 
 
 class TorchLSTM(nn.Module):
