@@ -83,7 +83,7 @@ class TDOptionsAPI(scraper.Caller):
         names = {'datetime': 'market_datetime_epoch'}
         return names
 
-    def parse(self, res) -> pd.DataFrame:
+    def parse(self, res, call) -> pd.DataFrame:
         res = res.json()
 
         symbol = res.get('symbol')
@@ -96,7 +96,7 @@ class TDOptionsAPI(scraper.Caller):
         try:
             df['market_datetime'] = pd.to_datetime(df['datetime'], unit='ms')
         except KeyError:
-            print('ehh')
+            print(f'Failed: {call}')
 
         df = df.rename(columns=self.column_renames)
         return df
