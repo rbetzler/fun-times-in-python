@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="RemoteMappingsManager">
+    <list>
+      <list>
+        <remote-mappings server-id="python@docker://py-dw-stocks:latest/python">
+          <settings>
+            <list>
+              <mapping local-root="/raw_files" remote-root="/mnt" />
+              <mapping local-root="/fun-times-in-python" remote-root="/usr/src/app" />
+            </list>
+          </settings>
+        </remote-mappings>
+        <remote-mappings server-id="python@docker://pytorch:latest/python">
+          <settings>
+            <list>
+              <mapping local-root=" /raw_files" remote-root="/mnt" />
+              <mapping local-root="/fun-times-in-python" remote-root="/usr/src/app" />
+            </list>
+          </settings>
+        </remote-mappings>
+      </list>
+    </list>
+  </component>
+</project>
