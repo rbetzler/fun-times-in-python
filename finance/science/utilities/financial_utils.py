@@ -7,37 +7,37 @@ import scipy.optimize as opt
 class BlackScholes:
     def __init__(self,
                  current_option_price=0,
-                 current_stock_price=0,
-                 strike_price=0,
+                 stock_price=0,
+                 strike=0,
                  risk_free_rate=0,
                  days_to_maturity=0,
                  volatility=0,
-                 call_put=None):
+                 is_call=True):
         self.current_option_price = current_option_price
-        self.current_stock_price = current_stock_price
-        self.strike_price = strike_price
-        self.risk_free_rate = np.log(risk_free_rate)
-        # time in days
-        self.time_to_maturity = days_to_maturity/365
+        self.stock = stock_price
+        self.strike = strike
+        self.risk_free_rate = risk_free_rate
+        self.time = days_to_maturity/365
         self.volatility = volatility
-        self.call_put = call_put
+        self.is_call = is_call
 
     """
     Option prices
     """
     @staticmethod
-    def option_price_calculator(current_stock_price,
-                                strike_price,
-                                risk_free_rate,
-                                time_to_maturity,
-                                volatility,
-                                call_put):
+    def option_price_calculator(
+            stock,
+            strike,
+            risk_free_rate,
+            time,
+            volatility,
+            is_call,
+    ):
 
-        d_one = (np.log(current_stock_price/strike_price) + (risk_free_rate+(volatility**2/2))*time_to_maturity) \
-                / (volatility * np.sqrt(time_to_maturity))
+        d_one = (np.log(current_stock_price/strike_price) + (risk_free_rate+(volatility**2/2))*time_to_maturity) / (volatility * np.sqrt(time_to_maturity))
         d_two = d_one - volatility * np.sqrt(time_to_maturity)
 
-        if call_put == 'call':
+        if is_call:
             option_price = current_stock_price * stats.norm.cdf(d_one, 0, 1) \
                            - strike_price * np.exp(1)**(-risk_free_rate*time_to_maturity) \
                            * stats.norm.cdf(d_two, 0, 1)
@@ -49,12 +49,14 @@ class BlackScholes:
 
     @property
     def option_price(self):
-        option_price = self.option_price_calculator(current_stock_price=self.current_stock_price,
-                                                    strike_price=self.strike_price,
-                                                    risk_free_rate=self.risk_free_rate,
-                                                    time_to_maturity=self.time_to_maturity,
-                                                    volatility=self.volatility,
-                                                    call_put=self.call_put)
+        option_price = self.option_price_calculator(
+            stock=self.stock,
+            strike=self.strike,
+            risk_free_rate=self.risk_free_rate,
+            time=self.time,
+            volatility=self.volatility,
+            is_call=self.is_call,
+        )
         return option_price
 
     """
@@ -62,12 +64,14 @@ class BlackScholes:
     Requires helper since brentq will only work for one input
     """
     def implied_volatility_helper(self, volatility_guess):
-        est_option_price = self.option_price_calculator(current_stock_price=self.current_stock_price,
-                                                        strike_price=self.strike_price,
-                                                        risk_free_rate=self.risk_free_rate,
-                                                        time_to_maturity=self.time_to_maturity,
-                                                        volatility=volatility_guess,
-                                                        call_put=self.call_put)
+        est_option_price = self.option_price_calculator(
+            stock=self.stock,
+            strike=self.strike,
+            risk_free_rate=self.risk_free_rate,
+            time=self.time,
+            volatility=volatility_guess,
+            is_call=self.is_call,
+        )
         diff = est_option_price - self.current_option_price
         return diff
 
@@ -80,53 +84,60 @@ class BlackScholes:
     Greeks
     """
     def delta(self, stock_price):
-        # the rate of change in an options value as the underlying changes
-        option_price = self.option_price_calculator(current_stock_price=stock_price,
-                                                    strike_price=self.strike_price,
-                                                    risk_free_rate=self.risk_free_rate,
-                                                    time_to_maturity=self.time_to_maturity,
-                                                    volatility=self.volatility,
-                                                    call_put=self.call_put)
+        """the rate of change in an options value as the underlying changes"""
+        option_price = self.option_price_calculator(
+            stock=stock_price,
+            strike=self.strike,
+            risk_free_rate=self.risk_free_rate,
+            time=self.time,
+            volatility=self.volatility,
+            is_call=self.is_call,
+        )
         return option_price
 
+    #TODO
     def gamma(self):
-        # the rate of change in an options value as the delta changes
+        """the rate of change in an options value as the delta changes"""
         pass
 
     def ro(self, rate):
-        # the rate of change in an options value as the risk free rate changes
-        option_price = self.option_price_calculator(current_stock_price=self.current_stock_price,
-                                                    strike_price=self.strike_price,
-                                                    risk_free_rate=rate,
-                                                    time_to_maturity=self.time_to_maturity,
-                                                    volatility=self.volatility,
-                                                    call_put=self.call_put)
+        """the rate of change in an options value as the risk free rate changes"""
+        option_price = self.option_price_calculator(
+            stock=self.stock,
+            strike=self.strike,
+            risk_free_rate=rate,
+            time=self.time,
+            volatility=self.volatility,
+            is_call=self.is_call,
+        )
         return option_price
 
     def theta(self, day):
-        # the rate of change in an options value as the time to maturity changes
-        option_price = self.option_price_calculator(current_stock_price=self.current_stock_price,
-                                                    strike_price=self.strike_price,
-                                                    risk_free_rate=self.risk_free_rate,
-                                                    time_to_maturity=day,
-                                                    volatility=self.volatility,
-                                                    call_put=self.call_put)
+        """the rate of change in an options value as the time to maturity changes"""
+        option_price = self.option_price_calculator(
+            stock=self.stock,
+            strike=self.strike,
+            risk_free_rate=self.risk_free_rate,
+            time=day,
+            volatility=self.volatility,
+            is_call=self.is_call,
+        )
         return option_price
 
     def vega(self, vol):
-        # the rate of change in an options value as volatility changes
-        option_price = self.option_price_calculator(current_stock_price=self.current_stock_price,
-                                                    strike_price=self.strike_price,
-                                                    risk_free_rate=self.risk_free_rate,
-                                                    time_to_maturity=self.time_to_maturity,
-                                                    volatility=vol,
-                                                    call_put=self.call_put)
+        """the rate of change in an options value as volatility changes"""
+        option_price = self.option_price_calculator(
+            stock=self.stock,
+            strike=self.strike,
+            risk_free_rate=self.risk_free_rate,
+            time=self.time,
+            volatility=vol,
+            is_call=self.is_call,
+        )
         return option_price
 
-    """
-    Greek wrapper
-    """
     def get_greek(self, greek=None, steps=30):
+        """wrapper to calculate greeks"""
         daily_diffs = []
         percent_down = (100 - steps) / 100
         percent_up = (100 + steps) / 100
