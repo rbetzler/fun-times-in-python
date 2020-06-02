@@ -141,7 +141,7 @@ class BlackScholes:
     @property
     def delta(self):
         """the rate of change in an options value as the underlying changes"""
-        delta = np.e ** (-self.risk_free_rate * self.time) * self._cumulative_density_function(self.d1)
+        delta = np.exp(-self.risk_free_rate * self.time) * self._cumulative_density_function(self.d1)
         return delta
 
     @property
@@ -166,6 +166,7 @@ class BlackScholes:
                     -self.time * self.strike * np.exp(-self.risk_free_rate * self.time)
                     * self._cumulative_density_function(-self.d2)
             )
+        rho = rho/100
         return rho
 
     @property
@@ -185,6 +186,7 @@ class BlackScholes:
                 * self._cumulative_density_function(self.d2)
         )
         theta = left - middle - center
+        theta = theta/100
         return theta
 
     @property
@@ -194,4 +196,5 @@ class BlackScholes:
                 self.stock * np.exp(-self.risk_free_rate * self.time)
                 * self._probability_density_function(self.d1) * np.sqrt(self.time)
         )
+        vega = vega/100
         return vega
