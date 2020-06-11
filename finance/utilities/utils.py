@@ -3,10 +3,14 @@ import psycopg2
 import pandas as pd
 import datetime
 
+_SECRETS = 'audit/babylon.env'
+_SECRETS_JUPYTER = '/usr/src/app/audit/babylon.env' # stupid jupyter workaround
+
 
 # Secrets
 def retrieve_secret(var, pwd=''):
-    secrets = open('audit/babylon.env').read().split()
+    file = _SECRETS if os.path.isfile(_SECRETS) else _SECRETS_JUPYTER
+    secrets = open(file).read().split()
     for secret in secrets:
         _var, _, _pwd = secret.partition('=')
         if var == _var:
