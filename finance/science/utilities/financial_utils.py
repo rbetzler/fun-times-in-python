@@ -5,148 +5,196 @@ import scipy.optimize as opt
 
 
 class BlackScholes:
-    def __init__(self,
-                 current_option_price=0,
-                 current_stock_price=0,
-                 strike_price=0,
-                 risk_free_rate=0,
-                 days_to_maturity=0,
-                 volatility=0,
-                 call_put=None):
+    def __init__(
+            self,
+            current_option_price=0,
+            stock_price=0,
+            strike=0,
+            risk_free_rate=0,
+            days_to_maturity=0,
+            volatility=0,
+            is_call=True,
+    ):
         self.current_option_price = current_option_price
-        self.current_stock_price = current_stock_price
-        self.strike_price = strike_price
-        self.risk_free_rate = np.log(risk_free_rate)
-        # time in days
-        self.time_to_maturity = days_to_maturity/365
+        self.stock = stock_price
+        self.strike = strike
+        self.risk_free_rate = risk_free_rate
+        self.time = days_to_maturity/365
         self.volatility = volatility
-        self.call_put = call_put
+        self.is_call = is_call
 
-    """
-    Option prices
-    """
     @staticmethod
-    def option_price_calculator(current_stock_price,
-                                strike_price,
-                                risk_free_rate,
-                                time_to_maturity,
-                                volatility,
-                                call_put):
+    def _d1(stock, strike, risk_free_rate, volatility, time, is_call):
+        d1 = (np.log(stock / strike) + (risk_free_rate + (volatility ** 2) / 2) * time) / (volatility * np.sqrt(time))
+        if not is_call:
+            d1 = -d1
+        return d1
 
-        d_one = (np.log(current_stock_price/strike_price) + (risk_free_rate+(volatility**2/2))*time_to_maturity) \
-                / (volatility * np.sqrt(time_to_maturity))
-        d_two = d_one - volatility * np.sqrt(time_to_maturity)
+    @property
+    def d1(self):
+        d1 = self._d1(
+            stock=self.stock,
+            strike=self.strike,
+            risk_free_rate=self.risk_free_rate,
+            volatility=self.volatility,
+            time=self.time,
+            is_call=self.is_call,
+        )
+        return d1
 
-        if call_put == 'call':
-            option_price = current_stock_price * stats.norm.cdf(d_one, 0, 1) \
-                           - strike_price * np.exp(1)**(-risk_free_rate*time_to_maturity) \
-                           * stats.norm.cdf(d_two, 0, 1)
-        else:
-            option_price = strike_price * np.exp(1) ** (-risk_free_rate * time_to_maturity) \
-                           * stats.norm.cdf(-d_two, 0, 1) \
-                           - current_stock_price * stats.norm.cdf(-d_one, 0, 1)
-        return option_price
+    @staticmethod
+    def _d2(d1, volatility, time, is_call):
+        d2 = d1 - volatility * np.sqrt(time)
+        if not is_call:
+            d2 = -d2
+        return d2
+
+    @property
+    def d2(self):
+        d2 = self._d2(
+            d1=self.d1,
+            volatility=self.volatility,
+            time=self.time,
+            is_call=self.is_call,
+        )
+        return d2
+
+    @staticmethod
+    def _probability_density_function(d, mean=0, standard_deviation=1):
+        pndf = stats.norm.pdf(d, mean, standard_deviation)
+        return pndf
+
+    @staticmethod
+    def _cumulative_density_function(d, mean=0, standard_deviation=1):
+        cndf = stats.norm.cdf(d, mean, standard_deviation)
+        return cndf
+
+    def _calculate_option_price(
+            self,
+            stock,
+            strike,
+            risk_free_rate,
+            time,
+            volatility,
+            is_call,
+    ):
+        d1 = self._d1(
+            stock=stock,
+            strike=strike,
+            risk_free_rate=risk_free_rate,
+            volatility=volatility,
+            time=time,
+            is_call=is_call
+        )
+        d2 = self._d2(
+            d1=d1,
+            volatility=volatility,
+            time=time,
+            is_call=is_call
+        )
+
+        d1_p = self._cumulative_density_function(d1)
+        d2_p = self._cumulative_density_function(d2)
+
+        stock_discounted = stock * d1_p
+        strike_discounted = strike * (np.exp(-risk_free_rate * time)) * d2_p
+
+        option = stock_discounted - strike_discounted if is_call else strike_discounted - stock_discounted
+        return option
 
     @property
     def option_price(self):
-        option_price = self.option_price_calculator(current_stock_price=self.current_stock_price,
-                                                    strike_price=self.strike_price,
-                                                    risk_free_rate=self.risk_free_rate,
-                                                    time_to_maturity=self.time_to_maturity,
-                                                    volatility=self.volatility,
-                                                    call_put=self.call_put)
+        option_price = self._calculate_option_price(
+            stock=self.stock,
+            strike=self.strike,
+            risk_free_rate=self.risk_free_rate,
+            time=self.time,
+            volatility=self.volatility,
+            is_call=self.is_call,
+        )
         return option_price
 
-    """
-    Implied volatility
-    Requires helper since brentq will only work for one input
-    """
-    def implied_volatility_helper(self, volatility_guess):
-        est_option_price = self.option_price_calculator(current_stock_price=self.current_stock_price,
-                                                        strike_price=self.strike_price,
-                                                        risk_free_rate=self.risk_free_rate,
-                                                        time_to_maturity=self.time_to_maturity,
-                                                        volatility=volatility_guess,
-                                                        call_put=self.call_put)
-        diff = est_option_price - self.current_option_price
+    def _implied_volatility(self, volatility_guess):
+        _option_price = self._calculate_option_price(
+            stock=self.stock,
+            strike=self.strike,
+            risk_free_rate=self.risk_free_rate,
+            time=self.time,
+            volatility=volatility_guess,
+            is_call=self.is_call,
+        )
+        diff = _option_price - self.current_option_price
         return diff
 
     @property
     def implied_volatility(self, lower_bound=-15, upper_bound=15):
-        imp_vol = opt.brentq(self.implied_volatility_helper, lower_bound, upper_bound)
-        return imp_vol
+        implied_volatility = opt.brentq(
+            self._implied_volatility,
+            lower_bound,
+            upper_bound,
+        )
+        return implied_volatility
 
     """
     Greeks
     """
-    def delta(self, stock_price):
-        # the rate of change in an options value as the underlying changes
-        option_price = self.option_price_calculator(current_stock_price=stock_price,
-                                                    strike_price=self.strike_price,
-                                                    risk_free_rate=self.risk_free_rate,
-                                                    time_to_maturity=self.time_to_maturity,
-                                                    volatility=self.volatility,
-                                                    call_put=self.call_put)
-        return option_price
+    @property
+    def delta(self):
+        """the rate of change in an options value as the underlying changes"""
+        delta = np.exp(-self.risk_free_rate * self.time) * self._cumulative_density_function(self.d1)
+        return delta
 
+    @property
     def gamma(self):
-        # the rate of change in an options value as the delta changes
-        pass
+        """the rate of change in an options value as the delta changes"""
+        gamma = (
+            (self._probability_density_function(self.d1) * np.exp(-self.risk_free_rate * self.time))
+            /(self.stock * self.volatility * np.sqrt(self.time))
+        )
+        return gamma
 
-    def ro(self, rate):
-        # the rate of change in an options value as the risk free rate changes
-        option_price = self.option_price_calculator(current_stock_price=self.current_stock_price,
-                                                    strike_price=self.strike_price,
-                                                    risk_free_rate=rate,
-                                                    time_to_maturity=self.time_to_maturity,
-                                                    volatility=self.volatility,
-                                                    call_put=self.call_put)
-        return option_price
+    @property
+    def rho(self):
+        """the rate of change in an options value as the risk free rate changes"""
+        if self.is_call:
+            rho = (
+                    self.time * self.strike * np.exp(-self.risk_free_rate * self.time)
+                    * self._cumulative_density_function(self.d2)
+            )
+        else:
+            rho = (
+                    -self.time * self.strike * np.exp(-self.risk_free_rate * self.time)
+                    * self._cumulative_density_function(-self.d2)
+            )
+        rho = rho/100
+        return rho
 
-    def theta(self, day):
-        # the rate of change in an options value as the time to maturity changes
-        option_price = self.option_price_calculator(current_stock_price=self.current_stock_price,
-                                                    strike_price=self.strike_price,
-                                                    risk_free_rate=self.risk_free_rate,
-                                                    time_to_maturity=day,
-                                                    volatility=self.volatility,
-                                                    call_put=self.call_put)
-        return option_price
+    @property
+    def theta(self):
+        """the rate of change in an options value as the time to maturity changes"""
+        left = -(
+                (self.stock * np.exp(-self.risk_free_rate * self.time)
+                 * self._probability_density_function(self.d1) * self.volatility)
+                /(2 * np.sqrt(self.time))
+        )
+        middle = (
+                -self.risk_free_rate * self.stock * np.exp(-self.risk_free_rate * self.time)
+                * self._cumulative_density_function(self.d1)
+        )
+        center = (
+                self.risk_free_rate * self.strike * np.exp(-self.risk_free_rate * self.time)
+                * self._cumulative_density_function(self.d2)
+        )
+        theta = left - middle - center
+        theta = theta/100
+        return theta
 
-    def vega(self, vol):
-        # the rate of change in an options value as volatility changes
-        option_price = self.option_price_calculator(current_stock_price=self.current_stock_price,
-                                                    strike_price=self.strike_price,
-                                                    risk_free_rate=self.risk_free_rate,
-                                                    time_to_maturity=self.time_to_maturity,
-                                                    volatility=vol,
-                                                    call_put=self.call_put)
-        return option_price
-
-    """
-    Greek wrapper
-    """
-    def get_greek(self, greek=None, steps=30):
-        daily_diffs = []
-        percent_down = (100 - steps) / 100
-        percent_up = (100 + steps) / 100
-
-        funcs = {
-            'delta': {'param': self.current_stock_price, 'func': self.delta},
-            'ro': {'param': self.risk_free_rate, 'func': self.ro},
-            'theta': {'param': self.time_to_maturity, 'func': self.theta},
-            'vega': {'param': self.volatility, 'func': self.vega}
-        }
-
-        vals = np.linspace((percent_down * funcs.get(greek).get('param')),
-                           ((1 + percent_up) * funcs.get(greek).get('param')),
-                           steps * 2 + 1)
-
-        for val in vals:
-            option_price = funcs.get(greek).get('func')(val)
-            daily_diffs.append((val, option_price))
-        df = pd.DataFrame(daily_diffs, columns=['val', 'option_price'])
-        diff = df['option_price'] - df['option_price'].shift(-1)
-        diff = -diff[~diff.isna()]
-        diff.index = diff.index - steps
-        return diff
+    @property
+    def vega(self):
+        """the rate of change in an options value as volatility changes"""
+        vega = (
+                self.stock * np.exp(-self.risk_free_rate * self.time)
+                * self._probability_density_function(self.d1) * np.sqrt(self.time)
+        )
+        vega = vega/100
+        return vega

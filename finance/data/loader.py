@@ -176,8 +176,12 @@ class FileIngestion(abc.ABC):
         last_ingest_datetime = self.get_ingest_audit
         df = available_files[available_files['file_modified_datetime'] >= last_ingest_datetime]
         df = df.sort_values(by=['file_modified_datetime'])
+
+        print(f'{len(df)} files need to be ingested')
         if self.n_files_to_process > 0:
             df = df.head(self.n_files_to_process)
+
+        print(f'Will ingest {len(df)} files')
         return df
 
     def insert_audit_record(self, ingest_datetime: str):
@@ -192,7 +196,6 @@ class FileIngestion(abc.ABC):
     def execute(self):
         print('Getting list of files to ingest')
         files = self.get_ingest_files
-        print(f'{len(files)} files to ingest')
 
         if not files.empty:
             raw_dfs = []
