@@ -27,7 +27,6 @@ class Caller(abc.ABC):
         self.lower_bound = lower_bound
         self.batch_size = batch_size
 
-    # general
     @property
     def job_name(self) -> str:
         return ''
@@ -36,7 +35,6 @@ class Caller(abc.ABC):
     def batch_name(self) -> str:
         return 'batch'
 
-    # api specific
     @property
     def api_name(self) -> str:
         return ''
@@ -45,7 +43,6 @@ class Caller(abc.ABC):
     def api_secret(self) -> str:
         return utils.retrieve_secret(self.api_name)
 
-    # calls
     @property
     def get_calls(self) -> pd.DataFrame:
         if self.calls_query:
@@ -77,7 +74,6 @@ class Caller(abc.ABC):
     def format_calls(self, idx, row) -> tuple:
         return ()
 
-    # file drop
     @property
     def place_raw_file(self) -> bool:
         return False
@@ -106,7 +102,6 @@ class Caller(abc.ABC):
                     + self.export_file_type
         return file_path
 
-    # db load
     @property
     def load_to_db(self) -> bool:
         return False
@@ -123,19 +118,17 @@ class Caller(abc.ABC):
     def db_engine(self) -> str:
         return create_engine(self.db_connection)
 
-    @property
     def insert_audit_record(self):
-        query = f" INSERT INTO audit.ingest_load_times" \
-                + f" (schema_name, table_name, job_name, ingest_datetime)" \
-                + f" VALUES ('{self.schema}', '{self.table}', '{self.job_name}', '{self.ingest_datetime}')"
+        query = f'''
+            INSERT INTO audit.ingest_load_times' (schema_name, table_name, job_name, ingest_datetime)'
+            VALUES ('{self.schema}', '{self.table}', '{self.job_name}', '{self.ingest_datetime}')
+            '''
         utils.insert_record(query=query)
-        return
 
     @property
     def append_to_table(self) -> str:
         return 'append'
 
-    # calling
     @property
     def n_workers(self) -> int:
         return 1
@@ -160,7 +153,6 @@ class Caller(abc.ABC):
             response = requests.get(call)
         return response
 
-    # parsing
     @property
     def parallel_output(self) -> pd.DataFrame:
         return pd.DataFrame()
@@ -172,7 +164,6 @@ class Caller(abc.ABC):
     def parse(self, response, call) -> pd.DataFrame:
         pass
 
-    # wrapper
     def parallelize(self, call) -> pd.DataFrame:
         response = self.summon(call[1].values[0])
         df = self.parse(response, call[0])
@@ -207,6 +198,7 @@ class Caller(abc.ABC):
                 self.db_engine,
                 schema=self.schema,
                 if_exists=self.append_to_table,
-                index=False)
+                index=False,
+            )
 
-            self.insert_audit_record
+            self.insert_audit_record()
