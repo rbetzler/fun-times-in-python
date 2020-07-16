@@ -34,23 +34,33 @@ class TableCreator(abc.ABC):
         conn = psycopg2.connect(self.db_connection)
         cursor = conn.cursor()
 
-        print(f'Checking if schema exists: {datetime.datetime.utcnow()}')
-        schema_check = f"""
+        schema_query = f'''
             SELECT EXISTS (
                 SELECT 1
                 FROM information_schema.schemata
                 WHERE schema_name = '{self.schema_name}'
             )
-            """
-        cursor.execute(schema_check)
+            '''
+        print(f'Checking if schema exists: {datetime.datetime.utcnow()}')
+        cursor.execute(schema_query)
         schema_exists = cursor.fetchone()[0]
         if not schema_exists:
             print(f'Schema does not exist; creating now: {datetime.datetime.utcnow()}')
             cursor.execute(f'CREATE SCHEMA {self.schema_name};')
             conn.commit()
 
-        if self.table_ddl:
-            print(f'Running table ddl just in case: {datetime.datetime.utcnow()}')
+        table_query = f'''
+            SELECT EXISTS (
+                SELECT 1
+                FROM information_schema.tables
+                WHERE table_name = '{self.table_name}'
+            )
+            '''
+        print(f'Checking if table exists: {datetime.datetime.utcnow()}')
+        cursor.execute(table_query)
+        table_exists = cursor.fetchone()[0]
+        if not table_exists:
+            print(f'Table does not exist; creating now: {datetime.datetime.utcnow()}')
             cursor.execute(self.table_ddl)
             conn.commit()
 

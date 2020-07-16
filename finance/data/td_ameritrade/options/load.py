@@ -25,7 +25,7 @@ class FileIngestion(loader.FileIngestion):
 
     @property
     def table(self) -> str:
-        return 'options_detail'
+        return 'options_raw'
 
     @property
     def schema(self) -> str:
@@ -37,4 +37,4 @@ class FileIngestion(loader.FileIngestion):
 
 
 if __name__ == '__main__':
-    FileIngestion().execute()
+    FileIngestion(n_files_to_process=100).execute()

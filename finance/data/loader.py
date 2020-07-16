@@ -18,12 +18,10 @@ class FileIngestion(abc.ABC):
         self.ingest_datetime = run_datetime.strftime("%Y-%m-%d %H:%M:%S")
         self.n_files_to_process = n_files_to_process
 
-    # general
     @property
     def job_name(self) -> str:
         return ''
 
-    # file drops
     @property
     def place_raw_file(self) -> bool:
         return False
@@ -36,7 +34,6 @@ class FileIngestion(abc.ABC):
     def batch_quote_char(self) -> str:
         return '"'
 
-    # import
     @property
     def import_directory(self) -> str:
         return ''
@@ -53,7 +50,6 @@ class FileIngestion(abc.ABC):
     def import_file_date_format(self) -> str:
         return '%Y%m%d%H%M%S'
 
-    # export
     @property
     def export_folder(self) -> str:
         return ''
@@ -78,7 +74,6 @@ class FileIngestion(abc.ABC):
     def export_file_separator(self) -> str:
         return ','
 
-    # db
     @property
     def load_to_db(self) -> bool:
         return False
@@ -99,7 +94,6 @@ class FileIngestion(abc.ABC):
     def append_to_table(self) -> str:
         return 'append'
 
-    # parse
     @property
     def data_format(self) -> pd.DataFrame:
         return pd.DataFrame()
@@ -113,7 +107,7 @@ class FileIngestion(abc.ABC):
         return {}
 
     @property
-    def get_columns_in_db(self) -> dict:
+    def get_columns_in_db(self) -> list:
         query = f'select * from {self.schema}.{self.table} limit 1'
         df = utils.query_db(query=query)
         cols = list(df.columns)
@@ -130,7 +124,6 @@ class FileIngestion(abc.ABC):
     def clean_df(self, df) -> pd.DataFrame:
         return df
 
-    # ingest
     @property
     def get_available_files(self) -> pd.DataFrame:
         files = []
@@ -162,11 +155,14 @@ class FileIngestion(abc.ABC):
 
     @property
     def get_ingest_audit(self) -> pd.DataFrame:
-        query = f" select coalesce(max(ingest_datetime), '1900-01-01') as ingest_datetime" \
-                + f" from audit.ingest_datetimes" \
-                + f" where schema_name = '{self.schema}'" \
-                + f" and table_name = '{self.table}'" \
-                + f" and job_name = '{self.job_name}'"
+        query = f'''
+            select coalesce(max(ingest_datetime), '1900-01-01') as ingest_datetime
+            from audit.ingest_datetimes
+            where
+                schema_name = '{self.schema}'
+                and table_name = '{self.table}'
+                and job_name = '{self.job_name}'
+            '''
         df = utils.query_db(query=query)['ingest_datetime'].values[0]
         return df
 
@@ -185,11 +181,11 @@ class FileIngestion(abc.ABC):
         return df
 
     def insert_audit_record(self, ingest_datetime: str):
-        query = f"""
+        query = f'''
             INSERT INTO audit.ingest_datetimes
             (schema_name, table_name, job_name, ingest_datetime)
             VALUES ('{self.schema}', '{self.table}', '{self.job_name}', '{ingest_datetime}')
-            """
+            '''
         utils.insert_record(query=query)
         return
 
@@ -244,7 +240,8 @@ class FileIngestion(abc.ABC):
                         self.db_engine,
                         schema=self.schema,
                         if_exists=self.append_to_table,
-                        index=False)
+                        index=False,
+                    )
 
                 self.insert_audit_record(ingest_datetime=files['file_modified_datetime'].max())
 

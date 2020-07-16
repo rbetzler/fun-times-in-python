@@ -4,7 +4,7 @@ import pandas as pd
 import datetime
 
 _SECRETS = 'audit/babylon.env'
-_SECRETS_JUPYTER = '/usr/src/app/audit/babylon.env' # stupid jupyter workaround
+_SECRETS_JUPYTER = '/usr/src/app/audit/babylon.env'  # stupid jupyter workaround
 
 
 # Secrets
