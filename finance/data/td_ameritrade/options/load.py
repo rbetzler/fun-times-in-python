@@ -37,4 +37,4 @@ class FileIngestion(loader.FileIngestion):
 
 
 if __name__ == '__main__':
-    FileIngestion(n_files_to_process=100).execute()
+    FileIngestion().execute()
