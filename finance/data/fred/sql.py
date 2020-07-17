@@ -1,14 +1,14 @@
-from finance.data import table_creator
+from finance.data import sql
 from finance.data.fred import ddls
 
 
-class FredTableCreator(table_creator.TableCreator):
+class FredSQLRunner(sql.SQLRunner):
     @property
     def schema_name(self) -> str:
         return 'fred'
 
 
-class FREDReleasesTable(FredTableCreator):
+class FREDReleasesTable(FredSQLRunner):
     @property
     def table_name(self) -> str:
         return 'releases'
@@ -18,7 +18,7 @@ class FREDReleasesTable(FredTableCreator):
         return ddls.RELEASES
 
 
-class FREDSeriesTable(FredTableCreator):
+class FREDSeriesTable(FredSQLRunner):
     @property
     def table_name(self) -> str:
         return 'series'
@@ -28,7 +28,7 @@ class FREDSeriesTable(FredTableCreator):
         return ddls.SERIES
 
 
-class FREDSourcesTable(FredTableCreator):
+class FREDSourcesTable(FredSQLRunner):
     @property
     def table_name(self) -> str:
         return 'sources'
@@ -38,7 +38,7 @@ class FREDSourcesTable(FredTableCreator):
         return ddls.SOURCES
 
 
-class FREDJobsTable(FredTableCreator):
+class FREDJobsTable(FredSQLRunner):
     @property
     def table_name(self) -> str:
         return 'jobs'
@@ -48,7 +48,7 @@ class FREDJobsTable(FredTableCreator):
         return ddls.JOBS
 
 
-class FREDSeriesSearchesTable(FredTableCreator):
+class FREDSeriesSearchesTable(FredSQLRunner):
     @property
     def table_name(self) -> str:
         return 'series_searches'
@@ -58,7 +58,7 @@ class FREDSeriesSearchesTable(FredTableCreator):
         return ddls.SERIES_SEARCHES
 
 
-class FREDSeriesTables(FredTableCreator):
+class FREDSeriesTables(FredSQLRunner):
     @property
     def table_name(self) -> str:
         return '_series_template'

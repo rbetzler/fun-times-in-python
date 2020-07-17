@@ -1,7 +1,7 @@
-from finance.data import table_creator
+from finance.data import sql
 
 
-class TdEquitiesTableCreator(table_creator.TableCreator):
+class TdEquitiesSQLRunner(sql.SQLRunner):
     @property
     def table_name(self) -> str:
         return 'equities'
@@ -87,4 +87,4 @@ class TdEquitiesTableCreator(table_creator.TableCreator):
 
 
 if __name__ == '__main__':
-    TdEquitiesTableCreator().execute()
+    TdEquitiesSQLRunner().execute()

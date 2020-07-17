@@ -1,8 +1,8 @@
-from finance.data import table_creator
+from finance.data import sql
 from finance.data.internals import ddl
 
 
-class IngestLoadTimesTable(table_creator.TableCreator):
+class IngestLoadTimesTable(sql.SQLRunner):
 
     @property
     def schema_name(self) -> str:
@@ -15,6 +15,10 @@ class IngestLoadTimesTable(table_creator.TableCreator):
     @property
     def table_ddl(self) -> str:
         return ddl.QUERY
+
+    @property
+    def sql_script(self) -> str:
+        pass
 
 
 if __name__ == '__main__':

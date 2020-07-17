@@ -1,7 +1,7 @@
-from finance.data import table_creator
+from finance.data import sql
 
 
-class TdFundamentalsTableCreator(table_creator.TableCreator):
+class TdFundamentalsSQLRunner(sql.SQLRunner):
     @property
     def table_name(self) -> str:
         return 'fundamentals'
@@ -74,4 +74,4 @@ class TdFundamentalsTableCreator(table_creator.TableCreator):
 
 
 if __name__ == '__main__':
-    TdFundamentalsTableCreator().execute()
+    TdFundamentalsSQLRunner().execute()

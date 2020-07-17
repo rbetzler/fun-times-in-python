@@ -4,7 +4,7 @@ import psycopg2
 from finance.utilities import utils
 
 
-class TableCreator(abc.ABC):
+class SQLRunner(abc.ABC):
 
     @property
     def db_connection(self) -> str:

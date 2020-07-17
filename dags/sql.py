@@ -39,7 +39,7 @@ end_time = BashOperator(
 
 tasks = {}
 command_prefix = 'python finance/data/'
-command_suffix = '/table_creator.py'
+command_suffix = '/sql.py'
 jobs = ['fred', 'internals', 'td_ameritrade', 'yahoo']
 for job in jobs:
     tasks.update({job: command_prefix + job + command_suffix})

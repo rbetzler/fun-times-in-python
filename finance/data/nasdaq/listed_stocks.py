@@ -1,8 +1,8 @@
-from finance.data import table_creator
+from finance.data import sql
 from finance.data.nasdaq import ddl
 
 
-class NasdaqListedStocksTable(table_creator.TableCreator):
+class NasdaqListedStocksTable(sql.SQLRunner):
 
     @property
     def schema_name(self) -> str:

@@ -1,8 +1,8 @@
-from finance.data import table_creator
+from finance.data import sql
 from finance.data.yahoo import ddl
 
 
-class StocksTable(table_creator.TableCreator):
+class StocksTable(sql.SQLRunner):
 
     @property
     def schema_name(self) -> str:
@@ -17,7 +17,7 @@ class StocksTable(table_creator.TableCreator):
         return ddl.STOCKS
 
 
-class IncomeStatementsTable(table_creator.TableCreator):
+class IncomeStatementsTable(sql.SQLRunner):
 
     @property
     def schema_name(self) -> str:
@@ -32,7 +32,7 @@ class IncomeStatementsTable(table_creator.TableCreator):
         return ddl.INCOME_STATEMENTS
 
 
-class BalanceSheetsTable(table_creator.TableCreator):
+class BalanceSheetsTable(sql.SQLRunner):
 
     @property
     def schema_name(self) -> str:
@@ -47,7 +47,7 @@ class BalanceSheetsTable(table_creator.TableCreator):
         return ddl.BALANCE_SHEETS
 
 
-class CashFlowsTable(table_creator.TableCreator):
+class CashFlowsTable(sql.SQLRunner):
 
     @property
     def schema_name(self) -> str:
@@ -62,7 +62,7 @@ class CashFlowsTable(table_creator.TableCreator):
         return ddl.CASH_FLOWS
 
 
-class SPIndex(table_creator.TableCreator):
+class SPIndex(sql.SQLRunner):
 
     @property
     def schema_name(self) -> str:
