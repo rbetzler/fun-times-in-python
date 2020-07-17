@@ -28,19 +28,19 @@ dag = DAG(
 )
 
 start_time = BashOperator(
-    task_id = 'start_pipeline',
-    bash_command = 'date',
-    dag = dag)
+    task_id='start_pipeline',
+    bash_command='date',
+    dag=dag)
 
 end_time = BashOperator(
-    task_id = 'end_pipeline',
-    bash_command = 'date',
-    dag = dag)
+    task_id='end_pipeline',
+    bash_command='date',
+    dag=dag)
 
 tasks = {}
-command_prefix = 'python finance/ingestion/'
+command_prefix = 'python finance/data/'
 command_suffix = '/table_creator.py'
-jobs = ['edgar', 'fred', 'internals', 'td_ameritrade', 'yahoo']
+jobs = ['fred', 'internals', 'td_ameritrade', 'yahoo']
 for job in jobs:
     tasks.update({job: command_prefix + job + command_suffix})
 
@@ -48,17 +48,18 @@ prior_task = ''
 for task in tasks:
     task_id = 'create_tables_' + task
     dock_task = DockerOperator(
-        task_id = task_id,
-        image = 'py-dw-stocks',
-        auto_remove = True,
-        command = tasks.get(task),
-        volumes = ['/media/nautilus/fun-times-in-python:/usr/src/app'],
-        network_mode = 'bridge',
-        dag = dag
+        task_id=task_id,
+        image='py-dw-stocks',
+        auto_remove=True,
+        command=tasks.get(task),
+        volumes=['/media/nautilus/fun-times-in-python:/usr/src/app'],
+        network_mode='bridge',
+        dag=dag
         )
     if prior_task:
         dock_task.set_upstream(prior_task)
-    else: dock_task.set_upstream(start_time)
+    else:
+        dock_task.set_upstream(start_time)
     prior_task = dock_task
 
 end_time.set_upstream(dock_task)
