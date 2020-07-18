@@ -43,10 +43,6 @@ class TDFundamentalsAPI(scraper.Caller):
         return 'td_fundamentals_'
 
     @property
-    def place_raw_file(self) -> bool:
-        return True
-
-    @property
     def n_workers(self) -> int:
         return 5
 

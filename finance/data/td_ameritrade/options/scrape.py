@@ -44,10 +44,6 @@ class TDOptionsAPI(scraper.Caller):
         return 'td_options_'
 
     @property
-    def place_raw_file(self) -> bool:
-        return True
-
-    @property
     def n_workers(self) -> int:
         return 15
 

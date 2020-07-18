@@ -5,16 +5,19 @@ from finance.data import scraper
 
 
 class BalanceSheetScraper(scraper.Caller):
-    # general
     @property
     def job_name(self) -> str:
         return 'yahoo_balance_sheet'
 
-    # calls
     @property
     def calls_query(self) -> str:
-        query = f"select distinct ticker from nasdaq.listed_stocks "\
-                f"where ticker !~ '[\^.~]' and character_length(ticker) between 1 and 4 limit 10;"
+        query = '''
+            select distinct ticker
+            from nasdaq.listed_stocks
+            where ticker !~ '[\^.~]'
+                and character_length(ticker) between 1 and 4
+            limit 10;
+            '''
         return query
 
     def format_calls(self, idx, row) -> tuple:
@@ -24,20 +27,10 @@ class BalanceSheetScraper(scraper.Caller):
         url = url_prefix + company + url_suffix + company
         return url, company
 
-    # db
-    @property
-    def load_to_db(self) -> bool:
-        return True
-
     @property
     def table(self) -> str:
         return 'balance_sheets'
 
-    @property
-    def schema(self) -> str:
-        return 'yahoo'
-
-    # parse
     def parse(self, soup, company) -> pd.DataFrame:
         dates = []
         tuples = []

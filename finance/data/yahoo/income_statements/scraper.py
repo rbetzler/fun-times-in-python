@@ -5,12 +5,10 @@ from finance.data import scraper
 
 
 class IncomeStatementsScraper(scraper.Caller):
-    # general
     @property
     def job_name(self) -> str:
         return 'yahoo_income_statements'
 
-    # calls
     @property
     def calls_query(self) -> str:
         query = f"select distinct ticker from nasdaq.listed_stocks "\
@@ -24,20 +22,6 @@ class IncomeStatementsScraper(scraper.Caller):
         url = url_prefix + company + url_suffix + company
         return url, company
 
-    # db
-    @property
-    def load_to_db(self) -> bool:
-        return True
-
-    @property
-    def table(self) -> str:
-        return 'income_statements'
-
-    @property
-    def schema(self) -> str:
-        return 'yahoo'
-
-    # parse
     def parse(self, soup, company) -> pd.DataFrame:
         dates = []
         tuples = []

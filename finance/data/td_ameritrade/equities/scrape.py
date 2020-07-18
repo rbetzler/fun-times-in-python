@@ -62,10 +62,6 @@ class TDOptionsAPI(scraper.Caller):
         return 'td_equities_'
 
     @property
-    def place_raw_file(self) -> bool:
-        return True
-
-    @property
     def n_workers(self) -> int:
         return 15
 

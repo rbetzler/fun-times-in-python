@@ -3,7 +3,6 @@ from finance.data import scraper
 
 
 class YahooStockScraper(scraper.Caller):
-    # general
     @property
     def job_name(self) -> str:
         return 'yahoo_stocks'
@@ -12,7 +11,6 @@ class YahooStockScraper(scraper.Caller):
     def request_type(self) -> str:
         return 'json'
 
-    # calls
     @property
     def py_calls(self) -> pd.DataFrame:
         urls = []
@@ -24,24 +22,6 @@ class YahooStockScraper(scraper.Caller):
                            + '153145400400'
                            + "&interval=1d&events=div%7Csplit&corsDomain=finance.yahoo.com")
         return pd.DataFrame(urls)
-
-    # db
-    @property
-    def load_to_db(self) -> bool:
-        return True
-
-    @property
-    def table(self) -> str:
-        return 'stocks'
-
-    @property
-    def schema(self) -> str:
-        return 'yahoo'
-
-    # parse
-    @property
-    def n_cores(self) -> int:
-        return 3
 
     @property
     def parallel_output(self) -> pd.DataFrame:

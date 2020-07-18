@@ -5,11 +5,9 @@ import datetime
 import requests
 import pandas as pd
 import concurrent.futures
-from sqlalchemy import create_engine
-from sqlalchemy import engine
+import zlib
 
 from finance.utilities import utils
-import zlib
 
 
 class Caller(abc.ABC):
@@ -67,14 +65,6 @@ class Caller(abc.ABC):
         pass
 
     @property
-    def place_raw_file(self) -> bool:
-        return False
-
-    @property
-    def place_batch_file(self) -> bool:
-        return False
-
-    @property
     @abc.abstractmethod
     def export_folder(self) -> str:
         pass
@@ -95,33 +85,6 @@ class Caller(abc.ABC):
                     + self.folder_datetime \
                     + self.export_file_type
         return file_path
-
-    @property
-    def load_to_db(self) -> bool:
-        return False
-
-    @property
-    def table(self) -> str:
-        pass
-
-    @property
-    def schema(self) -> str:
-        return ''
-
-    @property
-    def db_engine(self) -> engine.Engine:
-        return create_engine(self.db_connection)
-
-    def insert_audit_record(self):
-        query = f'''
-            INSERT INTO audit.ingest_load_times' (schema_name, table_name, job_name, ingest_datetime)'
-            VALUES ('{self.schema}', '{self.table}', '{self.job_name}', '{self.ingest_datetime}')
-            '''
-        utils.insert_record(query=query)
-
-    @property
-    def append_to_table(self) -> str:
-        return 'append'
 
     @property
     def n_workers(self) -> int:
@@ -167,8 +130,7 @@ class Caller(abc.ABC):
         if bool(self.column_mapping):
             df = df.rename(columns=self.column_mapping)
 
-        if self.place_raw_file:
-            df.to_csv(self.export_file_path(call[0]), index=False)
+        df.to_csv(self.export_file_path(call[0]), index=False)
 
         time.sleep(self.len_of_pause)
         return df
@@ -182,19 +144,3 @@ class Caller(abc.ABC):
 
         for future in concurrent.futures.as_completed(future_to_url):
             df = pd.concat([df, future.result()], sort=False)
-
-        if self.place_batch_file:
-            df.to_csv(self.export_file_path(self.batch_name), index=False)
-
-        if self.load_to_db:
-            if 'ingest_datetime' not in df:
-                df['ingest_datetime'] = self.ingest_datetime
-            df.to_sql(
-                self.table,
-                self.db_engine,
-                schema=self.schema,
-                if_exists=self.append_to_table,
-                index=False,
-            )
-
-            self.insert_audit_record()
