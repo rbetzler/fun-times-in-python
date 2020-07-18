@@ -13,14 +13,14 @@ class TDFundamentalsAPI(scraper.Caller):
 
     @property
     def calls_query(self) -> str:
-        query = """
+        query = '''
             SELECT DISTINCT ticker
             FROM nasdaq.listed_stocks
             WHERE ticker !~ '[\^.~]'
             AND CHARACTER_LENGTH(ticker) BETWEEN 1 AND 4
             LIMIT {batch_size}
             OFFSET {batch_start}
-            """
+            '''
         return query.format(batch_size=self.batch_size, batch_start=self.lower_bound)
 
     def format_calls(self, idx, row) -> tuple:
