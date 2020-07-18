@@ -2,7 +2,7 @@ from finance.data import sql
 from finance.data.yahoo import ddl
 
 
-class StocksTable(sql.SQLRunner):
+class Stocks(sql.SQLRunner):
 
     @property
     def schema_name(self) -> str:
@@ -16,8 +16,12 @@ class StocksTable(sql.SQLRunner):
     def table_ddl(self) -> str:
         return ddl.STOCKS
 
+    @property
+    def sql_script(self):
+        return None
 
-class IncomeStatementsTable(sql.SQLRunner):
+
+class IncomeStatements(sql.SQLRunner):
 
     @property
     def schema_name(self) -> str:
@@ -31,8 +35,12 @@ class IncomeStatementsTable(sql.SQLRunner):
     def table_ddl(self) -> str:
         return ddl.INCOME_STATEMENTS
 
+    @property
+    def sql_script(self):
+        return None
 
-class BalanceSheetsTable(sql.SQLRunner):
+
+class BalanceSheets(sql.SQLRunner):
 
     @property
     def schema_name(self) -> str:
@@ -46,8 +54,12 @@ class BalanceSheetsTable(sql.SQLRunner):
     def table_ddl(self) -> str:
         return ddl.BALANCE_SHEETS
 
+    @property
+    def sql_script(self):
+        return None
 
-class CashFlowsTable(sql.SQLRunner):
+
+class CashFlows(sql.SQLRunner):
 
     @property
     def schema_name(self) -> str:
@@ -60,6 +72,10 @@ class CashFlowsTable(sql.SQLRunner):
     @property
     def table_ddl(self) -> str:
         return ddl.CASH_FLOWS
+
+    @property
+    def sql_script(self):
+        return None
 
 
 class SPIndex(sql.SQLRunner):
@@ -76,10 +92,14 @@ class SPIndex(sql.SQLRunner):
     def table_ddl(self) -> str:
         return ddl.SP_INDEX
 
+    @property
+    def sql_script(self):
+        return None
+
 
 if __name__ == '__main__':
-    StocksTable().execute()
-    IncomeStatementsTable().execute()
-    BalanceSheetsTable().execute()
-    CashFlowsTable().execute()
+    Stocks().execute()
+    IncomeStatements().execute()
+    BalanceSheets().execute()
+    CashFlows().execute()
     SPIndex().execute()

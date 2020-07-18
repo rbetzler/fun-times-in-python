@@ -63,7 +63,7 @@ class YahooStockScraper(scraper.Caller):
     def len_of_pause(self) -> int:
         return 5
 
-    def parse(self, soup) -> pd.DataFrame:
+    def parse(self, soup, call) -> pd.DataFrame:
 
         # check if data got returned
         assert type(soup.get('chart').get('error')) is not dict
