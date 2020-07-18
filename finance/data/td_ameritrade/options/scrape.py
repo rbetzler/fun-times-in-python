@@ -4,7 +4,6 @@ from finance.data import scraper
 
 
 class TDOptionsAPI(scraper.Caller):
-    # general
     @property
     def api_name(self) -> str:
         return 'API_TD'
@@ -13,7 +12,6 @@ class TDOptionsAPI(scraper.Caller):
     def request_type(self) -> str:
         return 'api'
 
-    # calls
     @property
     def calls_query(self) -> str:
         query = """
@@ -34,7 +32,6 @@ class TDOptionsAPI(scraper.Caller):
         api_name = row.values[0]
         return api_call, api_name
 
-    # files
     @property
     def export_folder(self) -> str:
         folder = 'audit/td_ameritrade/options/' \
@@ -50,7 +47,6 @@ class TDOptionsAPI(scraper.Caller):
     def place_raw_file(self) -> bool:
         return True
 
-    # parse
     @property
     def n_workers(self) -> int:
         return 15

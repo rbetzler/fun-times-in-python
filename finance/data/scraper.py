@@ -6,6 +6,8 @@ import requests
 import pandas as pd
 import concurrent.futures
 from sqlalchemy import create_engine
+from sqlalchemy import engine
+
 from finance.utilities import utils
 import zlib
 
@@ -29,37 +31,26 @@ class Caller(abc.ABC):
 
     @property
     def job_name(self) -> str:
-        return ''
+        return 'api_caller'
 
     @property
     def batch_name(self) -> str:
         return 'batch'
 
     @property
+    @abc.abstractmethod
     def api_name(self) -> str:
-        return ''
+        pass
 
     @property
     def api_secret(self) -> str:
         return utils.retrieve_secret(self.api_name)
 
     @property
-    def get_calls(self) -> pd.DataFrame:
-        if self.calls_query:
-            calls = self.get_calls_from_db
-        else:
-            calls = self.py_calls
-        return calls
-
-    @property
-    def py_calls(self) -> pd.DataFrame:
-        return pd.DataFrame
-
-    @property
+    @abc.abstractmethod
     def calls_query(self) -> str:
-        return ''
+        pass
 
-    @property
     def get_calls_from_db(self) -> pd.DataFrame:
         calls = []
         names = []
@@ -71,8 +62,9 @@ class Caller(abc.ABC):
         df = pd.DataFrame(data=calls, index=names)
         return df
 
+    @abc.abstractmethod
     def format_calls(self, idx, row) -> tuple:
-        return ()
+        pass
 
     @property
     def place_raw_file(self) -> bool:
@@ -83,12 +75,14 @@ class Caller(abc.ABC):
         return False
 
     @property
+    @abc.abstractmethod
     def export_folder(self) -> str:
-        return ''
+        pass
 
     @property
+    @abc.abstractmethod
     def export_file_name(self) -> str:
-        return ''
+        pass
 
     @property
     def export_file_type(self) -> str:
@@ -108,14 +102,14 @@ class Caller(abc.ABC):
 
     @property
     def table(self) -> str:
-        return ''
+        pass
 
     @property
     def schema(self) -> str:
         return ''
 
     @property
-    def db_engine(self) -> str:
+    def db_engine(self) -> engine.Engine:
         return create_engine(self.db_connection)
 
     def insert_audit_record(self):
@@ -151,6 +145,8 @@ class Caller(abc.ABC):
             response = zlib.decompress(requests.get(call).content, 16+zlib.MAX_WBITS)
         elif self.request_type == 'api':
             response = requests.get(call)
+        else:
+            raise NotImplementedError('API request type not implemented!')
         return response
 
     @property
@@ -179,7 +175,7 @@ class Caller(abc.ABC):
 
     def execute(self):
         utils.create_directory(self.export_folder)
-        calls = self.get_calls
+        calls = self.get_calls_from_db()
         df = self.parallel_output
         executor = concurrent.futures.ProcessPoolExecutor(max_workers=self.n_workers)
         future_to_url = {executor.submit(self.parallelize, call): call for call in calls.iterrows()}
