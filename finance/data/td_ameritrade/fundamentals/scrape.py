@@ -4,38 +4,33 @@ from finance.data import scraper
 
 class TDFundamentalsAPI(scraper.Caller):
     @property
+    def job_name(self) -> str:
+        return 'API_TD'
+
+    @property
     def request_type(self) -> str:
         return 'api'
 
     @property
-    def api_name(self) -> str:
-        return 'API_TD'
-
-    @property
-    def calls_query(self) -> str:
-        query = '''
+    def requests_query(self) -> str:
+        query = r'''
             SELECT DISTINCT ticker
             FROM nasdaq.listed_stocks
             WHERE ticker !~ '[\^.~]'
-            AND CHARACTER_LENGTH(ticker) BETWEEN 1 AND 4
+                AND CHARACTER_LENGTH(ticker) BETWEEN 1 AND 4
             LIMIT {batch_size}
             OFFSET {batch_start}
             '''
         return query.format(batch_size=self.batch_size, batch_start=self.lower_bound)
 
-    def format_calls(self, idx, row) -> tuple:
-        api_call = 'https://api.tdameritrade.com/v1/instruments' \
-                   + '?apikey=' + self.api_secret \
-                   + '&symbol=' + row.values[0] \
-                   + '&projection=fundamental'
-        api_name = row.values[0]
-        return api_call, api_name
+    def format_requests(self, row) -> tuple:
+        key = row.ticker
+        request = f'https://api.tdameritrade.com/v1/instruments?apikey={self.api_secret}&symbol={key}&projection=fundamental'
+        return key, request
 
     @property
     def export_folder(self) -> str:
-        folder = 'audit/td_ameritrade/fundamentals/' \
-                 + self.folder_datetime \
-                 + '/'
+        folder = f'audit/td_ameritrade/fundamentals/{self.folder_datetime}/'
         return folder
 
     @property
