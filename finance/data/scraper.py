@@ -5,18 +5,20 @@ import datetime
 import requests
 import pandas as pd
 import concurrent.futures
-from sqlalchemy import create_engine
-from finance.utilities import utils
 import zlib
+
+from finance.utilities import utils
 
 
 class Caller(abc.ABC):
-    def __init__(self,
-                 run_datetime=datetime.datetime.now(),
-                 start_date=datetime.datetime.now().date().strftime('%Y-%m-%d'),
-                 end_date=datetime.datetime.now().date().strftime('%Y-%m-%d'),
-                 lower_bound=0,
-                 batch_size=0):
+    def __init__(
+            self,
+            run_datetime=datetime.datetime.now(),
+            start_date=datetime.datetime.now().date().strftime('%Y-%m-%d'),
+            end_date=datetime.datetime.now().date().strftime('%Y-%m-%d'),
+            lower_bound=0,
+            batch_size=0,
+    ):
         self.db_connection = utils.DW_STOCKS
         self.run_datetime = run_datetime.strftime('%Y-%m-%d-%H-%M')
         self.folder_datetime = run_datetime.strftime('%Y%m%d%H%M%S')
@@ -28,106 +30,55 @@ class Caller(abc.ABC):
         self.batch_size = batch_size
 
     @property
+    @abc.abstractmethod
     def job_name(self) -> str:
-        return ''
-
-    @property
-    def batch_name(self) -> str:
-        return 'batch'
-
-    @property
-    def api_name(self) -> str:
-        return ''
+        pass
 
     @property
     def api_secret(self) -> str:
-        return utils.retrieve_secret(self.api_name)
+        return utils.retrieve_secret(self.job_name)
 
     @property
-    def get_calls(self) -> pd.DataFrame:
-        if self.calls_query:
-            calls = self.get_calls_from_db
-        else:
-            calls = self.py_calls
-        return calls
+    @abc.abstractmethod
+    def requests_query(self) -> str:
+        pass
 
-    @property
-    def py_calls(self) -> pd.DataFrame:
-        return pd.DataFrame
-
-    @property
-    def calls_query(self) -> str:
-        return ''
-
-    @property
-    def get_calls_from_db(self) -> pd.DataFrame:
-        calls = []
-        names = []
-        params = utils.query_db(query=self.calls_query)
-        for idx, row in params.iterrows():
-            call = self.format_calls(idx, row)
-            calls.append(call[0])
-            names.append(call[1])
-        df = pd.DataFrame(data=calls, index=names)
+    def get_requests(self) -> pd.DataFrame:
+        keys = []
+        requests_ = []
+        params = utils.query_db(query=self.requests_query)
+        for row in params.itertuples():
+            key, request = self.format_requests(row)
+            keys.append(key)
+            requests_.append(request)
+        df = pd.DataFrame(data=requests_, index=keys, columns=['request'])
         return df
 
-    def format_calls(self, idx, row) -> tuple:
-        return ()
+    @abc.abstractmethod
+    def format_requests(self, row) -> tuple:
+        pass
 
     @property
-    def place_raw_file(self) -> bool:
-        return False
-
-    @property
-    def place_batch_file(self) -> bool:
-        return False
-
-    @property
+    @abc.abstractmethod
     def export_folder(self) -> str:
-        return ''
+        pass
 
     @property
+    @abc.abstractmethod
     def export_file_name(self) -> str:
-        return ''
+        pass
 
     @property
     def export_file_type(self) -> str:
         return '.csv'
 
-    def export_file_path(self, batch) -> str:
+    def export_file_path(self, key) -> str:
         file_path = self.export_folder \
                     + self.export_file_name \
-                    + batch + '_' \
+                    + key + '_' \
                     + self.folder_datetime \
                     + self.export_file_type
         return file_path
-
-    @property
-    def load_to_db(self) -> bool:
-        return False
-
-    @property
-    def table(self) -> str:
-        return ''
-
-    @property
-    def schema(self) -> str:
-        return ''
-
-    @property
-    def db_engine(self) -> str:
-        return create_engine(self.db_connection)
-
-    def insert_audit_record(self):
-        query = f'''
-            INSERT INTO audit.ingest_load_times' (schema_name, table_name, job_name, ingest_datetime)'
-            VALUES ('{self.schema}', '{self.table}', '{self.job_name}', '{self.ingest_datetime}')
-            '''
-        utils.insert_record(query=query)
-
-    @property
-    def append_to_table(self) -> str:
-        return 'append'
 
     @property
     def n_workers(self) -> int:
@@ -141,64 +92,49 @@ class Caller(abc.ABC):
     def len_of_pause(self) -> int:
         return 0
 
-    def summon(self, call) -> bs4.BeautifulSoup:
+    def get(self, call) -> bs4.BeautifulSoup:
+        raw_response = requests.get(call)
         if self.request_type == 'text':
-            raw_html = requests.get(call).text
+            raw_html = raw_response.text
             response = bs4.BeautifulSoup(raw_html, features="html.parser")
         elif self.request_type == 'json':
-            response = requests.get(call).json()
+            response = raw_response.json()
         elif self.request_type == 'gz':
-            response = zlib.decompress(requests.get(call).content, 16+zlib.MAX_WBITS)
+            response = zlib.decompress(raw_response.content, 16 + zlib.MAX_WBITS)
         elif self.request_type == 'api':
-            response = requests.get(call)
+            response = raw_response
+        else:
+            raise NotImplementedError('API request type not implemented!')
         return response
-
-    @property
-    def parallel_output(self) -> pd.DataFrame:
-        return pd.DataFrame()
 
     @property
     def column_mapping(self) -> dict:
         return {}
 
-    def parse(self, response, call) -> pd.DataFrame:
+    def parse(self, response, key) -> pd.DataFrame:
         pass
 
-    def parallelize(self, call) -> pd.DataFrame:
-        response = self.summon(call[1].values[0])
-        df = self.parse(response, call[0])
+    def parallelize(self, idx, row) -> pd.DataFrame:
+        response = self.get(row.request)
+        df = self.parse(response, idx)
 
         if bool(self.column_mapping):
             df = df.rename(columns=self.column_mapping)
 
-        if self.place_raw_file:
-            df.to_csv(self.export_file_path(call[0]), index=False)
+        df.to_csv(self.export_file_path(idx), index=False)
 
         time.sleep(self.len_of_pause)
         return df
 
     def execute(self):
         utils.create_directory(self.export_folder)
-        calls = self.get_calls
-        df = self.parallel_output
+        requests_ = self.get_requests()
         executor = concurrent.futures.ProcessPoolExecutor(max_workers=self.n_workers)
-        future_to_url = {executor.submit(self.parallelize, call): call for call in calls.iterrows()}
+        future_to_url = {executor.submit(self.parallelize, idx, row): row for idx, row in requests_.iterrows()}
 
+        failures = []
         for future in concurrent.futures.as_completed(future_to_url):
-            df = pd.concat([df, future.result()], sort=False)
+            if future.exception():
+                failures.append(future.exception())
 
-        if self.place_batch_file:
-            df.to_csv(self.export_file_path(self.batch_name), index=False)
-
-        if self.load_to_db:
-            if 'ingest_datetime' not in df:
-                df['ingest_datetime'] = self.ingest_datetime
-            df.to_sql(
-                self.table,
-                self.db_engine,
-                schema=self.schema,
-                if_exists=self.append_to_table,
-                index=False,
-            )
-
-            self.insert_audit_record()
+        print(failures)

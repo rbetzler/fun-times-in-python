@@ -2,33 +2,23 @@ import pandas as pd
 from finance.data import scraper
 
 
-class FREDSeriesAPIGrabber(scraper.Caller):
-    # general
+class FREDSeries(scraper.Caller):
     @property
-    def api_name(self) -> str:
+    def job_name(self) -> str:
         return 'API_FRED'
 
     @property
     def request_type(self) -> str:
         return 'api'
 
-    # calls
     @property
-    def calls_query(self) -> str:
-        return "select series_id, series_name, category from fred.jobs where is_active;"
+    def requests_query(self) -> str:
+        return 'select series_id, series_name, category from fred.jobs where is_active;'
 
-    def format_calls(self, idx, row) -> tuple:
-        api_call = 'https://api.stlouisfed.org/fred/series/observations?' \
-                   + 'series_id=' + row[0] \
-                   + '&api_key=' + self.api_secret \
-                   + '&file_type=json'
-        api_name = row[1]
-        return api_call, api_name
-
-    # files
-    @property
-    def place_raw_file(self) -> bool:
-        return True
+    def format_requests(self, row) -> tuple:
+        key = row.series_id
+        request = f'https://api.stlouisfed.org/fred/series/observations?series_id={key}&api_key={self.api_secret}&file_type=json'
+        return key, request
 
     @property
     def export_folder(self) -> str:
@@ -38,7 +28,6 @@ class FREDSeriesAPIGrabber(scraper.Caller):
     def export_file_name(self) -> str:
         return 'fred_'
 
-    # parse
     def parse(self, res, call) -> pd.DataFrame:
         res = res.json()
 
@@ -54,7 +43,7 @@ class FREDSeriesAPIGrabber(scraper.Caller):
             'sort_order',
             'count',
             'offset',
-            'limit'
+            'limit',
         ]
         df = pd.DataFrame()
         for key in keys_to_cols:
@@ -66,4 +55,4 @@ class FREDSeriesAPIGrabber(scraper.Caller):
 
 
 if __name__ == '__main__':
-    FREDSeriesAPIGrabber().execute()
+    FREDSeries().execute()

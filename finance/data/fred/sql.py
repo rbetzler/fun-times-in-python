@@ -1,14 +1,16 @@
-from finance.data import table_creator
+import abc
+
+from finance.data import sql
 from finance.data.fred import ddls
 
 
-class FredTableCreator(table_creator.TableCreator):
+class FredSQLRunner(sql.SQLRunner, abc.ABC):
     @property
     def schema_name(self) -> str:
         return 'fred'
 
 
-class FREDReleasesTable(FredTableCreator):
+class FREDReleasesTable(FredSQLRunner):
     @property
     def table_name(self) -> str:
         return 'releases'
@@ -17,8 +19,12 @@ class FREDReleasesTable(FredTableCreator):
     def table_ddl(self) -> str:
         return ddls.RELEASES
 
+    @property
+    def sql_script(self):
+        return None
 
-class FREDSeriesTable(FredTableCreator):
+
+class FREDSeriesTable(FredSQLRunner):
     @property
     def table_name(self) -> str:
         return 'series'
@@ -27,8 +33,12 @@ class FREDSeriesTable(FredTableCreator):
     def table_ddl(self) -> str:
         return ddls.SERIES
 
+    @property
+    def sql_script(self):
+        return None
 
-class FREDSourcesTable(FredTableCreator):
+
+class FREDSourcesTable(FredSQLRunner):
     @property
     def table_name(self) -> str:
         return 'sources'
@@ -37,8 +47,12 @@ class FREDSourcesTable(FredTableCreator):
     def table_ddl(self) -> str:
         return ddls.SOURCES
 
+    @property
+    def sql_script(self):
+        return None
 
-class FREDJobsTable(FredTableCreator):
+
+class FREDJobsTable(FredSQLRunner):
     @property
     def table_name(self) -> str:
         return 'jobs'
@@ -47,8 +61,12 @@ class FREDJobsTable(FredTableCreator):
     def table_ddl(self) -> str:
         return ddls.JOBS
 
+    @property
+    def sql_script(self):
+        return None
 
-class FREDSeriesSearchesTable(FredTableCreator):
+
+class FREDSeriesSearchesTable(FredSQLRunner):
     @property
     def table_name(self) -> str:
         return 'series_searches'
@@ -57,8 +75,12 @@ class FREDSeriesSearchesTable(FredTableCreator):
     def table_ddl(self) -> str:
         return ddls.SERIES_SEARCHES
 
+    @property
+    def sql_script(self):
+        return None
 
-class FREDSeriesTables(FredTableCreator):
+
+class FREDSeriesTables(FredSQLRunner):
     @property
     def table_name(self) -> str:
         return '_series_template'
@@ -66,6 +88,10 @@ class FREDSeriesTables(FredTableCreator):
     @property
     def table_ddl(self) -> str:
         return ddls.SERIES_TEMPLATE
+
+    @property
+    def sql_script(self):
+        return None
 
 
 if __name__ == '__main__':

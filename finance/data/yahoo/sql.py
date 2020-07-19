@@ -1,8 +1,8 @@
-from finance.data import table_creator
+from finance.data import sql
 from finance.data.yahoo import ddl
 
 
-class StocksTable(table_creator.TableCreator):
+class Stocks(sql.SQLRunner):
 
     @property
     def schema_name(self) -> str:
@@ -16,8 +16,12 @@ class StocksTable(table_creator.TableCreator):
     def table_ddl(self) -> str:
         return ddl.STOCKS
 
+    @property
+    def sql_script(self):
+        return None
 
-class IncomeStatementsTable(table_creator.TableCreator):
+
+class IncomeStatements(sql.SQLRunner):
 
     @property
     def schema_name(self) -> str:
@@ -31,8 +35,12 @@ class IncomeStatementsTable(table_creator.TableCreator):
     def table_ddl(self) -> str:
         return ddl.INCOME_STATEMENTS
 
+    @property
+    def sql_script(self):
+        return None
 
-class BalanceSheetsTable(table_creator.TableCreator):
+
+class BalanceSheets(sql.SQLRunner):
 
     @property
     def schema_name(self) -> str:
@@ -46,8 +54,12 @@ class BalanceSheetsTable(table_creator.TableCreator):
     def table_ddl(self) -> str:
         return ddl.BALANCE_SHEETS
 
+    @property
+    def sql_script(self):
+        return None
 
-class CashFlowsTable(table_creator.TableCreator):
+
+class CashFlows(sql.SQLRunner):
 
     @property
     def schema_name(self) -> str:
@@ -61,8 +73,12 @@ class CashFlowsTable(table_creator.TableCreator):
     def table_ddl(self) -> str:
         return ddl.CASH_FLOWS
 
+    @property
+    def sql_script(self):
+        return None
 
-class SPIndex(table_creator.TableCreator):
+
+class SPIndex(sql.SQLRunner):
 
     @property
     def schema_name(self) -> str:
@@ -76,10 +92,14 @@ class SPIndex(table_creator.TableCreator):
     def table_ddl(self) -> str:
         return ddl.SP_INDEX
 
+    @property
+    def sql_script(self):
+        return None
+
 
 if __name__ == '__main__':
-    StocksTable().execute()
-    IncomeStatementsTable().execute()
-    BalanceSheetsTable().execute()
-    CashFlowsTable().execute()
+    Stocks().execute()
+    IncomeStatements().execute()
+    BalanceSheets().execute()
+    CashFlows().execute()
     SPIndex().execute()

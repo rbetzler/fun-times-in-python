@@ -3,42 +3,34 @@ from finance.data import scraper
 
 
 class TDFundamentalsAPI(scraper.Caller):
-    # general
+    @property
+    def job_name(self) -> str:
+        return 'API_TD'
+
     @property
     def request_type(self) -> str:
         return 'api'
 
     @property
-    def api_name(self) -> str:
-        return 'API_TD'
-
-    # calls
-    @property
-    def calls_query(self) -> str:
-        query = """
+    def requests_query(self) -> str:
+        query = r'''
             SELECT DISTINCT ticker
             FROM nasdaq.listed_stocks
             WHERE ticker !~ '[\^.~]'
-            AND CHARACTER_LENGTH(ticker) BETWEEN 1 AND 4
+                AND CHARACTER_LENGTH(ticker) BETWEEN 1 AND 4
             LIMIT {batch_size}
             OFFSET {batch_start}
-            """
+            '''
         return query.format(batch_size=self.batch_size, batch_start=self.lower_bound)
 
-    def format_calls(self, idx, row) -> tuple:
-        api_call = 'https://api.tdameritrade.com/v1/instruments' \
-                   + '?apikey=' + self.api_secret \
-                   + '&symbol=' + row.values[0] \
-                   + '&projection=fundamental'
-        api_name = row.values[0]
-        return api_call, api_name
+    def format_requests(self, row) -> tuple:
+        key = row.ticker
+        request = f'https://api.tdameritrade.com/v1/instruments?apikey={self.api_secret}&symbol={key}&projection=fundamental'
+        return key, request
 
-    # files
     @property
     def export_folder(self) -> str:
-        folder = 'audit/td_ameritrade/fundamentals/' \
-                 + self.folder_datetime \
-                 + '/'
+        folder = f'audit/td_ameritrade/fundamentals/{self.folder_datetime}/'
         return folder
 
     @property
@@ -46,13 +38,8 @@ class TDFundamentalsAPI(scraper.Caller):
         return 'td_fundamentals_'
 
     @property
-    def place_raw_file(self) -> bool:
-        return True
-
-    # parse
-    @property
     def n_workers(self) -> int:
-        return 15
+        return 5
 
     @property
     def len_of_pause(self) -> int:
@@ -107,20 +94,24 @@ class TDFundamentalsAPI(scraper.Caller):
                  }
         return names
 
-    def parse(self, res) -> pd.DataFrame:
+    def parse(self, res, call) -> pd.DataFrame:
         res = res.json()
         df = pd.DataFrame()
-        for key in res.keys():
-            dictionary = res.get(key)
 
-            temp = pd.DataFrame.from_dict(dictionary.get('fundamental'), orient='index').T
-            temp['symbol'] = dictionary.get('symbol')
-            temp['cusip'] = dictionary.get('cusip')
-            temp['description'] = dictionary.get('description')
-            temp['exchange'] = dictionary.get('exchange')
-            temp['asset_type'] = dictionary.get('assetType')
+        try:
+            for key in res.keys():
+                dictionary = res.get(key)
+                temp = pd.DataFrame.from_dict(dictionary.get('fundamental'), orient='index').T
+                temp['symbol'] = dictionary.get('symbol')
+                temp['cusip'] = dictionary.get('cusip')
+                temp['description'] = dictionary.get('description')
+                temp['exchange'] = dictionary.get('exchange')
+                temp['asset_type'] = dictionary.get('assetType')
+                df = df.append(temp)
 
-            df = df.append(temp)
+        except AttributeError:
+            print(call)
+
         return df
 
 

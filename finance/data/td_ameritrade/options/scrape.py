@@ -4,37 +4,31 @@ from finance.data import scraper
 
 
 class TDOptionsAPI(scraper.Caller):
-    # general
     @property
-    def api_name(self) -> str:
+    def job_name(self) -> str:
         return 'API_TD'
 
     @property
     def request_type(self) -> str:
         return 'api'
 
-    # calls
     @property
-    def calls_query(self) -> str:
-        query = """
+    def requests_query(self) -> str:
+        query = r'''
             SELECT DISTINCT ticker
             FROM nasdaq.listed_stocks
             WHERE ticker !~ '[\^.~]'
-            AND CHARACTER_LENGTH(ticker) BETWEEN 1 AND 4
+                AND CHARACTER_LENGTH(ticker) BETWEEN 1 AND 4
             LIMIT {batch_size}
             OFFSET {batch_start}
-            """
+            '''
         return query.format(batch_size=self.batch_size, batch_start=self.lower_bound)
 
-    def format_calls(self, idx, row) -> tuple:
-        api_call = 'https://api.tdameritrade.com/v1/marketdata/chains' \
-                   + '?apikey=' + self.api_secret \
-                   + '&symbol=' + row.values[0] \
-                   + '&contractType=ALL'
-        api_name = row.values[0]
-        return api_call, api_name
+    def format_requests(self, row) -> tuple:
+        key = row.ticker
+        request = f'https://api.tdameritrade.com/v1/marketdata/chains?apikey={self.api_secret}&symbol={key}&contractType=ALL'
+        return key, request
 
-    # files
     @property
     def export_folder(self) -> str:
         folder = 'audit/td_ameritrade/options/' \
@@ -46,11 +40,6 @@ class TDOptionsAPI(scraper.Caller):
     def export_file_name(self) -> str:
         return 'td_options_'
 
-    @property
-    def place_raw_file(self) -> bool:
-        return True
-
-    # parse
     @property
     def n_workers(self) -> int:
         return 15
@@ -99,7 +88,7 @@ class TDOptionsAPI(scraper.Caller):
         }
         return names
 
-    def parse_chain(self, chain, call) -> pd.DataFrame:
+    def parse_chain(self, chain, key) -> pd.DataFrame:
         df = pd.DataFrame()
         try:
             for date in chain.keys():
@@ -112,19 +101,19 @@ class TDOptionsAPI(scraper.Caller):
                     temp['days_to_expiration_date'] = date.partition(':')[2]
                     df = df.append(temp)
         except AttributeError:
-            print(call)
+            print(key)
         df = df.rename(columns=self.column_renames)
         return df
 
-    def parse(self, res, call) -> pd.DataFrame:
+    def parse(self, res, key) -> pd.DataFrame:
         res = res.json()
 
         symbol = res.get('symbol')
         volatility = res.get('volatility')
         n_contracts = res.get('numberOfContracts')
         interest_rate = res.get('interestRate')
-        calls = self.parse_chain(res.get('callExpDateMap'), call)
-        puts = self.parse_chain(res.get('putExpDateMap'), call)
+        calls = self.parse_chain(res.get('callExpDateMap'), key)
+        puts = self.parse_chain(res.get('putExpDateMap'), key)
 
         df = calls.append(puts)
         df['symbol'] = symbol
