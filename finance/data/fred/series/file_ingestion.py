@@ -2,7 +2,7 @@ import pandas as pd
 from finance.data import loader
 
 
-class ABCFREDSeriesFileIngestion(loader.FileIngestion):
+class FREDSeries(loader.FileIngestion):
     @property
     def import_directory(self) -> str:
         return 'audit/fred/series'
@@ -20,7 +20,7 @@ class ABCFREDSeriesFileIngestion(loader.FileIngestion):
         return df
 
 
-class FREDInflation(ABCFREDSeriesFileIngestion):
+class FREDInflation(FREDSeries):
     @property
     def job_name(self) -> str:
         return 'fred_series_inflation'
@@ -34,7 +34,7 @@ class FREDInflation(ABCFREDSeriesFileIngestion):
         return 'inflation'
 
 
-class FREDGovernmentDebt(ABCFREDSeriesFileIngestion):
+class FREDGovernmentDebt(FREDSeries):
     @property
     def job_name(self) -> str:
         return 'fred_series_central_government_debt'
@@ -48,7 +48,7 @@ class FREDGovernmentDebt(ABCFREDSeriesFileIngestion):
         return 'central_government_debt'
 
 
-class FREDHouseholdDebt(ABCFREDSeriesFileIngestion):
+class FREDHouseholdDebt(FREDSeries):
     @property
     def job_name(self) -> str:
         return 'fred_series_household_debt_to_gdp'
@@ -62,7 +62,7 @@ class FREDHouseholdDebt(ABCFREDSeriesFileIngestion):
         return 'household_debt_to_gdp'
 
 
-class FREDRealGDPPerCapita(ABCFREDSeriesFileIngestion):
+class FREDRealGDPPerCapita(FREDSeries):
     @property
     def job_name(self) -> str:
         return 'fred_series_real_gdp_per_capita'
@@ -76,7 +76,7 @@ class FREDRealGDPPerCapita(ABCFREDSeriesFileIngestion):
         return 'real_gdp_per_capita'
 
 
-class FREDStockMarketCapitalization(ABCFREDSeriesFileIngestion):
+class FREDStockMarketCapitalization(FREDSeries):
     @property
     def job_name(self) -> str:
         return 'fred_series_stock_market_capitalization_to_gdp'
@@ -90,7 +90,7 @@ class FREDStockMarketCapitalization(ABCFREDSeriesFileIngestion):
         return 'stock_market_capitalization_to_gdp'
 
 
-class FREDTreasuriesOneYear(ABCFREDSeriesFileIngestion):
+class FREDTreasuriesOneYear(FREDSeries):
     @property
     def job_name(self) -> str:
         return 'fred_1_year_treasury_bill'
@@ -104,7 +104,7 @@ class FREDTreasuriesOneYear(ABCFREDSeriesFileIngestion):
         return 'treasuries_one_year'
 
 
-class FREDTreasuriesSixMonth(ABCFREDSeriesFileIngestion):
+class FREDTreasuriesSixMonth(FREDSeries):
     @property
     def job_name(self) -> str:
         return 'fred_6_month_treasury_bill'
@@ -118,7 +118,7 @@ class FREDTreasuriesSixMonth(ABCFREDSeriesFileIngestion):
         return 'treasuries_six_month'
 
 
-class FREDTreasuriesThreeMonth(ABCFREDSeriesFileIngestion):
+class FREDTreasuriesThreeMonth(FREDSeries):
     @property
     def job_name(self) -> str:
         return 'fred_3_month_treasury_bill'

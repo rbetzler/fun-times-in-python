@@ -1,8 +1,10 @@
+import abc
+
 from finance.data import sql
 from finance.data.fred import ddls
 
 
-class FredSQLRunner(sql.SQLRunner):
+class FredSQLRunner(sql.SQLRunner, abc.ABC):
     @property
     def schema_name(self) -> str:
         return 'fred'
@@ -17,6 +19,10 @@ class FREDReleasesTable(FredSQLRunner):
     def table_ddl(self) -> str:
         return ddls.RELEASES
 
+    @property
+    def sql_script(self):
+        return None
+
 
 class FREDSeriesTable(FredSQLRunner):
     @property
@@ -26,6 +32,10 @@ class FREDSeriesTable(FredSQLRunner):
     @property
     def table_ddl(self) -> str:
         return ddls.SERIES
+
+    @property
+    def sql_script(self):
+        return None
 
 
 class FREDSourcesTable(FredSQLRunner):
@@ -37,6 +47,10 @@ class FREDSourcesTable(FredSQLRunner):
     def table_ddl(self) -> str:
         return ddls.SOURCES
 
+    @property
+    def sql_script(self):
+        return None
+
 
 class FREDJobsTable(FredSQLRunner):
     @property
@@ -46,6 +60,10 @@ class FREDJobsTable(FredSQLRunner):
     @property
     def table_ddl(self) -> str:
         return ddls.JOBS
+
+    @property
+    def sql_script(self):
+        return None
 
 
 class FREDSeriesSearchesTable(FredSQLRunner):
@@ -57,6 +75,10 @@ class FREDSeriesSearchesTable(FredSQLRunner):
     def table_ddl(self) -> str:
         return ddls.SERIES_SEARCHES
 
+    @property
+    def sql_script(self):
+        return None
+
 
 class FREDSeriesTables(FredSQLRunner):
     @property
@@ -66,6 +88,10 @@ class FREDSeriesTables(FredSQLRunner):
     @property
     def table_ddl(self) -> str:
         return ddls.SERIES_TEMPLATE
+
+    @property
+    def sql_script(self):
+        return None
 
 
 if __name__ == '__main__':

@@ -72,6 +72,10 @@ class TdFundamentalsSQLRunner(sql.SQLRunner):
             """
         return ddl
 
+    @property
+    def sql_script(self):
+        return None
+
 
 if __name__ == '__main__':
     TdFundamentalsSQLRunner().execute()
