@@ -6,6 +6,9 @@ import pandas as pd
 from sqlalchemy import create_engine, engine
 from finance.utilities import utils
 
+AUDIT_DIR = 'audit/'
+BATCHES_DIR = 'batches/'
+
 
 class FileIngestion(abc.ABC):
     def __init__(
@@ -19,20 +22,27 @@ class FileIngestion(abc.ABC):
         self.n_files_to_process = n_files_to_process
 
     @property
+    @abc.abstractmethod
     def job_name(self) -> str:
-        return ''
+        pass
 
     @property
     def quote_character(self) -> str:
         return '"'
 
     @property
-    def import_directory(self) -> str:
-        return ''
+    @abc.abstractmethod
+    def directory(self) -> str:
+        pass
 
     @property
+    def import_directory(self):
+        return AUDIT_DIR + self.directory
+
+    @property
+    @abc.abstractmethod
     def import_file_prefix(self) -> str:
-        return ''
+        pass
 
     @property
     def import_file_extension(self) -> str:
@@ -44,22 +54,14 @@ class FileIngestion(abc.ABC):
 
     @property
     def export_folder(self) -> str:
-        return ''
-
-    @property
-    def export_file_name(self) -> str:
-        return 'batch_'
+        return AUDIT_DIR + BATCHES_DIR + self.directory
 
     @property
     def export_file_type(self) -> str:
         return '.csv'
 
     def export_file_path(self, job) -> str:
-        file_path = self.export_folder + '/' \
-                    + self.export_file_name \
-                    + job + '_' \
-                    + self.run_datetime \
-                    + self.export_file_type
+        file_path = f'{self.export_folder}/batch_{job}_{self.run_datetime}{self.export_file_type}'
         return file_path
 
     @property
@@ -67,24 +69,18 @@ class FileIngestion(abc.ABC):
         return ','
 
     @property
-    def table(self) -> str:
-        return ''
+    @abc.abstractmethod
+    def schema(self) -> str:
+        pass
 
     @property
-    def schema(self) -> str:
-        return ''
+    @abc.abstractmethod
+    def table(self) -> str:
+        pass
 
     @property
     def db_engine(self) -> engine.Engine:
         return create_engine(self.db_connection)
-
-    @property
-    def append_to_table(self) -> str:
-        return 'append'
-
-    @property
-    def data_format(self) -> pd.DataFrame:
-        return pd.DataFrame()
 
     @property
     def header_row(self) -> bool:
@@ -184,9 +180,10 @@ class FileIngestion(abc.ABC):
         if not files.empty:
             raw_dfs = []
             for idx, row in files.iterrows():
-                raw = pd.read_csv(row['file_paths'])
-                raw['file_datetime'] = row['file_dates']
-                raw_dfs.append(raw)
+                if os.stat(row['file_paths']).st_size > 1:
+                    raw = pd.read_csv(row['file_paths'])
+                    raw['file_datetime'] = row['file_dates']
+                    raw_dfs.append(raw)
             df = pd.concat(raw_dfs, sort=False)
 
             if not df.empty:
@@ -213,11 +210,11 @@ class FileIngestion(abc.ABC):
                 print('copying to db')
                 conn = psycopg2.connect(self.db_connection)
                 cursor = conn.cursor()
-                copy_command = f"""
+                copy_command = f'''
                     COPY {self.schema}.{self.table} 
                     FROM STDIN
-                    DELIMITER ',' QUOTE '{self.quote_character}' CSV
-                    """
+                    DELIMITER '{self.export_file_separator}' QUOTE '{self.quote_character}' CSV
+                    '''
                 cursor.copy_expert(copy_command, file=open(self.export_file_path(self.job_name)))
                 conn.commit()
                 cursor.close()

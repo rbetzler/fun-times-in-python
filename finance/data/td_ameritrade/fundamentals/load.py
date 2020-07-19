@@ -8,16 +8,12 @@ class FileIngestion(loader.FileIngestion):
         return 'td_fundamentals_api'
 
     @property
-    def import_directory(self) -> str:
-        return 'audit/td_ameritrade/fundamentals'
+    def directory(self) -> str:
+        return 'td_ameritrade/fundamentals'
 
     @property
     def import_file_prefix(self) -> str:
         return 'td_fundamentals_'
-
-    @property
-    def export_folder(self) -> str:
-        return 'audit/batches/td_ameritrade/fundamentals'
 
     @property
     def export_file_separator(self) -> str:
