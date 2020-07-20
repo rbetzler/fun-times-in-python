@@ -149,8 +149,9 @@ class FileIngestion(abc.ABC):
                 and table_name = '{self.table}'
                 and job_name = '{self.job_name}'
             '''
-        df = utils.query_db(query=query)['ingest_datetime'].values[0]
-        return df
+        df = utils.query_db(query=query)
+        ingest_datetime = df['ingest_datetime'].values[0]
+        return ingest_datetime
 
     @property
     def get_ingest_files(self) -> pd.DataFrame:
@@ -161,7 +162,8 @@ class FileIngestion(abc.ABC):
 
         print(f'{len(df)} files need to be ingested')
         if self.n_files_to_process > 0:
-            df = df.head(self.n_files_to_process)
+            file_modified_datetime = df.loc[self.n_files_to_process - 1, 'file_modified_datetime']
+            df = df[df['file_modified_datetime'] <= file_modified_datetime]
 
         print(f'Will ingest {len(df)} files')
         return df
