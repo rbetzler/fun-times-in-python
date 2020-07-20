@@ -3,6 +3,7 @@ import abc
 import psycopg2
 import datetime
 import pandas as pd
+from concurrent import futures
 from sqlalchemy import create_engine, engine
 from finance.utilities import utils
 
@@ -14,12 +15,13 @@ class FileIngestion(abc.ABC):
     def __init__(
             self,
             run_datetime=datetime.datetime.now(),
-            n_files_to_process=0
+            n_files_to_process=0,
     ):
         self.db_connection = utils.DW_STOCKS
         self.run_datetime = run_datetime.strftime('%Y%m%d%H%M%S')
         self.ingest_datetime = run_datetime.strftime("%Y-%m-%d %H:%M:%S")
         self.n_files_to_process = n_files_to_process
+        self.n_workers = None
 
     @property
     @abc.abstractmethod
@@ -164,6 +166,13 @@ class FileIngestion(abc.ABC):
         print(f'Will ingest {len(df)} files')
         return df
 
+    @staticmethod
+    def get_files(file_path, file_datetime):
+        if os.stat(file_path).st_size > 1:
+            raw = pd.read_csv(file_path)
+            raw['file_datetime'] = file_datetime
+            return raw
+
     def insert_audit_record(self, ingest_datetime: str):
         query = f'''
             INSERT INTO audit.ingest_datetimes
@@ -178,12 +187,19 @@ class FileIngestion(abc.ABC):
         files = self.get_ingest_files
 
         if not files.empty:
+            executor = futures.ProcessPoolExecutor(max_workers=self.n_workers)
+            future_to_url = {
+                executor.submit(
+                    self.get_files,
+                    row['file_paths'],
+                    row['file_dates'],
+                ): row for _, row in files.iterrows()}
+
             raw_dfs = []
-            for idx, row in files.iterrows():
-                if os.stat(row['file_paths']).st_size > 1:
-                    raw = pd.read_csv(row['file_paths'])
-                    raw['file_datetime'] = row['file_dates']
-                    raw_dfs.append(raw)
+            for future in futures.as_completed(future_to_url):
+                if future.result() is not None:
+                    raw_dfs.append(future.result())
+
             df = pd.concat(raw_dfs, sort=False)
 
             if not df.empty:
