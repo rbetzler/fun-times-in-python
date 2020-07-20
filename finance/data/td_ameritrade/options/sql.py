@@ -233,7 +233,10 @@ class TdOptionsSQLRunner(sql.SQLRunner):
 
     @property
     def sql_script(self) -> str:
-        script = """
+        script = '''
+        DROP INDEX IF EXISTS td.symbol_idx;
+        CREATE INDEX IF NOT EXISTS raw_symbol_idx ON td.options_raw (symbol);
+
         TRUNCATE td.options;
         INSERT INTO td.options (
             with partitioned as (
@@ -300,7 +303,10 @@ class TdOptionsSQLRunner(sql.SQLRunner):
             from partitioned
             where rn = 1
             );
-        """
+
+        DROP INDEX IF EXISTS td.raw_symbol_idx;
+        CREATE INDEX IF NOT EXISTS symbol_idx ON td.options (symbol);
+        '''
         return script
 
 
