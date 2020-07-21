@@ -28,6 +28,10 @@ class TdEquitiesSQLRunner(sql.SQLRunner):
             )
                 PARTITION BY RANGE (market_datetime);
 
+            CREATE TABLE IF NOT EXISTS td.equities_1980 PARTITION OF td.equities FOR VALUES FROM ('1980-01-01') TO ('1990-01-01');
+            CREATE TABLE IF NOT EXISTS td.equities_1990 PARTITION OF td.equities FOR VALUES FROM ('1990-01-01') TO ('1995-01-01');
+            CREATE TABLE IF NOT EXISTS td.equities_1995 PARTITION OF td.equities FOR VALUES FROM ('1995-01-01') TO ('2000-01-01');
+            CREATE TABLE IF NOT EXISTS td.equities_2000 PARTITION OF td.equities FOR VALUES FROM ('2000-01-01') TO ('2001-01-01');
             CREATE TABLE IF NOT EXISTS td.equities_2001 PARTITION OF td.equities FOR VALUES FROM ('2001-01-01') TO ('2002-01-01');
             CREATE TABLE IF NOT EXISTS td.equities_2002 PARTITION OF td.equities FOR VALUES FROM ('2002-01-01') TO ('2003-01-01');
             CREATE TABLE IF NOT EXISTS td.equities_2003 PARTITION OF td.equities FOR VALUES FROM ('2003-01-01') TO ('2004-01-01');
@@ -68,17 +72,17 @@ class TdEquitiesSQLRunner(sql.SQLRunner):
                 from td.equities_raw
                 )
             select
-                symbol,
-                open,
-                high,
-                low,
-                close,
-                volume,
-                market_datetime_epoch,
-                empty,
-                market_datetime,
-                file_datetime,
-                ingest_datetime
+                symbol
+                , open
+                , high
+                , low
+                , close
+                , volume
+                , market_datetime_epoch
+                , empty
+                , market_datetime
+                , file_datetime
+                , ingest_datetime
             from partitioned
             where rn = 1
             );
