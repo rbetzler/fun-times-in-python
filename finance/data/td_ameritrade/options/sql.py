@@ -234,78 +234,93 @@ class TdOptionsSQLRunner(sql.SQLRunner):
     @property
     def sql_script(self) -> str:
         script = '''
-            drop index if exists td.symbol_idx;
-            create index if not exists raw_symbol_idx on td.options_raw (symbol);
+            -- drop index if exists td.symbol_idx;
+            -- create index if not exists raw_symbol_idx on td.options_raw (symbol);
 
-            truncate td.options;
-            insert into td.options (
-                with partitioned as (
+            -- truncate td.options;
+            drop table if exists new_records;
+            create temp table new_records as (
+                with
+                partitioned as (
                     select *
                         , dense_rank() over(partition by symbol, date(file_datetime) order by ingest_datetime desc) as rn
                     from td.options_raw
+                    where file_datetime > (select max(file_datetime) as max_file_datetime from td.options)
                     )
                 select
-                    symbol,
-                    volatility,
-                    n_contracts,
-                    interest_rate,
-                    put_call,
-                    description,
-                    exchange_name,
-                    bid,
-                    ask,
-                    last,
-                    mark,
-                    bid_size,
-                    ask_size,
-                    bid_ask_size,
-                    last_size,
-                    high_price,
-                    low_price,
-                    open_price,
-                    close_price,
-                    total_volume,
-                    trade_date,
-                    trade_time_in_long,
-                    quote_time_in_long,
-                    net_change,
-                    delta,
-                    gamma,
-                    theta,
-                    vega,
-                    rho,
-                    open_interest,
-                    time_value,
-                    theoretical_option_value,
-                    theoretical_volatility,
-                    option_deliverable_list,
-                    strike_price,
-                    expiration_date,
-                    days_to_expiration,
-                    expiration_type,
-                    last_trading_day,
-                    multiplier,
-                    settlement_type,
-                    deliverable_note,
-                    is_index_option,
-                    percent_change,
-                    mark_change,
-                    mark_percent_change,
-                    non_standard,
-                    mini,
-                    in_the_money,
-                    expiration_date_from_epoch,
-                    strike,
-                    strike_date,
-                    days_to_expiration_date,
-                    file_datetime,
-                    ingest_datetime
+                    symbol
+                    , volatility
+                    , n_contracts
+                    , interest_rate
+                    , put_call
+                    , description
+                    , exchange_name
+                    , bid
+                    , ask
+                    , last
+                    , mark
+                    , bid_size
+                    , ask_size
+                    , bid_ask_size
+                    , last_size
+                    , high_price
+                    , low_price
+                    , open_price
+                    , close_price
+                    , total_volume
+                    , trade_date
+                    , trade_time_in_long
+                    , quote_time_in_long
+                    , net_change
+                    , delta
+                    , gamma
+                    , theta
+                    , vega
+                    , rho
+                    , open_interest
+                    , time_value
+                    , theoretical_option_value
+                    , theoretical_volatility
+                    , option_deliverable_list
+                    , strike_price
+                    , expiration_date
+                    , days_to_expiration
+                    , expiration_type
+                    , last_trading_day
+                    , multiplier
+                    , settlement_type
+                    , deliverable_note
+                    , is_index_option
+                    , percent_change
+                    , mark_change
+                    , mark_percent_change
+                    , non_standard
+                    , mini
+                    , in_the_money
+                    , expiration_date_from_epoch
+                    , strike
+                    , strike_date
+                    , days_to_expiration_date
+                    , file_datetime
+                    , ingest_datetime
                 from partitioned
                 where rn = 1
                 );
 
-            drop index if exists td.raw_symbol_idx;
-            create index if not exists symbol_idx on td.options (symbol);
+            delete
+            from td.options as o
+            using new_records as n
+            where n.symbol = o.symbol
+                and n.strike = o.strike
+                and n.days_to_expiration = o.days_to_expiration
+                and n.put_call = o.put_call
+                and date(n.file_datetime) = date(o.file_datetime)
+                and (extract('hour' from n.file_datetime) < 14) = (extract('hour' from o.file_datetime) < 14);
+
+            insert into td.options (select * from new_records);
+
+            -- drop index if exists td.raw_symbol_idx;
+            -- create index if not exists symbol_idx on td.options (symbol);
             '''
         return script
 
