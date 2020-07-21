@@ -12,7 +12,7 @@ class TdFundamentalsSQLRunner(sql.SQLRunner):
 
     @property
     def table_ddl(self) -> str:
-        ddl = """
+        ddl = '''
             CREATE TABLE IF NOT EXISTS td.fundamentals (
                 symbol                  text,
                 high_52                 numeric(20,6),
@@ -66,10 +66,11 @@ class TdFundamentalsSQLRunner(sql.SQLRunner):
                 file_datetime           timestamp without time zone,
                 ingest_datetime         timestamp without time zone
             ) PARTITION BY RANGE (file_datetime);
-            -- CREATE INDEX ON td.fundamentals (symbol);
-            CREATE TABLE IF NOT EXISTS td.fundamentals_2019 PARTITION OF td.fundamentals 
-                FOR VALUES FROM ('2019-01-01') TO ('2020-01-01');
-            """
+
+            CREATE TABLE IF NOT EXISTS td.fundamentals_2019_2 PARTITION OF td.fundamentals FOR VALUES FROM ('2019-07-01') TO ('2020-01-01');
+            CREATE TABLE IF NOT EXISTS td.fundamentals_2020_1 PARTITION OF td.fundamentals FOR VALUES FROM ('2020-01-01') TO ('2020-07-01');
+            CREATE TABLE IF NOT EXISTS td.fundamentals_2020_2 PARTITION OF td.fundamentals FOR VALUES FROM ('2020-07-01') TO ('2021-01-01');
+            '''
         return ddl
 
     @property

@@ -3,44 +3,48 @@ import abc
 import psycopg2
 import datetime
 import pandas as pd
-from sqlalchemy import create_engine
+from concurrent import futures
+from sqlalchemy import create_engine, engine
 from finance.utilities import utils
+
+AUDIT_DIR = 'audit/'
+BATCHES_DIR = 'batches/'
 
 
 class FileIngestion(abc.ABC):
     def __init__(
             self,
             run_datetime=datetime.datetime.now(),
-            n_files_to_process=0
+            n_files_to_process=0,
     ):
         self.db_connection = utils.DW_STOCKS
         self.run_datetime = run_datetime.strftime('%Y%m%d%H%M%S')
         self.ingest_datetime = run_datetime.strftime("%Y-%m-%d %H:%M:%S")
         self.n_files_to_process = n_files_to_process
+        self.n_workers = None
 
     @property
+    @abc.abstractmethod
     def job_name(self) -> str:
-        return ''
+        pass
 
     @property
-    def place_raw_file(self) -> bool:
-        return False
-
-    @property
-    def place_batch_file(self) -> bool:
-        return False
-
-    @property
-    def batch_quote_char(self) -> str:
+    def quote_character(self) -> str:
         return '"'
 
     @property
-    def import_directory(self) -> str:
-        return ''
+    @abc.abstractmethod
+    def directory(self) -> str:
+        pass
 
     @property
+    def import_directory(self):
+        return AUDIT_DIR + self.directory
+
+    @property
+    @abc.abstractmethod
     def import_file_prefix(self) -> str:
-        return ''
+        pass
 
     @property
     def import_file_extension(self) -> str:
@@ -52,22 +56,14 @@ class FileIngestion(abc.ABC):
 
     @property
     def export_folder(self) -> str:
-        return ''
-
-    @property
-    def export_file_name(self) -> str:
-        return 'batch_'
+        return AUDIT_DIR + BATCHES_DIR + self.directory
 
     @property
     def export_file_type(self) -> str:
         return '.csv'
 
     def export_file_path(self, job) -> str:
-        file_path = self.export_folder + '/' \
-                    + self.export_file_name \
-                    + job + '_' \
-                    + self.run_datetime \
-                    + self.export_file_type
+        file_path = f'{self.export_folder}/batch_{job}_{self.run_datetime}{self.export_file_type}'
         return file_path
 
     @property
@@ -75,28 +71,18 @@ class FileIngestion(abc.ABC):
         return ','
 
     @property
-    def load_to_db(self) -> bool:
-        return False
-
-    @property
-    def table(self) -> str:
-        return ''
-
-    @property
+    @abc.abstractmethod
     def schema(self) -> str:
-        return ''
+        pass
 
     @property
-    def db_engine(self) -> str:
+    @abc.abstractmethod
+    def table(self) -> str:
+        pass
+
+    @property
+    def db_engine(self) -> engine.Engine:
         return create_engine(self.db_connection)
-
-    @property
-    def append_to_table(self) -> str:
-        return 'append'
-
-    @property
-    def data_format(self) -> pd.DataFrame:
-        return pd.DataFrame()
 
     @property
     def header_row(self) -> bool:
@@ -163,8 +149,9 @@ class FileIngestion(abc.ABC):
                 and table_name = '{self.table}'
                 and job_name = '{self.job_name}'
             '''
-        df = utils.query_db(query=query)['ingest_datetime'].values[0]
-        return df
+        df = utils.query_db(query=query)
+        ingest_datetime = df['ingest_datetime'].values[0]
+        return ingest_datetime
 
     @property
     def get_ingest_files(self) -> pd.DataFrame:
@@ -175,10 +162,18 @@ class FileIngestion(abc.ABC):
 
         print(f'{len(df)} files need to be ingested')
         if self.n_files_to_process > 0:
-            df = df.head(self.n_files_to_process)
+            file_modified_datetime = df.loc[self.n_files_to_process - 1, 'file_modified_datetime']
+            df = df[df['file_modified_datetime'] <= file_modified_datetime]
 
         print(f'Will ingest {len(df)} files')
         return df
+
+    @staticmethod
+    def get_files(file_path, file_datetime):
+        if os.stat(file_path).st_size > 1:
+            raw = pd.read_csv(file_path)
+            raw['file_datetime'] = file_datetime
+            return raw
 
     def insert_audit_record(self, ingest_datetime: str):
         query = f'''
@@ -194,11 +189,19 @@ class FileIngestion(abc.ABC):
         files = self.get_ingest_files
 
         if not files.empty:
+            executor = futures.ProcessPoolExecutor(max_workers=self.n_workers)
+            future_to_url = {
+                executor.submit(
+                    self.get_files,
+                    row['file_paths'],
+                    row['file_dates'],
+                ): row for _, row in files.iterrows()}
+
             raw_dfs = []
-            for idx, row in files.iterrows():
-                raw = pd.read_csv(row['file_paths'])
-                raw['file_datetime'] = row['file_dates']
-                raw_dfs.append(raw)
+            for future in futures.as_completed(future_to_url):
+                if future.result() is not None:
+                    raw_dfs.append(future.result())
+
             df = pd.concat(raw_dfs, sort=False)
 
             if not df.empty:
@@ -213,35 +216,28 @@ class FileIngestion(abc.ABC):
 
                 df = self.add_and_order_columns(df)
 
-                if self.place_batch_file:
-                    print('placing batch file')
-                    df.to_csv(self.export_file_path(self.job_name),
-                              index=False,
-                              header=self.header_row,
-                              sep=self.export_file_separator)
-                    file = open(self.export_file_path(self.job_name), 'r')
+                print('placing batch file')
+                df.to_csv(
+                    self.export_file_path(self.job_name),
+                    index=False,
+                    header=self.header_row,
+                    sep=self.export_file_separator,
+                )
+                file = open(self.export_file_path(self.job_name), 'r')
 
-                    print('copying to db')
-                    conn = psycopg2.connect(self.db_connection)
-                    cursor = conn.cursor()
-                    copy_command = f"COPY {self.schema}.{self.table} " \
-                                   f"FROM STDIN " \
-                                   f"DELIMITER ',' QUOTE '{self.batch_quote_char}' CSV "
-                    cursor.copy_expert(copy_command, file=open(self.export_file_path(self.job_name)))
-                    conn.commit()
-                    cursor.close()
-                    conn.close()
-                    file.close()
-
-                elif self.load_to_db:
-                    print('loading straight to db')
-                    df.to_sql(
-                        self.table,
-                        self.db_engine,
-                        schema=self.schema,
-                        if_exists=self.append_to_table,
-                        index=False,
-                    )
+                print('copying to db')
+                conn = psycopg2.connect(self.db_connection)
+                cursor = conn.cursor()
+                copy_command = f'''
+                    COPY {self.schema}.{self.table} 
+                    FROM STDIN
+                    DELIMITER '{self.export_file_separator}' QUOTE '{self.quote_character}' CSV
+                    '''
+                cursor.copy_expert(copy_command, file=open(self.export_file_path(self.job_name)))
+                conn.commit()
+                cursor.close()
+                conn.close()
+                file.close()
 
                 self.insert_audit_record(ingest_datetime=files['file_modified_datetime'].max())
 

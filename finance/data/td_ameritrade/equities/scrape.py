@@ -52,9 +52,7 @@ class TDOptionsAPI(scraper.Caller):
 
     @property
     def export_folder(self) -> str:
-        folder = 'audit/td_ameritrade/equities/' \
-                 + self.folder_datetime \
-                 + '/'
+        folder = f'audit/td_ameritrade/equities/{self.folder_datetime}/'
         return folder
 
     @property

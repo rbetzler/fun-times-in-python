@@ -8,20 +8,12 @@ class FileIngestion(loader.FileIngestion):
         return 'td_fundamentals_api'
 
     @property
-    def import_directory(self) -> str:
-        return 'audit/td_ameritrade/fundamentals'
+    def directory(self) -> str:
+        return 'td_ameritrade/fundamentals'
 
     @property
     def import_file_prefix(self) -> str:
         return 'td_fundamentals_'
-
-    @property
-    def place_batch_file(self) -> bool:
-        return True
-
-    @property
-    def export_folder(self) -> str:
-        return 'audit/batches/td_ameritrade/fundamentals'
 
     @property
     def export_file_separator(self) -> str:
@@ -34,10 +26,6 @@ class FileIngestion(loader.FileIngestion):
     @property
     def schema(self) -> str:
         return 'td'
-
-    @property
-    def parallel_output(self) -> pd.DataFrame:
-        return pd.DataFrame()
 
     def clean_df(self, df) -> pd.DataFrame:
         blank_to_null_cols = ['dividend_date', 'dividend_pay_date']
