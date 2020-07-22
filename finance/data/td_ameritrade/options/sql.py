@@ -235,7 +235,7 @@ class TdOptionsSQLRunner(sql.SQLRunner):
     def sql_script(self) -> str:
         script = '''
             -- drop index if exists td.symbol_idx;
-            -- create index if not exists raw_symbol_idx on td.options_raw (symbol);
+            -- create index if not exists raw_symbol_idx on td.options_raw (symbol, date(file_datetime), ingest_datetime desc);
 
             -- truncate td.options;
             drop table if exists new_records;
