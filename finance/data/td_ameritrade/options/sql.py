@@ -234,7 +234,7 @@ class TdOptionsSQLRunner(sql.SQLRunner):
     @property
     def sql_script(self) -> str:
         script = '''
-            drop index if exists td.symbol_idx;
+            drop index if exists td.options_symbol_idx;
 
             drop table if exists new_records;
             create temp table new_records as (
@@ -318,7 +318,7 @@ class TdOptionsSQLRunner(sql.SQLRunner):
 
             insert into td.options (select * from new_records);
 
-            create index if not exists symbol_idx on td.options (symbol);
+            create index if not exists options_symbol_idx on td.options (symbol);
             '''
         return script
 

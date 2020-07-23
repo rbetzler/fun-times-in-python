@@ -63,7 +63,8 @@ class TdEquitiesSQLRunner(sql.SQLRunner):
 
     @property
     def sql_script(self) -> str:
-        script = """
+        script = '''
+        DROP INDEX IF EXISTS equities_symbol_idx;
         TRUNCATE td.equities;
         INSERT INTO td.equities (
             with partitioned as (
@@ -86,7 +87,8 @@ class TdEquitiesSQLRunner(sql.SQLRunner):
             from partitioned
             where rn = 1
             );
-        """
+        CREATE INDEX IF NOT EXISTS equities_symbol_idx ON td.equities (symbol);
+        '''
         return script
 
 
