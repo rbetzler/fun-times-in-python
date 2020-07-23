@@ -3,10 +3,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 
 import torch
-from torch import nn, functional, optim, autograd
-
-from finance.utilities import utils
-from finance.science.utilities import cluster_utils
+from torch import nn, optim
 
 
 class TorchLSTM(nn.Module):
