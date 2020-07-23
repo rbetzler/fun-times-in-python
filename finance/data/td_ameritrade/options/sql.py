@@ -245,7 +245,8 @@ class TdOptionsSQLRunner(sql.SQLRunner):
                     select *
                         , dense_rank() over(partition by symbol, date(file_datetime) order by ingest_datetime desc) as rn
                     from td.options_raw
-                    where file_datetime > (select max(file_datetime) as max_file_datetime from td.options)
+                    where file_datetime > (select max(file_datetime) as max_file_datetime from td.options where file_datetime > current_date - 10)
+                        and file_datetime > current_date - 10
                     )
                 select
                     symbol
