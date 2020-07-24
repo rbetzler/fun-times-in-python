@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 import scipy.stats as stats
 import scipy.optimize as opt
 
@@ -19,7 +18,7 @@ class BlackScholes:
         self.stock = stock_price
         self.strike = strike
         self.risk_free_rate = risk_free_rate
-        self.time = days_to_maturity/365
+        self.time = days_to_maturity / 365
         self.volatility = volatility
         self.is_call = is_call
 
@@ -138,6 +137,7 @@ class BlackScholes:
     """
     Greeks
     """
+
     @property
     def delta(self):
         """the rate of change in an options value as the underlying changes"""
@@ -148,8 +148,8 @@ class BlackScholes:
     def gamma(self):
         """the rate of change in an options value as the delta changes"""
         gamma = (
-            (self._probability_density_function(self.d1) * np.exp(-self.risk_free_rate * self.time))
-            /(self.stock * self.volatility * np.sqrt(self.time))
+                (self._probability_density_function(self.d1) * np.exp(-self.risk_free_rate * self.time))
+                / (self.stock * self.volatility * np.sqrt(self.time))
         )
         return gamma
 
@@ -166,7 +166,7 @@ class BlackScholes:
                     -self.time * self.strike * np.exp(-self.risk_free_rate * self.time)
                     * self._cumulative_density_function(-self.d2)
             )
-        rho = rho/100
+        rho = rho / 100
         return rho
 
     @property
@@ -175,7 +175,7 @@ class BlackScholes:
         left = -(
                 (self.stock * np.exp(-self.risk_free_rate * self.time)
                  * self._probability_density_function(self.d1) * self.volatility)
-                /(2 * np.sqrt(self.time))
+                / (2 * np.sqrt(self.time))
         )
         middle = (
                 -self.risk_free_rate * self.stock * np.exp(-self.risk_free_rate * self.time)
@@ -186,7 +186,7 @@ class BlackScholes:
                 * self._cumulative_density_function(self.d2)
         )
         theta = left - middle - center
-        theta = theta/100
+        theta = theta / 100
         return theta
 
     @property
@@ -196,5 +196,5 @@ class BlackScholes:
                 self.stock * np.exp(-self.risk_free_rate * self.time)
                 * self._probability_density_function(self.d1) * np.sqrt(self.time)
         )
-        vega = vega/100
+        vega = vega / 100
         return vega

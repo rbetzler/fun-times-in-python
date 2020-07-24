@@ -234,18 +234,26 @@ class TdOptionsSQLRunner(sql.SQLRunner):
     @property
     def sql_script(self) -> str:
         script = '''
-            -- drop index if exists td.symbol_idx;
-            -- create index if not exists raw_symbol_idx on td.options_raw (symbol);
+            drop index if exists td.options_symbol_idx;
 
-            -- truncate td.options;
             drop table if exists new_records;
             create temp table new_records as (
                 with
-                partitioned as (
+                dated as (
                     select *
-                        , dense_rank() over(partition by symbol, date(file_datetime) order by ingest_datetime desc) as rn
+                        , case
+                            when extract('hour' from file_datetime) >= 20 then file_datetime::date + 1
+                            when extract('hour' from file_datetime) < 13 or (extract('hour' from file_datetime) = 13 and extract('minute' from file_datetime) <= 30) then file_datetime::date
+                            end as file_date
                     from td.options_raw
-                    where file_datetime > (select max(file_datetime) as max_file_datetime from td.options)
+                    where file_datetime > current_date - 7 and file_datetime < current_date + 1
+                        and file_datetime > (select max(file_datetime) from td.options_raw where file_datetime > current_date - 7)
+                    )
+                , ranked as (
+                    select *
+                        , dense_rank() over(partition by file_date, symbol order by ingest_datetime desc) as dr
+                    from dated
+                    where file_date is not null
                     )
                 select
                     symbol
@@ -301,12 +309,13 @@ class TdOptionsSQLRunner(sql.SQLRunner):
                     , strike
                     , strike_date
                     , days_to_expiration_date
-                    , file_datetime
+                    , file_date as file_datetime
                     , ingest_datetime
-                from partitioned
-                where rn = 1
+                from ranked
+                where dr = 1
                 );
 
+            -- Fix delete performance
             delete
             from td.options as o
             using new_records as n
@@ -314,13 +323,11 @@ class TdOptionsSQLRunner(sql.SQLRunner):
                 and n.strike = o.strike
                 and n.days_to_expiration = o.days_to_expiration
                 and n.put_call = o.put_call
-                and date(n.file_datetime) = date(o.file_datetime)
-                and (extract('hour' from n.file_datetime) < 14) = (extract('hour' from o.file_datetime) < 14);
+                and n.file_datetime = o.file_datetime;
 
             insert into td.options (select * from new_records);
 
-            -- drop index if exists td.raw_symbol_idx;
-            -- create index if not exists symbol_idx on td.options (symbol);
+            create index if not exists options_symbol_idx on td.options (symbol);
             '''
         return script
 
