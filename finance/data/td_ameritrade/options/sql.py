@@ -247,6 +247,7 @@ class TdOptionsSQLRunner(sql.SQLRunner):
                             end as file_date
                     from td.options_raw
                     where file_datetime > current_date - 7 and file_datetime < current_date + 1
+                        and file_datetime > (select max(file_datetime) from td.options_raw where file_datetime > current_date - 7)
                     )
                 , ranked as (
                     select *
@@ -314,6 +315,7 @@ class TdOptionsSQLRunner(sql.SQLRunner):
                 where dr = 1
                 );
 
+            -- Fix delete performance
             delete
             from td.options as o
             using new_records as n
