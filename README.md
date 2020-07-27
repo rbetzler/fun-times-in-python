@@ -22,9 +22,12 @@ docker run -it --name py-temp -v /Users/rickbetzler/personal/fun-times-in-python
 ##### Docker build is too painful
 ```
 sudo docker pull postgres
-sudo docker run -d -p 5432:5432 --name dw-stocks -e POSTGRES_PASSWORD=password -v /media/nautilus/docks/postgres:/var/lib/postgresql/data -v /media/nautilus/fun-times-in-python:/mnt --network bridge postgres
+sudo docker run -d -p 5432:5432 --name dw-stocks -e POSTGRES_PASSWORD=password -v /media/nautilus/docks/postgres:/var/lib/postgresql/data -v /media/nautilus/fun-times-in-python:/mnt -v /mnt:/media --network bridge postgres
 docker run -d -p 5432:5432 --name dw-stocks -e POSTGRES_PASSWORD=password -v /Users/rickbetzler/personal/docks/postgres:/var/lib/postgresql/data --network local-network postgres
+
+also run: create tablespace ssd_tablespace location '/media/dw-stocks-tablespace';
 ```
+
 
 #### Airflow
 ##### From dockerfile
