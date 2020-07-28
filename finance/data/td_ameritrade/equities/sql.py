@@ -64,31 +64,34 @@ class TdEquitiesSQLRunner(sql.SQLRunner):
     @property
     def sql_script(self) -> str:
         script = '''
-        DROP INDEX IF EXISTS equities_symbol_idx;
-        TRUNCATE td.equities;
-        INSERT INTO td.equities (
-            with partitioned as (
-                select *
-                    , row_number() over(partition by symbol, market_datetime order by file_datetime desc) as rn
-                from td.equities_raw
-                )
-            select
-                symbol
-                , open
-                , high
-                , low
-                , close
-                , volume
-                , market_datetime_epoch
-                , empty
-                , market_datetime
-                , file_datetime
-                , ingest_datetime
-            from partitioned
-            where rn = 1
-            );
-        CREATE INDEX IF NOT EXISTS equities_symbol_idx ON td.equities (symbol);
-        '''
+            DROP INDEX IF EXISTS equities_symbol_idx;
+
+            TRUNCATE td.equities;
+
+            INSERT INTO td.equities (
+                with partitioned as (
+                    select *
+                        , row_number() over(partition by symbol, market_datetime order by file_datetime desc) as rn
+                    from td.equities_raw
+                    )
+                select
+                    symbol
+                    , open
+                    , high
+                    , low
+                    , close
+                    , volume
+                    , market_datetime_epoch
+                    , empty
+                    , market_datetime
+                    , file_datetime
+                    , ingest_datetime
+                from partitioned
+                where rn = 1
+                );
+
+            CREATE INDEX IF NOT EXISTS equities_symbol_idx ON td.equities (symbol);
+            '''
         return script
 
 
