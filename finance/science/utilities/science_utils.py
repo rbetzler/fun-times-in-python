@@ -1,4 +1,5 @@
 """portfolio utils"""
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
@@ -18,19 +19,24 @@ def encode_one_hot(df: pd.DataFrame, columns: str or list):
 def plot_groups(
     df: pd.DataFrame,
     groups: list,
-    lines: tuple,
-    title: str = 'Groups Plot',
+    lines: str or list,
     n_plots: int = 10,
     error_plot: bool = False,
+    title: str = 'Groups Plot',
+    xaxis_name: str = 'market_datetime',
+    xaxis_ticks: int = 5,
 ):
     """Generate multiple plots (or error plots) by groups"""
     n = 0
+    lines = [lines] if isinstance(lines, str) else lines
+
     plt.plot()
     for label, group in df.groupby(groups):
         plt.title(title + ' ' + label)
         if not error_plot:
             for line in lines:
-                plt.plot(group[line], label=line)
+                plt.plot(group[xaxis_name], group[line], label=line)
+                plt.xticks([group[xaxis_name].quantile(x) for x in np.linspace(0, 1, xaxis_ticks)])
 
         else:
             plt.plot(
