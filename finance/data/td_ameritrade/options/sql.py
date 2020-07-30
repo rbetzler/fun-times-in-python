@@ -228,6 +228,8 @@ class TdOptionsSQLRunner(sql.SQLRunner):
             CREATE TABLE IF NOT EXISTS td.options_raw_2022_10 PARTITION OF td.options_raw FOR VALUES FROM ('2022-10-01') TO ('2022-11-01');
             CREATE TABLE IF NOT EXISTS td.options_raw_2022_11 PARTITION OF td.options_raw FOR VALUES FROM ('2022-11-01') TO ('2022-12-01');
             CREATE TABLE IF NOT EXISTS td.options_raw_2022_12 PARTITION OF td.options_raw FOR VALUES FROM ('2022-12-01') TO ('2023-1-01');
+
+            CREATE INDEX options_raw_symbol_file_ingest_idx ON td.options_raw (symbol, date(file_datetime), ingest_datetime DESC);
             '''
         return ddl
 

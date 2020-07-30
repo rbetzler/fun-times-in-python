@@ -12,7 +12,7 @@ class TdEquitiesSQLRunner(sql.SQLRunner):
 
     @property
     def table_ddl(self) -> str:
-        ddl = """
+        ddl = '''
             CREATE TABLE IF NOT EXISTS td.equities (
                 symbol                  text,
                 open                    numeric(20,6),
@@ -58,7 +58,7 @@ class TdEquitiesSQLRunner(sql.SQLRunner):
             CREATE TABLE IF NOT EXISTS td.equities_2024 PARTITION OF td.equities FOR VALUES FROM ('2024-01-01') TO ('2025-01-01');
 
             CREATE TABLE IF NOT EXISTS td.equities_raw (LIKE td.equities);
-            """
+            '''
         return ddl
 
     @property
