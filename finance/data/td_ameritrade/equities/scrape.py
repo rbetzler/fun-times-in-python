@@ -36,7 +36,7 @@ class TDOptionsAPI(scraper.Caller):
 
     @property
     def period_type(self) -> str:
-        return 'month'
+        return 'year'
 
     @property
     def period(self) -> str:
@@ -61,7 +61,7 @@ class TDOptionsAPI(scraper.Caller):
 
     @property
     def n_workers(self) -> int:
-        return 5
+        return 15
 
     @property
     def len_of_pause(self) -> int:
