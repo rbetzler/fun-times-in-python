@@ -246,7 +246,7 @@ class TdOptionsSQLRunner(sql.SQLRunner):
                         , case
                             when extract(isodow from file_datetime) = 6 and extract('hour' from file_datetime) >= 20 then file_datetime::date + 3
                             when extract(isodow from file_datetime) = 7 then file_datetime::date + 2
-                            when extract(isodow from file_datetime) = 1 and extract('hour' from file_datetime) >= 20 then file_datetime::date + 1
+                            when extract(isodow from file_datetime) = 1 or extract('hour' from file_datetime) >= 20 then file_datetime::date + 1
                             when extract(hour from file_datetime) < 13 or (extract('hour' from file_datetime) = 13 and extract('minute' from file_datetime) <= 30) then file_datetime::date
                             end as file_date
                     from td.options_raw
