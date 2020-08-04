@@ -120,4 +120,5 @@ scrape_fundamentals.set_upstream(scrape_equities)
 load_fundamentals.set_upstream(scrape_fundamentals)
 table_creator_fundamentals.set_upstream(load_fundamentals)
 
+end_time.set_upstream(report_options)
 end_time.set_upstream(table_creator_fundamentals)
