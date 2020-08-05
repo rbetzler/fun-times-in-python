@@ -56,21 +56,21 @@ table_creator_options = DockerOperator(
     **kwargs,
 )
 
-scrape_equities = DockerOperator(
-    task_id='scrape_td_equities',
-    command='python finance/data/td_ameritrade/equities/scrape.py',
+scrape_quotes = DockerOperator(
+    task_id='scrape_td_quotes',
+    command='python finance/data/td_ameritrade/quotes/scrape.py',
     **kwargs,
 )
 
-load_equities = DockerOperator(
-    task_id='load_td_equities',
-    command='python finance/data/td_ameritrade/equities/load.py',
+load_quotes = DockerOperator(
+    task_id='load_td_quotes',
+    command='python finance/data/td_ameritrade/quotes/load.py',
     **kwargs,
 )
 
-table_creator_equities = DockerOperator(
-    task_id='update_td_equities_table',
-    command='python finance/data/td_ameritrade/equities/sql.py',
+table_creator_quotes = DockerOperator(
+    task_id='update_td_quotes_table',
+    command='python finance/data/td_ameritrade/quotes/sql.py',
     **kwargs,
 )
 
@@ -98,7 +98,6 @@ table_creator_fundamentals = DockerOperator(
     **kwargs,
 )
 
-
 end_time = BashOperator(
     task_id='end_pipeline',
     bash_command='date',
@@ -109,14 +108,14 @@ scrape_options.set_upstream(start_time)
 load_options.set_upstream(scrape_options)
 table_creator_options.set_upstream(load_options)
 
-scrape_equities.set_upstream(scrape_options)
-load_equities.set_upstream(scrape_equities)
-table_creator_equities.set_upstream(load_equities)
+scrape_quotes.set_upstream(scrape_options)
+load_quotes.set_upstream(scrape_quotes)
+table_creator_quotes.set_upstream(load_quotes)
 
 report_options.set_upstream(table_creator_options)
-report_options.set_upstream(table_creator_equities)
+report_options.set_upstream(table_creator_quotes)
 
-scrape_fundamentals.set_upstream(scrape_equities)
+scrape_fundamentals.set_upstream(scrape_quotes)
 load_fundamentals.set_upstream(scrape_fundamentals)
 table_creator_fundamentals.set_upstream(load_fundamentals)
 
