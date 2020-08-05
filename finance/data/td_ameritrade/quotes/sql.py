@@ -105,40 +105,42 @@ class TDQuotesSQLRunner(sql.SQLRunner):
     @property
     def sql_script(self):
         query = '''
-            with
-            raw_quotes as (
-              select
-                  case when extract(hour from trade_time_in_long_datetime) < 10 then trade_time_in_long_datetime::date - 1 else trade_time_in_long_datetime::date end as market_datetime
-                , symbol
-                , open_price
-                , high_price
-                , low_price
-                , close_price
-                , last_price
-                , last_size
-                , regular_market_last_price
-                , regular_market_last_size
-                , file_datetime
-              from td.quotes_raw
-              )
-            , partitioned as (
-              select *
-                , row_number() over (partition by symbol, market_datetime order by file_datetime desc) as rn
-              from raw_quotes
-              )
-            select
-                market_datetime
-              , symbol
-              , open_price
-              , high_price
-              , low_price
-              , close_price
-              , last_price
-              , last_size
-              , regular_market_last_price
-              , regular_market_last_size
-            from partitioned
-            where rn = 1
+            insert into td.quotes (
+                with
+                raw_quotes as (
+                  select
+                      case when extract(hour from trade_time_in_long_datetime) < 10 then trade_time_in_long_datetime::date - 1 else trade_time_in_long_datetime::date end as market_datetime
+                    , symbol
+                    , open_price
+                    , high_price
+                    , low_price
+                    , close_price
+                    , last_price
+                    , last_size
+                    , regular_market_last_price
+                    , regular_market_last_size
+                    , file_datetime
+                  from td.quotes_raw
+                  )
+                , partitioned as (
+                  select *
+                    , row_number() over (partition by symbol, market_datetime order by file_datetime desc) as rn
+                  from raw_quotes
+                  )
+                select
+                    market_datetime
+                  , symbol
+                  , open_price
+                  , high_price
+                  , low_price
+                  , close_price
+                  , last_price
+                  , last_size
+                  , regular_market_last_price
+                  , regular_market_last_size
+                from partitioned
+                where rn = 1
+                );
             '''
         return query
 
