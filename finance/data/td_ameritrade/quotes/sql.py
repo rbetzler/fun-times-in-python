@@ -70,11 +70,22 @@ class TDQuotesSQLRunner(sql.SQLRunner):
             )
                 partition by range (file_datetime);
 
-            create table td.quotes_2020 partition of td.quotes for values from ('2020-01-01') to ('2021-01-01');
-            create table td.quotes_2021 partition of td.quotes for values from ('2021-01-01') to ('2022-01-01');
-            create table td.quotes_2022 partition of td.quotes for values from ('2022-01-01') to ('2023-01-01');
-            create table td.quotes_2023 partition of td.quotes for values from ('2023-01-01') to ('2024-01-01');
-            create table td.quotes_2024 partition of td.quotes for values from ('2024-01-01') to ('2025-01-01');
+            create table td.quotes_20208 partition of td.quotes for values from ('2020-08-01') to ('2020-09-01');
+            create table td.quotes_20209 partition of td.quotes for values from ('2020-09-01') to ('2020-10-01');
+            create table td.quotes_202010 partition of td.quotes for values from ('2020-10-01') to ('2020-11-01');
+            create table td.quotes_202011 partition of td.quotes for values from ('2020-11-01') to ('2020-12-01');
+            create table td.quotes_202011 partition of td.quotes for values from ('2020-12-01') to ('2021-01-01');
+            create table td.quotes_20211 partition of td.quotes for values from ('2021-01-01') to ('2021-02-01');
+            create table td.quotes_20212 partition of td.quotes for values from ('2021-02-01') to ('2021-03-01');
+            create table td.quotes_20213 partition of td.quotes for values from ('2021-03-01') to ('2021-04-01');
+            create table td.quotes_20214 partition of td.quotes for values from ('2021-04-01') to ('2021-05-01');
+            create table td.quotes_20215 partition of td.quotes for values from ('2021-05-01') to ('2021-06-01');
+            create table td.quotes_20216 partition of td.quotes for values from ('2021-06-01') to ('2021-07-01');
+            create table td.quotes_20217 partition of td.quotes for values from ('2021-07-01') to ('2021-08-01');
+            create table td.quotes_20218 partition of td.quotes for values from ('2021-08-01') to ('2021-09-01');
+            create table td.quotes_20219 partition of td.quotes for values from ('2021-09-01') to ('2021-10-01');
+            create table td.quotes_202110 partition of td.quotes for values from ('2021-10-01') to ('2021-11-01');
+            create table td.quotes_202111 partition of td.quotes for values from ('2021-11-01') to ('2021-12-01');
 
             create table td.quotes_raw (like td.quotes);
             '''
