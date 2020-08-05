@@ -1,3 +1,4 @@
+"""lstm utils"""
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -7,7 +8,7 @@ from torch import nn, optim
 
 
 class TorchLSTM(nn.Module):
-    def __init__(self, 
+    def __init__(self,
                  train_x,
                  train_y,
                  test_x,
@@ -30,7 +31,7 @@ class TorchLSTM(nn.Module):
         torch.manual_seed(seed)
         torch.backends.cudnn.deterministic = deterministic
         torch.backends.cudnn.benchmark = benchmark
-        
+
         # Network params
         self.n_layers = n_layers
         self.input_shape = train_x.shape[1]
@@ -44,8 +45,8 @@ class TorchLSTM(nn.Module):
             self.input_shape
         )
         self.test_input = (
-            int(len(test_x)/self.batch_size), 
-            self.batch_size, 
+            int(len(test_x)/self.batch_size),
+            self.batch_size,
             self.input_shape
         )
 
@@ -53,26 +54,26 @@ class TorchLSTM(nn.Module):
         self.n_epochs = n_epochs
         self.learning_rate = learning_rate
         self.device = device
-        
+
         # Data
         self.train_x = train_x
         self.train_y = train_y
         self.test_x = test_x
         self.test_y = test_y
-        
+
         # Network
-        self.lstm = nn.LSTM(input_size=self.input_shape, 
+        self.lstm = nn.LSTM(input_size=self.input_shape,
                             hidden_size=self.hidden_shape,
                             num_layers=n_layers,
                             bias=bias,
                             dropout=dropout).to(self.device)
         self.relu = nn.ReLU()
         self.linear = nn.Linear(self.hidden_shape, self.output_shape).to(self.device)
-        
+
         self.lstm = nn.DataParallel(self.lstm)
         self.relu = nn.DataParallel(self.relu)
         self.linear = nn.DataParallel(self.linear)
-    
+
     def reset_network(self):
         self.lstm.reset_parameters()
         self.linear.reset_parameters()
@@ -80,7 +81,7 @@ class TorchLSTM(nn.Module):
     def training_data(self):
         x = np.array_split(self.train_x, self.n_training_batches)
         y = np.array_split(self.train_y, self.n_training_batches)
-        
+
         data = []
         for n in range(0, self.n_training_batches):
             data.append((x[n], y[n]))
@@ -90,24 +91,24 @@ class TorchLSTM(nn.Module):
     def loss_function(self):
         loss = nn.L1Loss(reduction='sum').to(self.device)
         return loss
-    
+
     @property
     def optimizer(self):
         return optim.Adam(self.parameters(), lr=self.learning_rate)
 
-#     def create_hidden_states(self):
-#         hidden = torch.zeros(self.n_layers, 
-#                              self.batch_size, 
-#                              self.hidden_shape).to(self.device)
-
-#         cell = torch.zeros(self.n_layers, 
-#                            self.batch_size,
-#                            self.hidden_shape).to(self.device)
-#         return hidden, cell
+    # def create_hidden_states(self):
+    #     hidden = torch.zeros(self.n_layers,
+    #                          self.batch_size,
+    #                          self.hidden_shape).to(self.device)
+    #
+    #     cell = torch.zeros(self.n_layers,
+    #                        self.batch_size,
+    #                        self.hidden_shape).to(self.device)
+    #     return hidden, cell
 
     def forward(self, data):
-#         TODO: figure out what these hidden states actually do
-#         output, self.hidden = self.lstm(data, self.hidden)
+        # TODO: figure out what hidden states actually do
+        # output, self.hidden = self.lstm(data, self.hidden)
 
         self.lstm.module.flatten_parameters()
         output, _ = self.lstm(data, None)
@@ -137,9 +138,9 @@ class TorchLSTM(nn.Module):
                 loss.backward()
                 optimizer.step()
                 optimizer.zero_grad()
-                
+
         df_history = pd.DataFrame(history, columns=['batch', 'epoch', 'loss'])
-        
+
         plt.title('Cumulative Loss by Epoch')
         plt.plot(df_history.groupby('epoch').sum()['loss'])
 
@@ -155,5 +156,4 @@ class TorchLSTM(nn.Module):
         df['prediction'] = self.predict().view(-1).cpu().detach().numpy()
         return df
 
-    # TODO:
-    #   Add and refined basic performance features
+    # TODO: Add and refine basic performance features

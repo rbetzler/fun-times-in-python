@@ -228,6 +228,8 @@ class TdOptionsSQLRunner(sql.SQLRunner):
             CREATE TABLE IF NOT EXISTS td.options_raw_2022_10 PARTITION OF td.options_raw FOR VALUES FROM ('2022-10-01') TO ('2022-11-01');
             CREATE TABLE IF NOT EXISTS td.options_raw_2022_11 PARTITION OF td.options_raw FOR VALUES FROM ('2022-11-01') TO ('2022-12-01');
             CREATE TABLE IF NOT EXISTS td.options_raw_2022_12 PARTITION OF td.options_raw FOR VALUES FROM ('2022-12-01') TO ('2023-1-01');
+
+            CREATE INDEX options_raw_symbol_file_ingest_idx ON td.options_raw (symbol, date(file_datetime), ingest_datetime DESC);
             '''
         return ddl
 
@@ -236,22 +238,23 @@ class TdOptionsSQLRunner(sql.SQLRunner):
         script = '''
             drop index if exists td.options_symbol_idx;
 
-            drop table if exists new_records;
-            create temp table new_records as (
+            truncate td.options;
+            insert into td.options (
                 with
                 dated as (
                     select *
                         , case
-                            when extract('hour' from file_datetime) >= 20 then file_datetime::date + 1
-                            when extract('hour' from file_datetime) < 13 or (extract('hour' from file_datetime) = 13 and extract('minute' from file_datetime) <= 30) then file_datetime::date
+                            when extract(isodow from file_datetime) = 6 and extract('hour' from file_datetime) >= 20 then file_datetime::date + 3
+                            when extract(isodow from file_datetime) = 7 then file_datetime::date + 2
+                            when extract(isodow from file_datetime) = 1 or extract('hour' from file_datetime) >= 20 then file_datetime::date + 1
+                            when extract(hour from file_datetime) < 13 or (extract('hour' from file_datetime) = 13 and extract('minute' from file_datetime) <= 30) then file_datetime::date
                             end as file_date
                     from td.options_raw
-                    where file_datetime > current_date - 7 and file_datetime < current_date + 1
-                        and file_datetime > (select max(file_datetime) from td.options_raw where file_datetime > current_date - 7)
+                    where file_datetime > current_date - 30 and file_datetime < current_date + 1
                     )
                 , ranked as (
                     select *
-                        , dense_rank() over(partition by file_date, symbol order by ingest_datetime desc) as dr
+                        , row_number() over(partition by file_date, symbol, put_call, strike, days_to_expiration order by ingest_datetime desc) as rn
                     from dated
                     where file_date is not null
                     )
@@ -312,20 +315,8 @@ class TdOptionsSQLRunner(sql.SQLRunner):
                     , file_date as file_datetime
                     , ingest_datetime
                 from ranked
-                where dr = 1
+                where rn = 1
                 );
-
-            -- Fix delete performance
-            delete
-            from td.options as o
-            using new_records as n
-            where n.symbol = o.symbol
-                and n.strike = o.strike
-                and n.days_to_expiration = o.days_to_expiration
-                and n.put_call = o.put_call
-                and n.file_datetime = o.file_datetime;
-
-            insert into td.options (select * from new_records);
 
             create index if not exists options_symbol_idx on td.options (symbol);
             '''

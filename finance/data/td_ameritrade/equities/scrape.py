@@ -36,7 +36,7 @@ class TDOptionsAPI(scraper.Caller):
 
     @property
     def period_type(self) -> str:
-        return 'month'
+        return 'year'
 
     @property
     def period(self) -> str:

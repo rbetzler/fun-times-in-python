@@ -12,7 +12,7 @@ class TdEquitiesSQLRunner(sql.SQLRunner):
 
     @property
     def table_ddl(self) -> str:
-        ddl = """
+        ddl = '''
             CREATE TABLE IF NOT EXISTS td.equities (
                 symbol                  text,
                 open                    numeric(20,6),
@@ -58,37 +58,40 @@ class TdEquitiesSQLRunner(sql.SQLRunner):
             CREATE TABLE IF NOT EXISTS td.equities_2024 PARTITION OF td.equities FOR VALUES FROM ('2024-01-01') TO ('2025-01-01');
 
             CREATE TABLE IF NOT EXISTS td.equities_raw (LIKE td.equities);
-            """
+            '''
         return ddl
 
     @property
     def sql_script(self) -> str:
         script = '''
-        DROP INDEX IF EXISTS equities_symbol_idx;
-        TRUNCATE td.equities;
-        INSERT INTO td.equities (
-            with partitioned as (
-                select *
-                    , row_number() over(partition by symbol, market_datetime order by file_datetime desc) as rn
-                from td.equities_raw
-                )
-            select
-                symbol
-                , open
-                , high
-                , low
-                , close
-                , volume
-                , market_datetime_epoch
-                , empty
-                , market_datetime
-                , file_datetime
-                , ingest_datetime
-            from partitioned
-            where rn = 1
-            );
-        CREATE INDEX IF NOT EXISTS equities_symbol_idx ON td.equities (symbol);
-        '''
+            DROP INDEX IF EXISTS equities_symbol_idx;
+
+            TRUNCATE td.equities;
+
+            INSERT INTO td.equities (
+                with partitioned as (
+                    select *
+                        , row_number() over(partition by symbol, market_datetime order by file_datetime desc) as rn
+                    from td.equities_raw
+                    )
+                select
+                    symbol
+                    , open
+                    , high
+                    , low
+                    , close
+                    , volume
+                    , market_datetime_epoch
+                    , empty
+                    , market_datetime
+                    , file_datetime
+                    , ingest_datetime
+                from partitioned
+                where rn = 1
+                );
+
+            CREATE INDEX IF NOT EXISTS equities_symbol_idx ON td.equities (symbol);
+            '''
         return script
 
 

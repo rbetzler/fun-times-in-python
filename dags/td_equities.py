@@ -13,62 +13,56 @@ args = {
     'email_on_failure': True,
     'email_on_retry': True,
     'retries': 1,
-    'retry_delay': timedelta(minutes = 1),
-    # 'queue': 'bash_queue',
-    # 'pool': 'backfill',
-    # 'priority_weight': 10,
-    # 'end_date': datetime(2016, 1, 1),
+    'retry_delay': timedelta(minutes=1),
 }
 
 dag = DAG(
-    dag_id='td_equities',
+    dag_id='td',
     default_args=args,
     start_date=datetime(2019, 10, 29),
     schedule_interval='0 10 * * 7',
-    catchup=False
+    catchup=False,
 )
+
+kwargs = {
+    'image': 'py-dw-stocks',
+    'auto_remove': True,
+    'volumes': ['/media/nautilus/fun-times-in-python:/usr/src/app'],
+    'network_mode': 'bridge',
+    'dag': dag,
+}
 
 start_time = BashOperator(
     task_id='start_pipeline',
     bash_command='date',
-    dag=dag)
-
-scrape = DockerOperator(
-    task_id='scrape_td_equities',
-    image='py-dw-stocks',
-    auto_remove=True,
-    command='python finance/data/td_ameritrade/equities/scrape.py',
-    volumes=['/media/nautilus/fun-times-in-python:/usr/src/app'],
-    network_mode='bridge',
-    dag=dag
+    dag=dag,
 )
 
-load = DockerOperator(
-    task_id='load_td_equities',
-    image='py-dw-stocks',
-    auto_remove=True,
-    command='python finance/data/td_ameritrade/equities/load.py',
-    volumes=['/media/nautilus/fun-times-in-python:/usr/src/app'],
-    network_mode='bridge',
-    dag=dag
-    )
+scrape_equities = DockerOperator(
+    task_id='scrape_td_equities',
+    command='python finance/data/td_ameritrade/equities/scrape.py',
+    **kwargs,
+)
 
-table_creator = DockerOperator(
+load_equities = DockerOperator(
+    task_id='load_td_equities',
+    command='python finance/data/td_ameritrade/equities/load.py',
+    **kwargs,
+)
+
+table_creator_equities = DockerOperator(
     task_id='update_td_equities_table',
-    image='py-dw-stocks',
-    auto_remove=True,
     command='python finance/data/td_ameritrade/equities/sql.py',
-    volumes=['/media/nautilus/fun-times-in-python:/usr/src/app'],
-    network_mode='bridge',
-    dag=dag
-    )
+    **kwargs,
+)
 
 end_time = BashOperator(
     task_id='end_pipeline',
     bash_command='date',
-    dag=dag)
+    dag=dag,
+)
 
-scrape.set_upstream(start_time)
-load.set_upstream(scrape)
-table_creator.set_upstream(load)
-end_time.set_upstream(table_creator)
+scrape_equities.set_upstream(start_time)
+load_equities.set_upstream(scrape_equities)
+table_creator_equities.set_upstream(load_equities)
+end_time.set_upstream(report_equities)
