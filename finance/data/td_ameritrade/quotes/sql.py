@@ -74,7 +74,7 @@ class TDQuotesSQLRunner(sql.SQLRunner):
             create table td.quotes_20209 partition of td.quotes for values from ('2020-09-01') to ('2020-10-01');
             create table td.quotes_202010 partition of td.quotes for values from ('2020-10-01') to ('2020-11-01');
             create table td.quotes_202011 partition of td.quotes for values from ('2020-11-01') to ('2020-12-01');
-            create table td.quotes_202011 partition of td.quotes for values from ('2020-12-01') to ('2021-01-01');
+            create table td.quotes_202012 partition of td.quotes for values from ('2020-12-01') to ('2021-01-01');
             create table td.quotes_20211 partition of td.quotes for values from ('2021-01-01') to ('2021-02-01');
             create table td.quotes_20212 partition of td.quotes for values from ('2021-02-01') to ('2021-03-01');
             create table td.quotes_20213 partition of td.quotes for values from ('2021-03-01') to ('2021-04-01');
