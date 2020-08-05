@@ -13,14 +13,14 @@ class Options(reporter.Reporter):
             equities as (
               select
                   symbol
-                , open
-                , high
-                , low
-                , close
+                , open_price
+                , high_price
+                , low_price
+                , close_price
                 , volume
                 , market_datetime::date as market_datetime
-              from td.equities
-              where market_datetime = (select max(market_datetime) from td.equities)
+              from td.quotes
+              where market_datetime = (select max(market_datetime) from td.quotes)
               )
             , options as (
               select
@@ -43,10 +43,10 @@ class Options(reporter.Reporter):
               select
                   coalesce(e.symbol, o.symbol) as ticker
                 , coalesce(e.market_datetime, o.file_datetime) as datetime
-                , e.open as equity_open
-                , e.high as equity_high
-                , e.low as equity_low
-                , e.close as equity_close
+                , e.open_price as equity_open_price
+                , e.high_price as equity_high_price
+                , e.low_price as equity_low_price
+                , e.close_price as equity_close_price
                 , e.volume as equity_volume
                 , o.put_call as option_type
                 , o.days_to_expiration as option_days_to_expiration

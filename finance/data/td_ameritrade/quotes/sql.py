@@ -21,9 +21,10 @@ class TDQuotesSQLRunner(sql.SQLRunner):
                 , low_price numeric(12,2)
                 , close_price numeric(12,2)
                 , last_price numeric(12,2)
-                , last_size numeric(12,2)
+                , last_size integer
                 , regular_market_last_price numeric(12,2)
-                , regular_market_last_size numeric(12,2)
+                , regular_market_last_size integer
+                , volume integer
             );
 
             create table td.quotes_raw (
@@ -119,6 +120,7 @@ class TDQuotesSQLRunner(sql.SQLRunner):
                     , last_size
                     , regular_market_last_price
                     , regular_market_last_size
+                    , total_volume
                     , file_datetime
                   from td.quotes_raw
                   )
@@ -138,6 +140,7 @@ class TDQuotesSQLRunner(sql.SQLRunner):
                   , last_size
                   , regular_market_last_price
                   , regular_market_last_size
+                  , total_volume
                 from partitioned
                 where rn = 1
                 );
