@@ -1,4 +1,5 @@
 """portfolio utils"""
+import datetime
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -36,7 +37,11 @@ def plot_groups(
         if not error_plot:
             for line in lines:
                 plt.plot(group[xaxis_name], group[line], label=line)
-                plt.xticks([group[xaxis_name].quantile(x) for x in np.linspace(0, 1, xaxis_ticks)])
+                if isinstance(group[xaxis_name].values[0], datetime.date):
+                    ticks = pd.to_datetime(group['market_datetime'])
+                else:
+                    ticks = group[xaxis_name]
+                plt.xticks([ticks.quantile(x) for x in np.linspace(0, 1, xaxis_ticks)])
 
         else:
             plt.plot(
