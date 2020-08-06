@@ -13,7 +13,7 @@ class TdEquitiesSQLRunner(sql.SQLRunner):
     @property
     def table_ddl(self) -> str:
         ddl = '''
-            CREATE TABLE IF NOT EXISTS td.equities (
+            create table if not exists td.equities (
                 symbol                  text,
                 open                    numeric(20,6),
                 high                    numeric(20,6),
@@ -26,46 +26,89 @@ class TdEquitiesSQLRunner(sql.SQLRunner):
                 file_datetime           timestamp without time zone,
                 ingest_datetime         timestamp without time zone
             )
-                PARTITION BY RANGE (market_datetime);
+                partition by range (market_datetime);
 
-            CREATE TABLE IF NOT EXISTS td.equities_1980 PARTITION OF td.equities FOR VALUES FROM ('1980-01-01') TO ('1990-01-01');
-            CREATE TABLE IF NOT EXISTS td.equities_1990 PARTITION OF td.equities FOR VALUES FROM ('1990-01-01') TO ('1995-01-01');
-            CREATE TABLE IF NOT EXISTS td.equities_1995 PARTITION OF td.equities FOR VALUES FROM ('1995-01-01') TO ('2000-01-01');
-            CREATE TABLE IF NOT EXISTS td.equities_2000 PARTITION OF td.equities FOR VALUES FROM ('2000-01-01') TO ('2001-01-01');
-            CREATE TABLE IF NOT EXISTS td.equities_2001 PARTITION OF td.equities FOR VALUES FROM ('2001-01-01') TO ('2002-01-01');
-            CREATE TABLE IF NOT EXISTS td.equities_2002 PARTITION OF td.equities FOR VALUES FROM ('2002-01-01') TO ('2003-01-01');
-            CREATE TABLE IF NOT EXISTS td.equities_2003 PARTITION OF td.equities FOR VALUES FROM ('2003-01-01') TO ('2004-01-01');
-            CREATE TABLE IF NOT EXISTS td.equities_2004 PARTITION OF td.equities FOR VALUES FROM ('2004-01-01') TO ('2005-01-01');
-            CREATE TABLE IF NOT EXISTS td.equities_2005 PARTITION OF td.equities FOR VALUES FROM ('2005-01-01') TO ('2006-01-01');
-            CREATE TABLE IF NOT EXISTS td.equities_2006 PARTITION OF td.equities FOR VALUES FROM ('2006-01-01') TO ('2007-01-01');
-            CREATE TABLE IF NOT EXISTS td.equities_2007 PARTITION OF td.equities FOR VALUES FROM ('2007-01-01') TO ('2008-01-01');
-            CREATE TABLE IF NOT EXISTS td.equities_2008 PARTITION OF td.equities FOR VALUES FROM ('2008-01-01') TO ('2009-01-01');
-            CREATE TABLE IF NOT EXISTS td.equities_2009 PARTITION OF td.equities FOR VALUES FROM ('2009-01-01') TO ('2010-01-01');
-            CREATE TABLE IF NOT EXISTS td.equities_2010 PARTITION OF td.equities FOR VALUES FROM ('2010-01-01') TO ('2011-01-01');
-            CREATE TABLE IF NOT EXISTS td.equities_2011 PARTITION OF td.equities FOR VALUES FROM ('2011-01-01') TO ('2012-01-01');
-            CREATE TABLE IF NOT EXISTS td.equities_2012 PARTITION OF td.equities FOR VALUES FROM ('2012-01-01') TO ('2013-01-01');
-            CREATE TABLE IF NOT EXISTS td.equities_2013 PARTITION OF td.equities FOR VALUES FROM ('2013-01-01') TO ('2014-01-01');
-            CREATE TABLE IF NOT EXISTS td.equities_2014 PARTITION OF td.equities FOR VALUES FROM ('2014-01-01') TO ('2015-01-01');
-            CREATE TABLE IF NOT EXISTS td.equities_2015 PARTITION OF td.equities FOR VALUES FROM ('2015-01-01') TO ('2016-01-01');
-            CREATE TABLE IF NOT EXISTS td.equities_2016 PARTITION OF td.equities FOR VALUES FROM ('2016-01-01') TO ('2017-01-01');
-            CREATE TABLE IF NOT EXISTS td.equities_2017 PARTITION OF td.equities FOR VALUES FROM ('2017-01-01') TO ('2018-01-01');
-            CREATE TABLE IF NOT EXISTS td.equities_2018 PARTITION OF td.equities FOR VALUES FROM ('2018-01-01') TO ('2019-01-01');
-            CREATE TABLE IF NOT EXISTS td.equities_2019 PARTITION OF td.equities FOR VALUES FROM ('2019-01-01') TO ('2020-01-01');
-            CREATE TABLE IF NOT EXISTS td.equities_2020 PARTITION OF td.equities FOR VALUES FROM ('2020-01-01') TO ('2021-01-01');
-            CREATE TABLE IF NOT EXISTS td.equities_2021 PARTITION OF td.equities FOR VALUES FROM ('2021-01-01') TO ('2022-01-01');
-            CREATE TABLE IF NOT EXISTS td.equities_2022 PARTITION OF td.equities FOR VALUES FROM ('2022-01-01') TO ('2023-01-01');
-            CREATE TABLE IF NOT EXISTS td.equities_2023 PARTITION OF td.equities FOR VALUES FROM ('2023-01-01') TO ('2024-01-01');
-            CREATE TABLE IF NOT EXISTS td.equities_2024 PARTITION OF td.equities FOR VALUES FROM ('2024-01-01') TO ('2025-01-01');
+            create table if not exists td.equities_1980 partition of td.equities for values from ('1980-01-01') to ('1990-01-01');
+            create table if not exists td.equities_1990 partition of td.equities for values from ('1990-01-01') to ('1995-01-01');
+            create table if not exists td.equities_1995 partition of td.equities for values from ('1995-01-01') to ('2000-01-01');
+            create table if not exists td.equities_2000 partition of td.equities for values from ('2000-01-01') to ('2001-01-01');
+            create table if not exists td.equities_2001 partition of td.equities for values from ('2001-01-01') to ('2002-01-01');
+            create table if not exists td.equities_2002 partition of td.equities for values from ('2002-01-01') to ('2003-01-01');
+            create table if not exists td.equities_2003 partition of td.equities for values from ('2003-01-01') to ('2004-01-01');
+            create table if not exists td.equities_2004 partition of td.equities for values from ('2004-01-01') to ('2005-01-01');
+            create table if not exists td.equities_2005 partition of td.equities for values from ('2005-01-01') to ('2006-01-01');
+            create table if not exists td.equities_2006 partition of td.equities for values from ('2006-01-01') to ('2007-01-01');
+            create table if not exists td.equities_2007 partition of td.equities for values from ('2007-01-01') to ('2008-01-01');
+            create table if not exists td.equities_2008 partition of td.equities for values from ('2008-01-01') to ('2009-01-01');
+            create table if not exists td.equities_2009 partition of td.equities for values from ('2009-01-01') to ('2010-01-01');
+            create table if not exists td.equities_2010 partition of td.equities for values from ('2010-01-01') to ('2011-01-01');
+            create table if not exists td.equities_2011 partition of td.equities for values from ('2011-01-01') to ('2012-01-01');
+            create table if not exists td.equities_2012 partition of td.equities for values from ('2012-01-01') to ('2013-01-01');
+            create table if not exists td.equities_2013 partition of td.equities for values from ('2013-01-01') to ('2014-01-01');
+            create table if not exists td.equities_2014 partition of td.equities for values from ('2014-01-01') to ('2015-01-01');
+            create table if not exists td.equities_2015 partition of td.equities for values from ('2015-01-01') to ('2016-01-01');
+            create table if not exists td.equities_2016 partition of td.equities for values from ('2016-01-01') to ('2017-01-01');
+            create table if not exists td.equities_2017 partition of td.equities for values from ('2017-01-01') to ('2018-01-01');
+            create table if not exists td.equities_2018 partition of td.equities for values from ('2018-01-01') to ('2019-01-01');
+            create table if not exists td.equities_2019 partition of td.equities for values from ('2019-01-01') to ('2020-01-01');
+            create table if not exists td.equities_2020 partition of td.equities for values from ('2020-01-01') to ('2021-01-01');
+            create table if not exists td.equities_2021 partition of td.equities for values from ('2021-01-01') to ('2022-01-01');
+            create table if not exists td.equities_2022 partition of td.equities for values from ('2022-01-01') to ('2023-01-01');
+            create table if not exists td.equities_2023 partition of td.equities for values from ('2023-01-01') to ('2024-01-01');
+            create table if not exists td.equities_2024 partition of td.equities for values from ('2024-01-01') to ('2025-01-01');
 
-            CREATE TABLE IF NOT EXISTS td.equities_raw (LIKE td.equities);
+            create table if not exists td.equities_raw (
+                symbol                  text,
+                open                    numeric(20,6),
+                high                    numeric(20,6),
+                low                     numeric(20,6),
+                close                   numeric(20,6),
+                volume                  numeric(20,6),
+                market_datetime_epoch   text,
+                empty                   boolean,
+                market_datetime         timestamp without time zone,
+                file_datetime           timestamp without time zone,
+                ingest_datetime         timestamp without time zone
+            )
+                partition by range (market_datetime);
+
+            create table if not exists td.equities_raw_1980 partition of td.equities_raw for values from ('1980-01-01') to ('1990-01-01');
+            create table if not exists td.equities_raw_1990 partition of td.equities_raw for values from ('1990-01-01') to ('1995-01-01');
+            create table if not exists td.equities_raw_1995 partition of td.equities_raw for values from ('1995-01-01') to ('2000-01-01');
+            create table if not exists td.equities_raw_2000 partition of td.equities_raw for values from ('2000-01-01') to ('2001-01-01');
+            create table if not exists td.equities_raw_2001 partition of td.equities_raw for values from ('2001-01-01') to ('2002-01-01');
+            create table if not exists td.equities_raw_2002 partition of td.equities_raw for values from ('2002-01-01') to ('2003-01-01');
+            create table if not exists td.equities_raw_2003 partition of td.equities_raw for values from ('2003-01-01') to ('2004-01-01');
+            create table if not exists td.equities_raw_2004 partition of td.equities_raw for values from ('2004-01-01') to ('2005-01-01');
+            create table if not exists td.equities_raw_2005 partition of td.equities_raw for values from ('2005-01-01') to ('2006-01-01');
+            create table if not exists td.equities_raw_2006 partition of td.equities_raw for values from ('2006-01-01') to ('2007-01-01');
+            create table if not exists td.equities_raw_2007 partition of td.equities_raw for values from ('2007-01-01') to ('2008-01-01');
+            create table if not exists td.equities_raw_2008 partition of td.equities_raw for values from ('2008-01-01') to ('2009-01-01');
+            create table if not exists td.equities_raw_2009 partition of td.equities_raw for values from ('2009-01-01') to ('2010-01-01');
+            create table if not exists td.equities_raw_2010 partition of td.equities_raw for values from ('2010-01-01') to ('2011-01-01');
+            create table if not exists td.equities_raw_2011 partition of td.equities_raw for values from ('2011-01-01') to ('2012-01-01');
+            create table if not exists td.equities_raw_2012 partition of td.equities_raw for values from ('2012-01-01') to ('2013-01-01');
+            create table if not exists td.equities_raw_2013 partition of td.equities_raw for values from ('2013-01-01') to ('2014-01-01');
+            create table if not exists td.equities_raw_2014 partition of td.equities_raw for values from ('2014-01-01') to ('2015-01-01');
+            create table if not exists td.equities_raw_2015 partition of td.equities_raw for values from ('2015-01-01') to ('2016-01-01');
+            create table if not exists td.equities_raw_2016 partition of td.equities_raw for values from ('2016-01-01') to ('2017-01-01');
+            create table if not exists td.equities_raw_2017 partition of td.equities_raw for values from ('2017-01-01') to ('2018-01-01');
+            create table if not exists td.equities_raw_2018 partition of td.equities_raw for values from ('2018-01-01') to ('2019-01-01');
+            create table if not exists td.equities_raw_2019 partition of td.equities_raw for values from ('2019-01-01') to ('2020-01-01');
+            create table if not exists td.equities_raw_2020 partition of td.equities_raw for values from ('2020-01-01') to ('2021-01-01');
+            create table if not exists td.equities_raw_2021 partition of td.equities_raw for values from ('2021-01-01') to ('2022-01-01');
+            create table if not exists td.equities_raw_2022 partition of td.equities_raw for values from ('2022-01-01') to ('2023-01-01');
+            create table if not exists td.equities_raw_2023 partition of td.equities_raw for values from ('2023-01-01') to ('2024-01-01');
+            create table if not exists td.equities_raw_2024 partition of td.equities_raw for values from ('2024-01-01') to ('2025-01-01');
+
+            create index if not exists equities_symbol_idx on td.equities (symbol);
+            create index if not exists equities_market_datetime_idx on td.equities (market_datetime);
             '''
         return ddl
 
     @property
     def sql_script(self) -> str:
         script = '''
-            drop index if exists equities_symbol_idx;
-
             truncate td.equities;
 
             insert into td.equities (
@@ -75,7 +118,7 @@ class TdEquitiesSQLRunner(sql.SQLRunner):
                     from td.equities_raw
                     )
                 select
-                    symbol
+                      symbol
                     , open
                     , high
                     , low
@@ -83,14 +126,12 @@ class TdEquitiesSQLRunner(sql.SQLRunner):
                     , volume
                     , market_datetime_epoch
                     , empty
-                    , market_datetime
+                    , market_datetime::date as market_datetime
                     , file_datetime
                     , ingest_datetime
                 from partitioned
                 where rn = 1
                 );
-
-            create index if not exists equities_symbol_idx on td.equities (symbol);
             '''
         return script
 
