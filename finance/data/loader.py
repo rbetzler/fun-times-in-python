@@ -239,6 +239,15 @@ class FileIngestion(abc.ABC):
                     '''
                 cursor.copy_expert(copy_command, file=open(self.export_file_path(self.job_name)))
                 conn.commit()
+
+                print('vacuuming table')
+                conn.autocommit = True
+                cursor.execute(f'vacuum {self.schema}.{self.table};')
+
+                print('analyzing table')
+                cursor.execute(f'analyze {self.schema}.{self.table};')
+
+                print('closing db connection')
                 cursor.close()
                 conn.close()
                 file.close()

@@ -31,9 +31,9 @@ class SQLRunner(abc.ABC):
         pass
 
     @property
-    def is_maintenance(self) -> bool:
-        """Maintenance scripts (like vacuums) require toggling autocommit on and off"""
-        return False
+    def run_maintenance(self) -> bool:
+        """Run vacuum and analyze on table after sql scripts finish"""
+        return True
 
     def execute(self):
         conn = psycopg2.connect(self.db_connection)
@@ -73,13 +73,22 @@ class SQLRunner(abc.ABC):
 
         if self.sql_script:
             print(f'Running sql script: {datetime.datetime.utcnow()}')
-            if self.is_maintenance:
-                conn.autocommit = True
-                cursor.execute(self.sql_script)
-                conn.autocommit = False
-            else:
-                cursor.execute(self.sql_script)
-                conn.commit()
+            cursor.execute(self.sql_script)
+            conn.commit()
 
-        conn.close()
         cursor.close()
+        conn.close()
+
+        if self.run_maintenance:
+            print('reconnecting to db to run maintenance scripts')
+            conn = psycopg2.connect(self.db_connection)
+            cursor = conn.cursor()
+            conn.autocommit = True
+
+            print('vacuuming table')
+            cursor.execute(f'vacuum {self.schema_name}.{self.table_name};')
+
+            print('analyzing table')
+            cursor.execute(f'analyze {self.schema_name}.{self.table_name};')
+            cursor.close()
+            conn.close()
