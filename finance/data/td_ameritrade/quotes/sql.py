@@ -106,6 +106,7 @@ class TDQuotesSQLRunner(sql.SQLRunner):
     @property
     def sql_script(self):
         query = '''
+            truncate td.quotes;
             insert into td.quotes (
                 with
                 raw_quotes as (
