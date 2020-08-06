@@ -250,7 +250,7 @@ class TdOptionsSQLRunner(sql.SQLRunner):
                             when extract(hour from file_datetime) < 13 or (extract('hour' from file_datetime) = 13 and extract('minute' from file_datetime) <= 30) then file_datetime::date
                             end as file_date
                     from td.options_raw
-                    where file_datetime > current_date - 30 and file_datetime < current_date + 1
+                    where file_datetime > current_date - 10 and file_datetime < current_date + 1
                     )
                 , ranked as (
                     select *
