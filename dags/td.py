@@ -74,6 +74,12 @@ table_creator_quotes = DockerOperator(
     **kwargs,
 )
 
+table_creator_stocks = DockerOperator(
+    task_id='update_td_stocks_table',
+    command='python finance/data/td_ameritrade/stocks_sql.py',
+    **kwargs,
+)
+
 report_options = DockerOperator(
     task_id='report_options',
     command='python finance/science/reports/options.py',
@@ -111,9 +117,10 @@ table_creator_options.set_upstream(load_options)
 scrape_quotes.set_upstream(scrape_options)
 load_quotes.set_upstream(scrape_quotes)
 table_creator_quotes.set_upstream(load_quotes)
+table_creator_stocks.set_upstream(table_creator_quotes)
 
 report_options.set_upstream(table_creator_options)
-report_options.set_upstream(table_creator_quotes)
+report_options.set_upstream(table_creator_stocks)
 
 scrape_fundamentals.set_upstream(scrape_quotes)
 load_fundamentals.set_upstream(scrape_fundamentals)
