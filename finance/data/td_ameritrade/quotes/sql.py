@@ -14,6 +14,20 @@ class TDQuotesSQLRunner(sql.SQLRunner):
     def table_ddl(self) -> str:
         ddl = '''
             create table td.quotes (
+                  market_datetime date
+                , symbol varchar
+                , open_price numeric(12,2)
+                , high_price numeric(12,2)
+                , low_price numeric(12,2)
+                , close_price numeric(12,2)
+                , last_price numeric(12,2)
+                , last_size integer
+                , regular_market_last_price numeric(12,2)
+                , regular_market_last_size integer
+                , volume integer
+            );
+
+            create table td.quotes_raw (
                 asset_type varchar
               , asset_main_type varchar
               , cusip varchar
@@ -70,30 +84,70 @@ class TDQuotesSQLRunner(sql.SQLRunner):
             )
                 partition by range (file_datetime);
 
-            create table td.quotes_20208 partition of td.quotes for values from ('2020-08-01') to ('2020-09-01');
-            create table td.quotes_20209 partition of td.quotes for values from ('2020-09-01') to ('2020-10-01');
-            create table td.quotes_202010 partition of td.quotes for values from ('2020-10-01') to ('2020-11-01');
-            create table td.quotes_202011 partition of td.quotes for values from ('2020-11-01') to ('2020-12-01');
-            create table td.quotes_202011 partition of td.quotes for values from ('2020-12-01') to ('2021-01-01');
-            create table td.quotes_20211 partition of td.quotes for values from ('2021-01-01') to ('2021-02-01');
-            create table td.quotes_20212 partition of td.quotes for values from ('2021-02-01') to ('2021-03-01');
-            create table td.quotes_20213 partition of td.quotes for values from ('2021-03-01') to ('2021-04-01');
-            create table td.quotes_20214 partition of td.quotes for values from ('2021-04-01') to ('2021-05-01');
-            create table td.quotes_20215 partition of td.quotes for values from ('2021-05-01') to ('2021-06-01');
-            create table td.quotes_20216 partition of td.quotes for values from ('2021-06-01') to ('2021-07-01');
-            create table td.quotes_20217 partition of td.quotes for values from ('2021-07-01') to ('2021-08-01');
-            create table td.quotes_20218 partition of td.quotes for values from ('2021-08-01') to ('2021-09-01');
-            create table td.quotes_20219 partition of td.quotes for values from ('2021-09-01') to ('2021-10-01');
-            create table td.quotes_202110 partition of td.quotes for values from ('2021-10-01') to ('2021-11-01');
-            create table td.quotes_202111 partition of td.quotes for values from ('2021-11-01') to ('2021-12-01');
-
-            create table td.quotes_raw (like td.quotes);
+            create table td.quotes_raw_20208 partition of td.quotes_raw for values from ('2020-08-01') to ('2020-09-01');
+            create table td.quotes_raw_20209 partition of td.quotes_raw for values from ('2020-09-01') to ('2020-10-01');
+            create table td.quotes_raw_202010 partition of td.quotes_raw for values from ('2020-10-01') to ('2020-11-01');
+            create table td.quotes_raw_202011 partition of td.quotes_raw for values from ('2020-11-01') to ('2020-12-01');
+            create table td.quotes_raw_202012 partition of td.quotes_raw for values from ('2020-12-01') to ('2021-01-01');
+            create table td.quotes_raw_20211 partition of td.quotes_raw for values from ('2021-01-01') to ('2021-02-01');
+            create table td.quotes_raw_20212 partition of td.quotes_raw for values from ('2021-02-01') to ('2021-03-01');
+            create table td.quotes_raw_20213 partition of td.quotes_raw for values from ('2021-03-01') to ('2021-04-01');
+            create table td.quotes_raw_20214 partition of td.quotes_raw for values from ('2021-04-01') to ('2021-05-01');
+            create table td.quotes_raw_20215 partition of td.quotes_raw for values from ('2021-05-01') to ('2021-06-01');
+            create table td.quotes_raw_20216 partition of td.quotes_raw for values from ('2021-06-01') to ('2021-07-01');
+            create table td.quotes_raw_20217 partition of td.quotes_raw for values from ('2021-07-01') to ('2021-08-01');
+            create table td.quotes_raw_20218 partition of td.quotes_raw for values from ('2021-08-01') to ('2021-09-01');
+            create table td.quotes_raw_20219 partition of td.quotes_raw for values from ('2021-09-01') to ('2021-10-01');
+            create table td.quotes_raw_202110 partition of td.quotes_raw for values from ('2021-10-01') to ('2021-11-01');
+            create table td.quotes_raw_202111 partition of td.quotes_raw for values from ('2021-11-01') to ('2021-12-01');
             '''
         return ddl
 
     @property
     def sql_script(self):
-        return None
+        query = '''
+            truncate td.quotes;
+
+            insert into td.quotes (
+                with
+                raw_quotes as (
+                  select
+                      case when extract(hour from trade_time_in_long_datetime) < 10 then trade_time_in_long_datetime::date - 1 else trade_time_in_long_datetime::date end as market_datetime
+                    , symbol
+                    , open_price
+                    , high_price
+                    , low_price
+                    , close_price
+                    , last_price
+                    , last_size
+                    , regular_market_last_price
+                    , regular_market_last_size
+                    , total_volume
+                    , file_datetime
+                  from td.quotes_raw
+                  )
+                , partitioned as (
+                  select *
+                    , row_number() over (partition by symbol, market_datetime order by file_datetime desc) as rn
+                  from raw_quotes
+                  )
+                select
+                    market_datetime
+                  , symbol
+                  , open_price
+                  , high_price
+                  , low_price
+                  , close_price
+                  , last_price
+                  , last_size
+                  , regular_market_last_price
+                  , regular_market_last_size
+                  , total_volume
+                from partitioned
+                where rn = 1
+                );
+            '''
+        return query
 
 
 if __name__ == '__main__':

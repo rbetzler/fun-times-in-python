@@ -141,16 +141,20 @@ class FileIngestion(abc.ABC):
 
     @property
     def get_ingest_audit(self) -> pd.DataFrame:
-        query = f'''
-            select coalesce(max(ingest_datetime), '1900-01-01') as ingest_datetime
-            from audit.ingest_datetimes
-            where
-                schema_name = '{self.schema}'
-                and table_name = '{self.table}'
-                and job_name = '{self.job_name}'
-            '''
+        query = f'select 1 from {self.schema}.{self.table} limit 1'
         df = utils.query_db(query=query)
-        ingest_datetime = df['ingest_datetime'].values[0]
+        if not df.empty:
+            query = f'''
+                select coalesce(max(ingest_datetime), '1900-01-01') as ingest_datetime
+                from audit.ingest_datetimes
+                where   schema_name = '{self.schema}'
+                    and table_name = '{self.table}'
+                    and job_name = '{self.job_name}'
+                '''
+            df = utils.query_db(query=query)
+            ingest_datetime = df['ingest_datetime'].values[0]
+        else:
+            ingest_datetime = '2000-01-01'
         return ingest_datetime
 
     @property
@@ -229,12 +233,21 @@ class FileIngestion(abc.ABC):
                 conn = psycopg2.connect(self.db_connection)
                 cursor = conn.cursor()
                 copy_command = f'''
-                    COPY {self.schema}.{self.table} 
+                    COPY {self.schema}.{self.table}
                     FROM STDIN
                     DELIMITER '{self.export_file_separator}' QUOTE '{self.quote_character}' CSV
                     '''
                 cursor.copy_expert(copy_command, file=open(self.export_file_path(self.job_name)))
                 conn.commit()
+
+                print('vacuuming table')
+                conn.autocommit = True
+                cursor.execute(f'vacuum {self.schema}.{self.table};')
+
+                print('analyzing table')
+                cursor.execute(f'analyze {self.schema}.{self.table};')
+
+                print('closing db connection')
                 cursor.close()
                 conn.close()
                 file.close()

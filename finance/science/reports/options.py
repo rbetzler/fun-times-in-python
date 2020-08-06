@@ -10,7 +10,7 @@ class Options(reporter.Reporter):
     def query(self) -> str:
         query = f'''
             with
-            equities as (
+            stocks as (
               select
                   symbol
                 , open
@@ -18,9 +18,9 @@ class Options(reporter.Reporter):
                 , low
                 , close
                 , volume
-                , market_datetime::date as market_datetime
-              from td.equities
-              where market_datetime = (select max(market_datetime) from td.equities)
+                , market_datetime
+              from td.stocks
+              where market_datetime = (select max(market_datetime) from td.stocks)
               )
             , options as (
               select
@@ -41,13 +41,13 @@ class Options(reporter.Reporter):
               )
             , base as (
               select
-                  coalesce(e.symbol, o.symbol) as ticker
-                , coalesce(e.market_datetime, o.file_datetime) as datetime
-                , e.open as equity_open
-                , e.high as equity_high
-                , e.low as equity_low
-                , e.close as equity_close
-                , e.volume as equity_volume
+                  coalesce(s.symbol, o.symbol) as ticker
+                , coalesce(s.market_datetime, o.file_datetime) as datetime
+                , s.open as equity_open
+                , s.high as equity_high
+                , s.low as equity_low
+                , s.close as equity_close
+                , s.volume as equity_volume
                 , o.put_call as option_type
                 , o.days_to_expiration as option_days_to_expiration
                 , o.strike as option_strike
@@ -56,9 +56,9 @@ class Options(reporter.Reporter):
                 , (o.bid + o.ask) / 2 as option_bid_ask
                 , o.last as option_last
                 , o.open_interest as option_open_interest
-              from equities as e
+              from stocks as s
               inner join options as o
-                on e.symbol = o.symbol
+                on s.symbol = o.symbol
               )
             select *
               , option_bid_ask / option_strike as option_price_versus_strike
