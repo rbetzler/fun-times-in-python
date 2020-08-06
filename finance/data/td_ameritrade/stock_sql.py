@@ -24,6 +24,7 @@ class TDStocksSQLRunner(sql.SQLRunner):
             )
                 partition by range (market_datetime);
 
+            create table if not exists td.stocks_1900 partition of td.stocks for values from ('1900-01-01') to ('1980-01-01');
             create table if not exists td.stocks_1980 partition of td.stocks for values from ('1980-01-01') to ('1990-01-01');
             create table if not exists td.stocks_1990 partition of td.stocks for values from ('1990-01-01') to ('1995-01-01');
             create table if not exists td.stocks_1995 partition of td.stocks for values from ('1995-01-01') to ('2000-01-01');
@@ -132,4 +133,4 @@ class TDStocksSQLRunner(sql.SQLRunner):
 
 
 if __name__ == '__main__':
-    TDQuotesSQLRunner().execute()
+    TDStocksSQLRunner().execute()
