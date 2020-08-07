@@ -76,7 +76,7 @@ table_creator_quotes = DockerOperator(
 
 table_creator_stocks = DockerOperator(
     task_id='update_td_stocks_table',
-    command='python finance/data/td_ameritrade/stocks_sql.py',
+    command='python finance/data/td_ameritrade/stock_sql.py',
     **kwargs,
 )
 
