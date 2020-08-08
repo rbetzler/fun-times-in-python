@@ -1,5 +1,7 @@
-from concurrent import futures
 import pandas as pd
+
+from concurrent import futures
+from datetime import datetime
 
 from finance.science.reports import reporter
 from finance.science.utilities import options_utils
@@ -22,8 +24,7 @@ class BlackScholes(reporter.Reporter):
               from nasdaq.listed_stocks
               where ticker !~ '[\^.~]'
                 and character_length(ticker) between 1 and 4
-                and ticker = 'KO'
-              limit 5
+              limit 500
               )
             , stocks as (
               select
@@ -50,6 +51,7 @@ class BlackScholes(reporter.Reporter):
               inner join tickers as t
                 on t.ticker = o.symbol
               where o.file_datetime >= (select max(file_datetime)::date from td.options)
+                and o.days_to_expiration > 0
               )
             , final as (
               select distinct
@@ -100,7 +102,7 @@ class BlackScholes(reporter.Reporter):
         return symbol, volatility, strike, days_to_maturity, put_call
 
     def process_df(self, df: pd.DataFrame) -> pd.DataFrame:
-        print('Starting implied vol calcs')
+        print(f'Starting implied vol calcs {datetime.utcnow()}')
 
         executor = futures.ProcessPoolExecutor(max_workers=N_WORKERS)
         future_submission = {
@@ -116,12 +118,14 @@ class BlackScholes(reporter.Reporter):
             ): row for row in df.itertuples()
         }
 
-        vols = []
+        results = []
         for future in futures.as_completed(future_submission):
-            vols.append(future.result())
+            results.append(future.result())
 
-        print('Finished implied vol calcs')
-        return df
+        print(f'Finished implied vol calcs {datetime.utcnow()}')
+        vols = pd.DataFrame(results, columns=['symbol', 'implied_volatility', 'strike', 'days_to_maturity', 'put_call'])
+
+        return vols
 
     @property
     def export_folder(self) -> str:
