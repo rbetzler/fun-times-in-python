@@ -17,7 +17,7 @@ args = {
 }
 
 dag = DAG(
-    dag_id='td',
+    dag_id='td_equities',
     default_args=args,
     start_date=datetime(2019, 10, 29),
     schedule_interval='0 10 * * 7',
@@ -65,4 +65,4 @@ end_time = BashOperator(
 scrape_equities.set_upstream(start_time)
 load_equities.set_upstream(scrape_equities)
 table_creator_equities.set_upstream(load_equities)
-end_time.set_upstream(report_equities)
+end_time.set_upstream(table_creator_equities)
