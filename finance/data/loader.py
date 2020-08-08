@@ -189,7 +189,7 @@ class FileIngestion(abc.ABC):
         return
 
     def execute(self):
-        print('Getting list of files to ingest')
+        print(f'getting list of files to ingest {datetime.datetime.utcnow()}')
         files = self.get_ingest_files
 
         if not files.empty:
@@ -220,7 +220,7 @@ class FileIngestion(abc.ABC):
 
                 df = self.add_and_order_columns(df)
 
-                print('placing batch file')
+                print(f'placing batch file {datetime.datetime.utcnow()}')
                 df.to_csv(
                     self.export_file_path(self.job_name),
                     index=False,
@@ -229,7 +229,7 @@ class FileIngestion(abc.ABC):
                 )
                 file = open(self.export_file_path(self.job_name), 'r')
 
-                print('copying to db')
+                print(f'copying to db {datetime.datetime.utcnow()}')
                 conn = psycopg2.connect(self.db_connection)
                 cursor = conn.cursor()
                 copy_command = f'''
@@ -240,14 +240,14 @@ class FileIngestion(abc.ABC):
                 cursor.copy_expert(copy_command, file=open(self.export_file_path(self.job_name)))
                 conn.commit()
 
-                print('vacuuming table')
+                print(f'vacuuming table {datetime.datetime.utcnow()}')
                 conn.autocommit = True
                 cursor.execute(f'vacuum {self.schema}.{self.table};')
 
-                print('analyzing table')
+                print(f'analyzing table {datetime.datetime.utcnow()}')
                 cursor.execute(f'analyze {self.schema}.{self.table};')
 
-                print('closing db connection')
+                print(f'closing db connection {datetime.datetime.utcnow()}')
                 cursor.close()
                 conn.close()
                 file.close()
