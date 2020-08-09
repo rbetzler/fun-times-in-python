@@ -281,7 +281,44 @@ class TdOptionsSQLRunner(sql.SQLRunner):
             insert into td.options (
                 with
                 dated as (
-                    select *
+                    select
+                          symbol
+                        , volatility
+                        , n_contracts
+                        , interest_rate
+                        , put_call
+                        , bid
+                        , ask
+                        , last
+                        , mark
+                        , bid_size
+                        , ask_size
+                        , bid_ask_size
+                        , last_size
+                        , high_price
+                        , low_price
+                        , open_price
+                        , close_price
+                        , total_volume
+                        , trade_date
+                        , delta
+                        , gamma
+                        , theta
+                        , vega
+                        , rho
+                        , open_interest
+                        , time_value
+                        , theoretical_option_value
+                        , theoretical_volatility
+                        , strike_price
+                        , expiration_date
+                        , days_to_expiration
+                        , expiration_date_from_epoch
+                        , strike
+                        , strike_date
+                        , days_to_expiration_date
+                        , file_datetime
+                        , ingest_datetime
                         , case
                             -- If Sunday, set to Friday
                             when extract(isodow from file_datetime) = 1 then file_datetime::date - 2
@@ -302,13 +339,11 @@ class TdOptionsSQLRunner(sql.SQLRunner):
                     where file_date is not null
                     )
                 select
-                    symbol
+                      symbol
                     , volatility
                     , n_contracts
                     , interest_rate
                     , put_call
-                    , description
-                    , exchange_name
                     , bid
                     , ask
                     , last
@@ -323,9 +358,6 @@ class TdOptionsSQLRunner(sql.SQLRunner):
                     , close_price
                     , total_volume
                     , trade_date
-                    , trade_time_in_long
-                    , quote_time_in_long
-                    , net_change
                     , delta
                     , gamma
                     , theta
@@ -335,22 +367,9 @@ class TdOptionsSQLRunner(sql.SQLRunner):
                     , time_value
                     , theoretical_option_value
                     , theoretical_volatility
-                    , option_deliverable_list
                     , strike_price
                     , expiration_date
                     , days_to_expiration
-                    , expiration_type
-                    , last_trading_day
-                    , multiplier
-                    , settlement_type
-                    , deliverable_note
-                    , is_index_option
-                    , percent_change
-                    , mark_change
-                    , mark_percent_change
-                    , non_standard
-                    , mini
-                    , in_the_money
                     , expiration_date_from_epoch
                     , strike
                     , strike_date
