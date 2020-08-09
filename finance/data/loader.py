@@ -71,6 +71,10 @@ class FileIngestion(abc.ABC):
         return ','
 
     @property
+    def vacuum_analyze(self) -> bool:
+        return True
+
+    @property
     @abc.abstractmethod
     def schema(self) -> str:
         pass
@@ -240,12 +244,10 @@ class FileIngestion(abc.ABC):
                 cursor.copy_expert(copy_command, file=open(self.export_file_path(self.job_name)))
                 conn.commit()
 
-                print(f'vacuuming table {datetime.datetime.utcnow()}')
-                conn.autocommit = True
-                cursor.execute(f'vacuum {self.schema}.{self.table};')
-
-                print(f'analyzing table {datetime.datetime.utcnow()}')
-                cursor.execute(f'analyze {self.schema}.{self.table};')
+                if self.vacuum_analyze:
+                    print(f'vacuuming and analyzing table {datetime.datetime.utcnow()}')
+                    conn.autocommit = True
+                    cursor.execute(f'vacuum analyze {self.schema}.{self.table};')
 
                 print(f'closing db connection {datetime.datetime.utcnow()}')
                 cursor.close()
