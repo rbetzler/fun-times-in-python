@@ -84,6 +84,8 @@ RUN apt-get install -y vim
 
 RUN chown -R airflow: ${AIRFLOW_USER_HOME}
 
+RUN export FERNET_KEY=$(python -c "from cryptography.fernet import Fernet; FERNET_KEY = Fernet.generate_key().decode(); print(FERNET_KEY)")
+
 EXPOSE 8080 5555 8793
 
 USER airflow

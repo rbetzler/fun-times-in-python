@@ -32,10 +32,20 @@ also run: create tablespace ssd_tablespace location '/media/dw-stocks-tablespace
 #### Airflow
 ##### From dockerfile
 ```
-sudo docker build . --tag airflow
-sudo docker run --name airflow-prod -p 8080:8080 -v /media/nautilus/fun-times-in-python/dags:/usr/local/airflow/dags -v /var/run/docker.sock:/var/run/docker.sock:ro -td --network bridge airflow
-
+docker build . --tag airflow
+docker run --name airflow-prod -p 8080:8080 -v /media/nautilus/fun-times-in-python/dags:/usr/local/airflow/dags -v /var/run/docker.sock:/var/run/docker.sock:ro -td --network bridge airflow
+```
+Manual airflow setup:
+```
+# Airflow host permissions
 sudo chmod 777 /var/run/docker.sock
+
+# Create airflow user in postgres
+create user airflow password 'airflow';
+grant all privileges on all tables in schema public to airflow;
+
+# Run airflow init
+airflow initdb
 ```
 
 ##### Start container, access terminal
