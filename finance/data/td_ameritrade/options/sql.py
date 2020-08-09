@@ -267,10 +267,10 @@ class TdOptionsSQLRunner(sql.SQLRunner):
             create table if not exists td.options_raw_20211102 partition of td.options_raw for values from ('2021-11-02') to ('2021-11-09');
             create table if not exists td.options_raw_20211109 partition of td.options_raw for values from ('2021-11-09') to ('2021-11-16');
 
-            create index options_raw_symbol_idx on td.options_raw (symbol);
-            create index options_raw_file_idx on td.options_raw (file_datetime);
-            create index options_raw_ingest_idx on td.options_raw (ingest_datetime);
-            create index options_raw_symbol_file_ingest_idx on td.options_raw (symbol, date(file_datetime), ingest_datetime desc);
+            --create index options_raw_symbol_idx on td.options_raw (symbol);
+            --create index options_raw_file_idx on td.options_raw (file_datetime);
+            --create index options_raw_ingest_idx on td.options_raw (ingest_datetime);
+            --create index options_raw_symbol_file_ingest_idx on td.options_raw (symbol, date(file_datetime), ingest_datetime desc);
             '''
         return ddl
 
