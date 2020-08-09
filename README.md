@@ -16,7 +16,10 @@ sudo docker run -it --name py-temp -v /media/nautilus/fun-times-in-python:/usr/s
 docker run -it --name py-temp -v /Users/rickbetzler/personal/fun-times-in-python:/usr/src/app -v /Users/rickbetzler/personal/raw_files:/mnt --network local-network py-dw-stocks
 ```
 ##### Run a python script
-`sudo docker exec py-temp python /home/utilities/test_dag_script.py`
+```
+docker exec py-temp python /home/utilities/test_dag_script.py
+docker run -it --network bridge -v /media/nautilus/fun-times-in-python:/usr/src/app py-dw-stocks bash
+```
 
 #### Postgres
 ##### Docker build is too painful
