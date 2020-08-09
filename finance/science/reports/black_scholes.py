@@ -13,45 +13,39 @@ RISK_FREE_RATE = .001
 class BlackScholes(reporter.Reporter):
 
     @property
+    def export_folder(self) -> str:
+        return 'black_scholes'
+
+    @property
+    def export_file_name(self) -> str:
+        return 'black_scholes'
+
+    @property
     def query(self) -> str:
         query = f'''
-            with 
-            tickers as (
-              select distinct 
-                  ticker
-                , sector
-                , industry
-              from nasdaq.listed_stocks
-              where ticker !~ '[\^.~]'
-                and character_length(ticker) between 1 and 4
-              limit 500
-              )
-            , stocks as (
+            with
+            stocks as (
               select
-                  s.market_datetime
-                , s.symbol
-                , s.close
-              from td.stocks as s
-              inner join tickers as t
-                on t.ticker = s.symbol
-              where s.market_datetime = (select max(market_datetime) from td.stocks)
+                  market_datetime
+                , symbol
+                , close
+              from td.stocks
+              where market_datetime = '{self._report_day.strftime('%Y%m%d')}'
               )
             , options as (
               select
-                  o.symbol
-                , o.file_datetime
-                , o.put_call
-                , o.strike
-                , o.days_to_expiration
-                , o.last
-                , (o.bid + o.ask) / 2 as bid_ask
-                , o.volatility
-                , o.expiration_date_from_epoch
-              from td.options as o
-              inner join tickers as t
-                on t.ticker = o.symbol
-              where o.file_datetime >= (select max(file_datetime)::date from td.options)
-                and o.days_to_expiration > 0
+                  symbol
+                , file_datetime
+                , put_call
+                , strike
+                , days_to_expiration
+                , last
+                , (bid + ask) / 2 as bid_ask
+                , volatility
+                , expiration_date_from_epoch
+              from td.options
+              where file_datetime = '{self._report_day.strftime('%Y%m%d')}'
+                and days_to_expiration > 0
               )
             , final as (
               select distinct
@@ -126,14 +120,6 @@ class BlackScholes(reporter.Reporter):
         vols = pd.DataFrame(results, columns=['symbol', 'implied_volatility', 'strike', 'days_to_maturity', 'put_call'])
 
         return vols
-
-    @property
-    def export_folder(self) -> str:
-        return 'black_scholes'
-
-    @property
-    def export_file_name(self) -> str:
-        return 'black_scholes'
 
 
 if __name__ == '__main__':
