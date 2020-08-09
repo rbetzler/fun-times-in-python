@@ -1,4 +1,4 @@
-from finance.science.reports import reporter
+from finance.data import reporter
 from finance.utilities import utils
 
 REPORT_FOLDER_PREFIX = 'audit/reports'

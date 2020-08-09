@@ -3,7 +3,7 @@ import pandas as pd
 from concurrent import futures
 from datetime import datetime
 
-from finance.science.reports import reporter
+from finance.data import reporter
 from finance.science.utilities import options_utils
 
 N_WORKERS = 15
@@ -118,9 +118,12 @@ class BlackScholes(reporter.Reporter):
 
         print(f'Finished implied vol calcs {datetime.utcnow()}')
         vols = pd.DataFrame(results, columns=['symbol', 'implied_volatility', 'strike', 'days_to_maturity', 'put_call'])
+        vols = vols.dropna()
 
         return vols
 
 
 if __name__ == '__main__':
-    BlackScholes().execute()
+    BlackScholes(
+        report_day=datetime.utcnow().replace(day=6)
+    ).execute()
