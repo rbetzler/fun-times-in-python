@@ -30,7 +30,7 @@ class BlackScholes(reporter.Reporter):
                 , symbol
                 , close
               from td.stocks
-              where market_datetime = '{self._report_day.strftime('%Y%m%d')}'
+              where market_datetime > (select max(file_datetime)::date from td.black_scholes)
               )
             , options as (
               select
@@ -44,7 +44,7 @@ class BlackScholes(reporter.Reporter):
                 , volatility
                 , expiration_date_from_epoch
               from td.options
-              where file_datetime = '{self._report_day.strftime('%Y%m%d')}'
+              where file_datetime > (select max(file_datetime)::date from td.black_scholes)
                 and days_to_expiration > 0
               )
             , final as (
