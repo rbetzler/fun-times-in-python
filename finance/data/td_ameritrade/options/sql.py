@@ -321,16 +321,16 @@ class TdOptionsSQLRunner(sql.SQLRunner):
                         , ingest_datetime
                         , case
                             -- If Sunday, set to Friday
-                            when extract(isodow from file_datetime) = 1 then file_datetime::date - 2
+                            when extract(isodow from file_datetime) = 7 then file_datetime::date - 2
                             -- If Saturday, set to Friday
-                            when extract(isodow from file_datetime) = 7 then file_datetime::date - 1
+                            when extract(isodow from file_datetime) = 6 then file_datetime::date - 1
                             -- If after market close, leave as is
                             when extract('hour' from file_datetime) >= 20 then file_datetime::date
                             -- If before market open, set to prior day
                             when extract(hour from file_datetime) < 13 or (extract('hour' from file_datetime) = 13 and extract('minute' from file_datetime) <= 30) then file_datetime::date - 1
                             end as file_date
                     from td.options_raw
-                    where file_datetime > current_date - 10 and file_datetime < current_date + 1
+                    where file_datetime > current_date - 7 and file_datetime < current_date + 1
                     )
                 , ranked as (
                     select *
