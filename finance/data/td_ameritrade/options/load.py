@@ -15,6 +15,10 @@ class FileIngestion(loader.FileIngestion):
         return 'td_'
 
     @property
+    def vacuum_analyze(self) -> bool:
+        return False
+
+    @property
     def schema(self) -> str:
         return 'td'
 
