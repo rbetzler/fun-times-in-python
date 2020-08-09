@@ -166,7 +166,7 @@ class FileIngestion(abc.ABC):
 
         print(f'{len(df)} files need to be ingested')
         if self.n_files_to_process > 0:
-            file_modified_datetime = df.loc[self.n_files_to_process - 1, 'file_modified_datetime']
+            file_modified_datetime = df['file_modified_datetime'].nsmallest(self.n_files_to_process).max()
             df = df[df['file_modified_datetime'] <= file_modified_datetime]
 
         print(f'Will ingest {len(df)} files')
