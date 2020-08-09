@@ -15,9 +15,13 @@ class Reporter(abc.ABC):
             self,
             report_day=datetime.datetime.utcnow(),
     ):
-        self.report_day = report_day.strftime('%Y%m%d%H%M')
+        self._report_day = report_day
         self.email_user = utils.retrieve_secret('EMAIL_USER')
         self.email_password = utils.retrieve_secret('EMAIL_PASSWORD')
+
+    @property
+    def report_day(self) -> str:
+        return self._report_day.strftime('%Y%m%d%H%M')
 
     @property
     @abc.abstractmethod
@@ -26,21 +30,22 @@ class Reporter(abc.ABC):
 
     @staticmethod
     def process_df(df: pd.DataFrame) -> pd.DataFrame:
+        """Helper function for non-sql data transformations"""
         return df
 
     @property
-    @abc.abstractmethod
     def email_recipients(self) -> list:
+        """To whom emails get sent"""
         pass
 
     @property
-    @abc.abstractmethod
     def subject(self) -> str:
+        """Email subject line"""
         pass
 
     @property
-    @abc.abstractmethod
     def body(self) -> str:
+        """Email body"""
         pass
 
     def send_emails(self, df: pd.DataFrame):
@@ -96,8 +101,9 @@ class Reporter(abc.ABC):
         print('Processing data')
         df = self.process_df(df)
 
-        print('Sending email')
-        self.send_emails(df)
+        if self.email_recipients:
+            print('Sending email')
+            self.send_emails(df)
 
         print('Archiving report')
         df.to_csv(self.export_file_path, index=False)

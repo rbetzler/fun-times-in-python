@@ -4,27 +4,23 @@ from finance.data import loader
 class FileIngestion(loader.FileIngestion):
     @property
     def job_name(self) -> str:
-        return 'td_options_api'
+        return 'black_scholes'
 
     @property
     def directory(self) -> str:
-        return 'td_ameritrade/options'
+        return 'reports/black_scholes'
 
     @property
     def import_file_prefix(self) -> str:
-        return 'td_'
+        return 'black_scholes_'
 
     @property
-    def vacuum_analyze(self) -> bool:
-        return False
+    def table(self) -> str:
+        return 'black_scholes'
 
     @property
     def schema(self) -> str:
         return 'td'
-
-    @property
-    def table(self) -> str:
-        return 'options_raw'
 
 
 if __name__ == '__main__':

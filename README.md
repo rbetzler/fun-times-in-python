@@ -16,7 +16,10 @@ sudo docker run -it --name py-temp -v /media/nautilus/fun-times-in-python:/usr/s
 docker run -it --name py-temp -v /Users/rickbetzler/personal/fun-times-in-python:/usr/src/app -v /Users/rickbetzler/personal/raw_files:/mnt --network local-network py-dw-stocks
 ```
 ##### Run a python script
-`sudo docker exec py-temp python /home/utilities/test_dag_script.py`
+```
+docker exec py-temp python /home/utilities/test_dag_script.py
+docker run -it --network bridge -v /media/nautilus/fun-times-in-python:/usr/src/app py-dw-stocks bash
+```
 
 #### Postgres
 ##### Docker build is too painful
@@ -32,10 +35,20 @@ also run: create tablespace ssd_tablespace location '/media/dw-stocks-tablespace
 #### Airflow
 ##### From dockerfile
 ```
-sudo docker build . --tag airflow
-sudo docker run --name airflow-prod -p 8080:8080 -v /media/nautilus/fun-times-in-python/dags:/usr/local/airflow/dags -v /var/run/docker.sock:/var/run/docker.sock:ro -td --network bridge airflow
-
+docker build . --tag airflow
+docker run --name airflow-prod -p 8080:8080 -v /media/nautilus/fun-times-in-python/dags:/usr/local/airflow/dags -v /var/run/docker.sock:/var/run/docker.sock:ro -td --network bridge airflow
+```
+Manual airflow setup:
+```
+# Airflow host permissions
 sudo chmod 777 /var/run/docker.sock
+
+# Create airflow user in postgres
+create user airflow password 'airflow';
+grant all privileges on all tables in schema public to airflow;
+
+# Run airflow init
+airflow initdb
 ```
 
 ##### Start container, access terminal

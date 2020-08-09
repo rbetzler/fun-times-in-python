@@ -38,6 +38,7 @@ start_time = BashOperator(
     dag=dag,
 )
 
+# options
 scrape_options = DockerOperator(
     task_id='scrape_td_options',
     command='python finance/data/td_ameritrade/options/scrape.py',
@@ -56,6 +57,7 @@ table_creator_options = DockerOperator(
     **kwargs,
 )
 
+# quotes
 scrape_quotes = DockerOperator(
     task_id='scrape_td_quotes',
     command='python finance/data/td_ameritrade/quotes/scrape.py',
@@ -74,18 +76,21 @@ table_creator_quotes = DockerOperator(
     **kwargs,
 )
 
+# derived stocks table
 table_creator_stocks = DockerOperator(
     task_id='update_td_stocks_table',
-    command='python finance/data/td_ameritrade/stocks_sql.py',
+    command='python finance/data/td_ameritrade/stock_sql.py',
     **kwargs,
 )
 
+# options report
 report_options = DockerOperator(
     task_id='report_options',
-    command='python finance/science/reports/options.py',
+    command='python finance/data/td_ameritrade/options/report.py',
     **kwargs,
 )
 
+# fundamentals
 scrape_fundamentals = DockerOperator(
     task_id='scrape_td_fundamentals',
     command='python finance/data/td_ameritrade/fundamentals/scrape.py',
@@ -104,6 +109,19 @@ table_creator_fundamentals = DockerOperator(
     **kwargs,
 )
 
+# black scholes
+report_black_scholes = DockerOperator(
+    task_id='report_black_scholes',
+    command='python finance/data/td_ameritrade/black_scholes/report.py',
+    **kwargs,
+)
+
+load_black_scholes = DockerOperator(
+    task_id='load_black_scholes',
+    command='python finance/data/td_ameritrade/black_scholes/load.py',
+    **kwargs,
+)
+
 end_time = BashOperator(
     task_id='end_pipeline',
     bash_command='date',
@@ -119,6 +137,10 @@ load_quotes.set_upstream(scrape_quotes)
 table_creator_quotes.set_upstream(load_quotes)
 table_creator_stocks.set_upstream(table_creator_quotes)
 
+report_black_scholes.set_upstream(table_creator_options)
+report_black_scholes.set_upstream(table_creator_stocks)
+load_black_scholes.set_upstream(report_black_scholes)
+
 report_options.set_upstream(table_creator_options)
 report_options.set_upstream(table_creator_stocks)
 
@@ -127,4 +149,5 @@ load_fundamentals.set_upstream(scrape_fundamentals)
 table_creator_fundamentals.set_upstream(load_fundamentals)
 
 end_time.set_upstream(report_options)
+end_time.set_upstream(load_black_scholes)
 end_time.set_upstream(table_creator_fundamentals)

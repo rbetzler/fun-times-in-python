@@ -71,6 +71,10 @@ class FileIngestion(abc.ABC):
         return ','
 
     @property
+    def vacuum_analyze(self) -> bool:
+        return True
+
+    @property
     @abc.abstractmethod
     def schema(self) -> str:
         pass
@@ -166,7 +170,7 @@ class FileIngestion(abc.ABC):
 
         print(f'{len(df)} files need to be ingested')
         if self.n_files_to_process > 0:
-            file_modified_datetime = df.loc[self.n_files_to_process - 1, 'file_modified_datetime']
+            file_modified_datetime = df['file_modified_datetime'].nsmallest(self.n_files_to_process).max()
             df = df[df['file_modified_datetime'] <= file_modified_datetime]
 
         print(f'Will ingest {len(df)} files')
@@ -189,7 +193,7 @@ class FileIngestion(abc.ABC):
         return
 
     def execute(self):
-        print('Getting list of files to ingest')
+        print(f'getting list of files to ingest {datetime.datetime.utcnow()}')
         files = self.get_ingest_files
 
         if not files.empty:
@@ -220,7 +224,7 @@ class FileIngestion(abc.ABC):
 
                 df = self.add_and_order_columns(df)
 
-                print('placing batch file')
+                print(f'placing batch file {datetime.datetime.utcnow()}')
                 df.to_csv(
                     self.export_file_path(self.job_name),
                     index=False,
@@ -229,7 +233,7 @@ class FileIngestion(abc.ABC):
                 )
                 file = open(self.export_file_path(self.job_name), 'r')
 
-                print('copying to db')
+                print(f'copying to db {datetime.datetime.utcnow()}')
                 conn = psycopg2.connect(self.db_connection)
                 cursor = conn.cursor()
                 copy_command = f'''
@@ -240,14 +244,12 @@ class FileIngestion(abc.ABC):
                 cursor.copy_expert(copy_command, file=open(self.export_file_path(self.job_name)))
                 conn.commit()
 
-                print('vacuuming table')
-                conn.autocommit = True
-                cursor.execute(f'vacuum {self.schema}.{self.table};')
+                if self.vacuum_analyze:
+                    print(f'vacuuming and analyzing table {datetime.datetime.utcnow()}')
+                    conn.autocommit = True
+                    cursor.execute(f'vacuum analyze {self.schema}.{self.table};')
 
-                print('analyzing table')
-                cursor.execute(f'analyze {self.schema}.{self.table};')
-
-                print('closing db connection')
+                print(f'closing db connection {datetime.datetime.utcnow()}')
                 cursor.close()
                 conn.close()
                 file.close()

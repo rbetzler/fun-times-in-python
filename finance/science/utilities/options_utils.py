@@ -128,11 +128,15 @@ class BlackScholes:
 
     @property
     def implied_volatility(self, lower_bound=-15, upper_bound=15):
-        implied_volatility = opt.brentq(
-            self._implied_volatility,
-            lower_bound,
-            upper_bound,
-        )
+        try:
+            implied_volatility = opt.brentq(
+                self._implied_volatility,
+                lower_bound,
+                upper_bound,
+            )
+        except ValueError as e:
+            print(f'Filling null to workaround {e}')
+            implied_volatility = None
         return implied_volatility
 
     """
