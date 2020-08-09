@@ -124,6 +124,4 @@ class BlackScholes(reporter.Reporter):
 
 
 if __name__ == '__main__':
-    BlackScholes(
-        report_day=datetime.utcnow().replace(day=6)
-    ).execute()
+    BlackScholes().execute()
