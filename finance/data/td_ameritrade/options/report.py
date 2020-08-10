@@ -36,8 +36,8 @@ class Options(reporter.Reporter):
               from td.options
               where file_datetime >= (select max(file_datetime)::date from td.options)
                 and put_call = 'PUT'
-                and open_interest > 0
-                and days_to_expiration < 150
+                and open_interest > 5
+                and days_to_expiration < 60
               )
             , base as (
               select
@@ -69,6 +69,7 @@ class Options(reporter.Reporter):
               , option_type
               , option_days_to_expiration
               , option_strike
+            limit 200000
             '''
         return query
 
