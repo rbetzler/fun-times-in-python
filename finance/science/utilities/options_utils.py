@@ -133,6 +133,9 @@ class BlackScholes:
                 self._implied_volatility,
                 lower_bound,
                 upper_bound,
+                xtol=1e-15,
+                rtol=1e-15,
+                maxiter=1000,
             )
         except ValueError as e:
             print(f'Filling null to workaround {e}')

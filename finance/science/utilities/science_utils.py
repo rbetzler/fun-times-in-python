@@ -33,12 +33,12 @@ def plot_groups(
 
     plt.plot()
     for label, group in df.groupby(groups):
-        plt.title(title + ' ' + label)
+        plt.title(title + ' ' + str(label))
         if not error_plot:
             for line in lines:
                 plt.plot(group[xaxis_name], group[line], label=line)
                 if isinstance(group[xaxis_name].values[0], datetime.date):
-                    ticks = pd.to_datetime(group['market_datetime'])
+                    ticks = pd.to_datetime(group[xaxis_name])
                 else:
                     ticks = group[xaxis_name]
                 plt.xticks([ticks.quantile(x) for x in np.linspace(0, 1, xaxis_ticks)])

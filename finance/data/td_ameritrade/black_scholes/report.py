@@ -30,7 +30,7 @@ class BlackScholes(reporter.Reporter):
                 , symbol
                 , close
               from td.stocks
-              where market_datetime > (select max(file_datetime)::date from td.black_scholes)
+              where market_datetime = '{self._report_day.strftime('%Y%m%d')}'
               )
             , options as (
               select
@@ -44,7 +44,7 @@ class BlackScholes(reporter.Reporter):
                 , volatility
                 , expiration_date_from_epoch
               from td.options
-              where file_datetime > (select max(file_datetime)::date from td.black_scholes)
+              where file_datetime = '{self._report_day.strftime('%Y%m%d')}'
                 and days_to_expiration > 0
               )
             , final as (
@@ -98,6 +98,7 @@ class BlackScholes(reporter.Reporter):
     def process_df(self, df: pd.DataFrame) -> pd.DataFrame:
         print(f'Starting implied vol calcs {datetime.utcnow()}')
 
+        # TODO: Pass thru market_datetime to csv
         executor = futures.ProcessPoolExecutor(max_workers=N_WORKERS)
         future_submission = {
             executor.submit(
