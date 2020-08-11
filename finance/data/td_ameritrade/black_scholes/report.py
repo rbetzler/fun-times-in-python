@@ -39,7 +39,7 @@ class BlackScholes(reporter.Reporter):
                 , strike
                 , days_to_expiration
                 , last
-                , (bid + ask) / 2 as bid_ask
+                , ask
                 , volatility
                 , expiration_date_from_epoch
               from td.options
@@ -55,7 +55,7 @@ class BlackScholes(reporter.Reporter):
                 , o.strike
                 , o.days_to_expiration as days_to_maturity
                 , o.last
-                , o.bid_ask
+                , o.ask
                 , o.volatility
                 , o.expiration_date_from_epoch
               from stocks as s
@@ -77,7 +77,7 @@ class BlackScholes(reporter.Reporter):
     @staticmethod
     def executor_helper(
             symbol: str,
-            bid_ask: float,
+            ask: float,
             close: float,
             strike: float,
             risk_free_rate: float,
@@ -85,13 +85,14 @@ class BlackScholes(reporter.Reporter):
             put_call: str,
     ) -> tuple:
         volatility = options_utils.BlackScholes(
-            current_option_price=bid_ask,
+            current_option_price=ask,
             stock_price=close,
             strike=strike,
             risk_free_rate=risk_free_rate,
             days_to_maturity=days_to_maturity,
             is_call=put_call,
         ).implied_volatility
+        volatility = max(round(volatility, 6), 0)
         return symbol, volatility, strike, days_to_maturity, put_call
 
     def process_df(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -103,7 +104,7 @@ class BlackScholes(reporter.Reporter):
             executor.submit(
                 self.executor_helper,
                 row.symbol,
-                row.bid_ask,
+                row.ask,
                 row.close,
                 row.strike,
                 RISK_FREE_RATE,
