@@ -1,8 +1,7 @@
+import datetime
 import pandas as pd
 
 from concurrent import futures
-from datetime import datetime
-
 from finance.data import reporter
 from finance.science.utilities import options_utils
 
@@ -91,12 +90,12 @@ class BlackScholes(reporter.Reporter):
             strike=strike,
             risk_free_rate=risk_free_rate,
             days_to_maturity=days_to_maturity,
-            is_call=put_call == 'CALL',
+            is_call=put_call,
         ).implied_volatility
         return symbol, volatility, strike, days_to_maturity, put_call
 
     def process_df(self, df: pd.DataFrame) -> pd.DataFrame:
-        print(f'Starting implied vol calcs {datetime.utcnow()}')
+        print(f'Starting implied vol calcs {datetime.datetime.utcnow()}')
 
         # TODO: Pass thru market_datetime to csv
         executor = futures.ProcessPoolExecutor(max_workers=N_WORKERS)
@@ -117,7 +116,7 @@ class BlackScholes(reporter.Reporter):
         for future in futures.as_completed(future_submission):
             results.append(future.result())
 
-        print(f'Finished implied vol calcs {datetime.utcnow()}')
+        print(f'Finished implied vol calcs {datetime.datetime.utcnow()}')
         vols = pd.DataFrame(results, columns=['symbol', 'implied_volatility', 'strike', 'days_to_maturity', 'put_call'])
         vols = vols.dropna()
 
