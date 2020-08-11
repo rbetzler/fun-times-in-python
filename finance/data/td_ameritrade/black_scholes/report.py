@@ -92,7 +92,6 @@ class BlackScholes(reporter.Reporter):
             days_to_maturity=days_to_maturity,
             is_call=put_call,
         ).implied_volatility
-        volatility = max(round(volatility, 6), 0)
         return symbol, volatility, strike, days_to_maturity, put_call
 
     def process_df(self, df: pd.DataFrame) -> pd.DataFrame:
