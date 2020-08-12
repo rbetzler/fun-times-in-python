@@ -63,7 +63,7 @@ class Options(reporter.Reporter):
             select *
               , option_bid_ask / option_strike as option_price_versus_strike
             from base
-            where option_strike > equity_high
+            where option_strike < equity_high
             order by
                 ticker
               , datetime
