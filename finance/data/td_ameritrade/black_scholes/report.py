@@ -18,12 +18,13 @@ class Greeks(NamedTuple):
     days_to_maturity: int
     put_call: bool
     implied_volatility: float
+    market_datetime: datetime.datetime
 
 
 class BlackScholes(reporter.Reporter):
 
     @property
-    def last_run_datetime(self) -> datetime.datetime:
+    def market_datetime(self) -> datetime.date:
         """Get the last black scholes run date and convert the timestamp type"""
         query = '''
             select date_trunc('day', max(file_datetime)) as last_run_date
@@ -37,14 +38,9 @@ class BlackScholes(reporter.Reporter):
             last_run_date = pd.Timestamp(raw_last_run_date).to_pydatetime()
         else:
             last_run_date = self._report_day
-        return last_run_date
 
-    @property
-    def report_day(self) -> str:
-        """Get the earlier of (a) the last black scholes run or (b) the report day specified"""
-        last_run_date = self.last_run_datetime
-        report_day = min(last_run_date, self._report_day).strftime('%Y%m%d')
-        return report_day
+        market_datetime = min(last_run_date, self._report_day).date()
+        return market_datetime
 
     @property
     def export_folder(self) -> str:
@@ -64,7 +60,7 @@ class BlackScholes(reporter.Reporter):
                 , symbol
                 , close
               from td.stocks
-              where market_datetime = '{self.report_day}'
+              where market_datetime = '{self.market_datetime}'
               )
             , options as (
               select
@@ -78,7 +74,7 @@ class BlackScholes(reporter.Reporter):
                 , volatility
                 , expiration_date_from_epoch
               from td.options
-              where file_datetime = '{self.report_day}'
+              where file_datetime = '{self.market_datetime}'
                 and days_to_expiration > 0
               )
             , final as (
@@ -118,6 +114,7 @@ class BlackScholes(reporter.Reporter):
             risk_free_rate: float,
             days_to_maturity: int,
             put_call: bool,
+            market_datetime: datetime.datetime,
     ) -> tuple:
         bs = options_utils.BlackScholes(
             current_option_price=ask,
@@ -133,6 +130,7 @@ class BlackScholes(reporter.Reporter):
             days_to_maturity=days_to_maturity,
             put_call=put_call,
             implied_volatility=bs.implied_volatility,
+            market_datetime=market_datetime,
         )
         return greek
 
@@ -151,6 +149,7 @@ class BlackScholes(reporter.Reporter):
                 RISK_FREE_RATE,
                 row.days_to_maturity,
                 row.put_call == 'CALL',
+                row.market_datetime,
             ): row for row in df.itertuples()
         }
 
