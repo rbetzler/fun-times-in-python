@@ -16,8 +16,20 @@ DENORMALIZED_PREDICTION = 'denormalized_prediction'
 class Dev(engine.Engine):
 
     @property
-    def archive_files(self) -> bool:
+    def is_prod(self) -> bool:
         return False
+
+    @property
+    def archive_files(self) -> bool:
+        return True
+
+    @property
+    def is_training_run(self) -> bool:
+        return True
+
+    @property
+    def model_id(self) -> str:
+        return 'v0'
 
     @property
     def query(self) -> str:
@@ -126,10 +138,6 @@ class Dev(engine.Engine):
             '''
         return query
 
-    def preprocess_data(self, df: pd.DataFrame) -> pd.DataFrame:
-        df = science_utils.encode_one_hot(df, [SYMBOL])
-        return df
-
     @property
     def target_column(self) -> str:
         return NORMALIZED_OPEN
@@ -147,13 +155,9 @@ class Dev(engine.Engine):
         ]
         return cols
 
-    @property
-    def is_training_run(self) -> bool:
-        return True
-
-    @property
-    def trained_model_filepath(self) -> str:
-        return '/usr/src/app/audit/science/dev/models/v0'
+    def preprocess_data(self, df: pd.DataFrame) -> pd.DataFrame:
+        df = science_utils.encode_one_hot(df, [SYMBOL])
+        return df
 
     def run_model(
             self,
@@ -181,13 +185,12 @@ class Dev(engine.Engine):
         prediction = model.prediction_df
         return prediction
 
-    def post_process_data(
+    def postprocess_data(
             self,
             input: pd.DataFrame,
             output: pd.DataFrame,
     ) -> pd.DataFrame:
         df = input[self.columns_to_ignore].join(output)
-
         df[DENORMALIZED_PREDICTION] = df[PREDICTION] * (df[OPEN_MAX] - df[OPEN_MIN]) + df[OPEN_MIN]
         return df
 

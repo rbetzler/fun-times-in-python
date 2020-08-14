@@ -12,12 +12,6 @@ class Engine(abc.ABC):
             run_datetime=datetime.datetime.utcnow().replace(day=13),
     ):
         self.run_datetime = run_datetime
-        self.run_datetime_str = run_datetime.strftime('%Y%m%d%H%M%S')
-
-    @property
-    def archive_files(self) -> bool:
-        """Whether to save output files"""
-        return False
 
     @property
     def is_prod(self) -> bool:
@@ -25,15 +19,41 @@ class Engine(abc.ABC):
         return False
 
     @property
+    def archive_files(self) -> bool:
+        """Whether to save output files"""
+        return False
+
+    @property
+    def is_training_run(self) -> bool:
+        """Whether the model will be trained or not"""
+        return False
+
+    @property
+    def location(self) -> str:
+        """String representation of whether the model will be trained or not"""
+        return 'prod' if self.is_prod else 'dev'
+
+    @property
+    @abc.abstractmethod
+    def model_id(self) -> str:
+        """Model id for filename(s)"""
+        pass
+
+    @property
+    def filename(self) -> str:
+        """Filename for archiving results"""
+        return f"{self.model_id}_{self.run_datetime.strftime('%Y%m%d%H%M%S')}"
+
+    @property
+    def trained_model_filepath(self) -> str:
+        """Filepath from where to load and to where to save a trained model"""
+        return f'/usr/src/app/audit/science/{self.location}/models/{self.model_id}'
+
+    @property
     @abc.abstractmethod
     def query(self) -> str:
         """Query to retrieve raw data"""
         pass
-
-    @abc.abstractmethod
-    def preprocess_data(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Process data pre-model run"""
-        return df
 
     @property
     @abc.abstractmethod
@@ -47,17 +67,10 @@ class Engine(abc.ABC):
         """Columns to ignore when running the model"""
         pass
 
-    @property
     @abc.abstractmethod
-    def is_training_run(self) -> bool:
-        """Whether or not the model will be trained"""
-        pass
-
-    @property
-    @abc.abstractmethod
-    def trained_model_filepath(self) -> str:
-        """Filpath from where to load and to where to save a trained model"""
-        pass
+    def preprocess_data(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Process data pre-model run"""
+        return df
 
     @abc.abstractmethod
     def run_model(
@@ -68,7 +81,7 @@ class Engine(abc.ABC):
         return df
 
     @abc.abstractmethod
-    def post_process_data(
+    def postprocess_data(
             self,
             input: pd.DataFrame,
             output: pd.DataFrame,
@@ -77,9 +90,7 @@ class Engine(abc.ABC):
         return output
 
     def execute(self):
-        location = 'prod' if self.is_prod else 'dev'
-        print(f'Running in {location} {datetime.datetime.utcnow()}')
-
+        print(f'Running in {self.location} {datetime.datetime.utcnow()}')
         print(f'Getting raw data {datetime.datetime.utcnow()}')
         df = utils.query_db(query=self.query)
 
@@ -89,20 +100,20 @@ class Engine(abc.ABC):
         print(f'Running model {datetime.datetime.utcnow()}')
         output = self.run_model(input)
         if self.archive_files:
-            print(f'Saving model predictions to {location} {datetime.datetime.utcnow()}')
+            print(f'Saving model predictions to {self.location} {datetime.datetime.utcnow()}')
             modeling_utils.save_file(
                 df=output,
                 subfolder='predictions',
-                filename=self.run_datetime_str,
+                filename=self.filename,
                 is_prod=self.is_prod,
             )
 
-        trades = self.post_process_data(input=input, output=output)
+        trades = self.postprocess_data(input=input, output=output)
         if self.archive_files:
-            print(f'Saving trades to {location} {datetime.datetime.utcnow()}')
+            print(f'Saving trades to {self.location} {datetime.datetime.utcnow()}')
             modeling_utils.save_file(
                 df=trades,
                 subfolder='trades',
-                filename=self.run_datetime_str,
+                filename=self.filename,
                 is_prod=self.is_prod,
             )
