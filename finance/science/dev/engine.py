@@ -121,6 +121,7 @@ class Dev(engine.Engine):
                     , (open_29 - open_min) / (open_max - open_min) as open_29
                     , (open_30 - open_min) / (open_max - open_min) as open_30
             from summarized
+            where target_max_open is not null
             order by market_datetime, symbol
             '''
         return query
@@ -148,7 +149,7 @@ class Dev(engine.Engine):
 
     @property
     def is_training_run(self) -> bool:
-        return False
+        return True
 
     @property
     def trained_model_filepath(self) -> str:
