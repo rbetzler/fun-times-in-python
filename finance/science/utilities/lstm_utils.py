@@ -24,7 +24,7 @@ class TorchLSTM(nn.Module):
             input_shape=None,
             batch_size=None,
             bias: bool = True,
-            dropout: int = 0,
+            dropout: float = 0,
             seed: int = 3,
             deterministic: bool = True,
             benchmark: bool = False,
