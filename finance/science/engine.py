@@ -9,7 +9,7 @@ from finance.science.utilities import modeling_utils
 class Engine(abc.ABC):
     def __init__(
             self,
-            run_datetime=datetime.datetime.utcnow(),
+            run_datetime=datetime.datetime.utcnow().replace(day=13),
     ):
         self.run_datetime = run_datetime
         self.run_datetime_str = run_datetime.strftime('%Y%m%d%H%M%S')
@@ -81,7 +81,7 @@ class Engine(abc.ABC):
         print(f'Running in {location} {datetime.datetime.utcnow()}')
 
         print(f'Getting raw data {datetime.datetime.utcnow()}')
-        df = utils.query_db(self.query)
+        df = utils.query_db(query=self.query)
 
         print(f'Processing raw data {datetime.datetime.utcnow()}')
         input = self.preprocess_data(df)

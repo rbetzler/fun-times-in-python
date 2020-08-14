@@ -12,8 +12,6 @@ class TorchLSTM(nn.Module):
             self,
             x: pd.DataFrame = None,
             y: pd.DataFrame = None,
-            x_train: pd.DataFrame = None,
-            y_train: pd.DataFrame = None,
             n_layers=2,
             hidden_shape=100,
             output_shape=1,
@@ -21,7 +19,6 @@ class TorchLSTM(nn.Module):
             n_epochs: int = 100,
             learning_rate: float = .0001,
             device: str = 'cuda',
-            input_shape=None,
             batch_size=None,
             bias: bool = True,
             dropout: float = 0,
@@ -48,23 +45,11 @@ class TorchLSTM(nn.Module):
         self.device = device
 
         # Data dimensions
-        self.input_shape = input_shape or x_train.shape[1]
+        self.input_shape = x.shape[1]
         self.batch_size = batch_size or len(x)
 
-        if isinstance(x_train, pd.DataFrame):
-            train_sequence_length = int(len(x_train) / self.batch_size / self.n_training_batches)
-            sequence_length = int(len(x) / self.batch_size)
-        else:
-            train_sequence_length = 1
-            sequence_length = 1
-
-        self.train_input = (
-            train_sequence_length,
-            self.batch_size,
-            self.input_shape
-        )
         self.input = (
-            sequence_length,
+            int(len(x) / self.batch_size / self.n_training_batches),
             self.batch_size,
             self.input_shape
         )
@@ -72,8 +57,6 @@ class TorchLSTM(nn.Module):
         # Data
         self.x = x
         self.y = y
-        self.x_train = x_train
-        self.y_train = y_train
 
         # Network
         self.lstm = nn.LSTM(
@@ -97,8 +80,8 @@ class TorchLSTM(nn.Module):
         self.linear.reset_parameters()
 
     def training_data(self):
-        x = np.array_split(self.x_train, self.n_training_batches)
-        y = np.array_split(self.y_train, self.n_training_batches)
+        x = np.array_split(self.x, self.n_training_batches)
+        y = np.array_split(self.y, self.n_training_batches)
 
         data = []
         for n in range(0, self.n_training_batches):
@@ -141,7 +124,7 @@ class TorchLSTM(nn.Module):
         batch = 0
         for data in self.training_data():
             batch += 1
-            x = torch.tensor(data[0].values).to(self.device).float().detach().requires_grad_(True).view(self.train_input)
+            x = torch.tensor(data[0].values).to(self.device).float().detach().requires_grad_(True).view(self.input)
             y = torch.tensor(data[1].values).to(self.device).float()
 
             for epoch in range(self.n_epochs):

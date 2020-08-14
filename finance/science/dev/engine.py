@@ -1,4 +1,3 @@
-import datetime
 import pandas as pd
 import torch
 
@@ -6,12 +5,12 @@ from finance.science import engine
 from finance.science.utilities import lstm_utils, science_utils
 
 SYMBOL = 'symbol'
-OPEN = 'OPEN'
-OPEN_MAX = 'OPEN_MAX'
-OPEN_MIN = 'OPEN_MIN'
+OPEN = 'open'
+OPEN_MAX = 'open_max'
+OPEN_MIN = 'open_min'
 PREDICTION = 'prediction'
 NORMALIZED_OPEN = 'normalized_open'
-DENORMALIZED_PREDICTION = 'DENORMALIZED_PREDICTION'
+DENORMALIZED_PREDICTION = 'denormalized_prediction'
 
 
 class Dev(engine.Engine):
@@ -74,7 +73,7 @@ class Dev(engine.Engine):
                 from td.stocks as s
                 inner join tickers as t
                     on t.ticker = s.symbol
-                where s.market_datetime = '{self.run_datetime.date()}'
+                where s.market_datetime between '{self.run_datetime.replace(month=7).date()}' and '{self.run_datetime.date()}'
                 )
             , summarized as (
                 select *
@@ -149,7 +148,7 @@ class Dev(engine.Engine):
 
     @property
     def is_training_run(self) -> bool:
-        return True
+        return False
 
     @property
     def trained_model_filepath(self) -> str:
@@ -190,3 +189,7 @@ class Dev(engine.Engine):
 
         df[DENORMALIZED_PREDICTION] = df[PREDICTION] * (df[OPEN_MAX] - df[OPEN_MIN]) + df[OPEN_MIN]
         return df
+
+
+if __name__ == '__main__':
+    Dev().execute()
