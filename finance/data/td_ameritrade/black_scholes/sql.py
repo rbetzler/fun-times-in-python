@@ -19,10 +19,11 @@ class BlackScholesSQLRunner(sql.SQLRunner):
                 strike numeric(20,6),
                 days_to_maturity numeric(20,6),
                 put_call text,
+                market_datetime timestamp without time zone,
                 file_datetime timestamp without time zone,
                 ingest_datetime timestamp without time zone
             )
-                partition by range (file_datetime);
+                partition by range (market_datetime);
 
             create table if not exists td.black_scholes_20200407 partition of td.black_scholes for values from ('2020-04-07') to ('2020-04-14');
             create table if not exists td.black_scholes_20200414 partition of td.black_scholes for values from ('2020-04-14') to ('2020-04-21');
@@ -65,7 +66,7 @@ class BlackScholesSQLRunner(sql.SQLRunner):
             create table if not exists td.black_scholes_20201229 partition of td.black_scholes for values from ('2020-12-29') to ('2021-01-05');
 
             create index if not exists black_scholes_symbol_idx on td.black_scholes (symbol);
-            create index if not exists black_scholes_file_datetime_idx on td.black_scholes (file_datetime);
+            create index if not exists black_scholes_file_datetime_idx on td.black_scholes (market_datetime);
             '''
         return ddl
 

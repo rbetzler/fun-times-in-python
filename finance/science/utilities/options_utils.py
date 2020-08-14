@@ -137,6 +137,7 @@ class BlackScholes:
                 rtol=1e-15,
                 maxiter=1000,
             )
+            implied_volatility = max(round(implied_volatility, 6), 0)
         except ValueError as e:
             print(f'Filling null to workaround {e}')
             implied_volatility = None

@@ -1,8 +1,10 @@
+import datetime
 import pandas as pd
 
 from concurrent import futures
-from datetime import datetime
+from typing import NamedTuple
 
+from finance.utilities import utils
 from finance.data import reporter
 from finance.science.utilities import options_utils
 
@@ -10,7 +12,35 @@ N_WORKERS = 15
 RISK_FREE_RATE = .001
 
 
+class Greeks(NamedTuple):
+    symbol: str
+    strike: float
+    days_to_maturity: int
+    put_call: bool
+    implied_volatility: float
+    market_datetime: datetime.datetime
+
+
 class BlackScholes(reporter.Reporter):
+
+    @property
+    def market_datetime(self) -> datetime.date:
+        """Get the last black scholes run date and convert the timestamp type"""
+        query = '''
+            select date_trunc('day', max(file_datetime)) as last_run_date
+            from td.black_scholes;
+            '''
+        df = utils.query_db(query=query)
+
+        # Convert np datetime to pandas datetime to python datetime
+        raw_last_run_date = df['last_run_date'].values[0]
+        if raw_last_run_date:
+            last_run_date = pd.Timestamp(raw_last_run_date).to_pydatetime()
+        else:
+            last_run_date = self._report_day
+
+        market_datetime = min(last_run_date, self._report_day).date()
+        return market_datetime
 
     @property
     def export_folder(self) -> str:
@@ -30,7 +60,7 @@ class BlackScholes(reporter.Reporter):
                 , symbol
                 , close
               from td.stocks
-              where market_datetime = '{self._report_day.strftime('%Y%m%d')}'
+              where market_datetime = '{self.market_datetime}'
               )
             , options as (
               select
@@ -40,11 +70,11 @@ class BlackScholes(reporter.Reporter):
                 , strike
                 , days_to_expiration
                 , last
-                , (bid + ask) / 2 as bid_ask
+                , ask
                 , volatility
                 , expiration_date_from_epoch
               from td.options
-              where file_datetime = '{self._report_day.strftime('%Y%m%d')}'
+              where file_datetime = '{self.market_datetime}'
                 and days_to_expiration > 0
               )
             , final as (
@@ -56,7 +86,7 @@ class BlackScholes(reporter.Reporter):
                 , o.strike
                 , o.days_to_expiration as days_to_maturity
                 , o.last
-                , o.bid_ask
+                , o.ask
                 , o.volatility
                 , o.expiration_date_from_epoch
               from stocks as s
@@ -71,32 +101,41 @@ class BlackScholes(reporter.Reporter):
                 , o.days_to_expiration
               )
             select *
-            from final
+            from final;
             '''
         return query
 
     @staticmethod
     def executor_helper(
             symbol: str,
-            bid_ask: float,
+            ask: float,
             close: float,
             strike: float,
             risk_free_rate: float,
-            days_to_maturity: float,
-            put_call: str,
+            days_to_maturity: int,
+            put_call: bool,
+            market_datetime: datetime.datetime,
     ) -> tuple:
-        volatility = options_utils.BlackScholes(
-            current_option_price=bid_ask,
+        bs = options_utils.BlackScholes(
+            current_option_price=ask,
             stock_price=close,
             strike=strike,
             risk_free_rate=risk_free_rate,
             days_to_maturity=days_to_maturity,
-            is_call=put_call == 'CALL',
-        ).implied_volatility
-        return symbol, volatility, strike, days_to_maturity, put_call
+            is_call=put_call,
+        )
+        greek = Greeks(
+            symbol=symbol,
+            strike=strike,
+            days_to_maturity=days_to_maturity,
+            put_call=put_call,
+            implied_volatility=bs.implied_volatility,
+            market_datetime=market_datetime,
+        )
+        return greek
 
     def process_df(self, df: pd.DataFrame) -> pd.DataFrame:
-        print(f'Starting implied vol calcs {datetime.utcnow()}')
+        print(f'Starting implied vol calcs {datetime.datetime.utcnow()}')
 
         # TODO: Pass thru market_datetime to csv
         executor = futures.ProcessPoolExecutor(max_workers=N_WORKERS)
@@ -104,12 +143,13 @@ class BlackScholes(reporter.Reporter):
             executor.submit(
                 self.executor_helper,
                 row.symbol,
-                row.bid_ask,
+                row.ask,
                 row.close,
                 row.strike,
                 RISK_FREE_RATE,
                 row.days_to_maturity,
                 row.put_call == 'CALL',
+                row.market_datetime,
             ): row for row in df.itertuples()
         }
 
@@ -117,8 +157,8 @@ class BlackScholes(reporter.Reporter):
         for future in futures.as_completed(future_submission):
             results.append(future.result())
 
-        print(f'Finished implied vol calcs {datetime.utcnow()}')
-        vols = pd.DataFrame(results, columns=['symbol', 'implied_volatility', 'strike', 'days_to_maturity', 'put_call'])
+        print(f'Finished implied vol calcs {datetime.datetime.utcnow()}')
+        vols = pd.DataFrame(results)
         vols = vols.dropna()
 
         return vols

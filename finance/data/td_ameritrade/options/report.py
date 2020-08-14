@@ -36,7 +36,7 @@ class Options(reporter.Reporter):
               from td.options
               where file_datetime >= (select max(file_datetime)::date from td.options)
                 and put_call = 'PUT'
-                and open_interest > 5
+                and open_interest > 1
                 and days_to_expiration < 60
               )
             , base as (
@@ -63,6 +63,7 @@ class Options(reporter.Reporter):
             select *
               , option_bid_ask / option_strike as option_price_versus_strike
             from base
+            where option_strike < equity_high
             order by
                 ticker
               , datetime

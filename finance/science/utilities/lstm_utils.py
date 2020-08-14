@@ -8,68 +8,69 @@ from torch import nn, optim
 
 
 class TorchLSTM(nn.Module):
-    def __init__(self,
-                 train_x,
-                 train_y,
-                 test_x,
-                 test_y,
-                 n_layers=2,
-                 bias=True,
-                 dropout=0,
-                 hidden_shape=100,
-                 output_shape=1,
-                 batch_size=None,
-                 n_training_batches=1,
-                 n_epochs=100,
-                 learning_rate=.0001,
-                 device='cuda',
-                 seed=3,
-                 deterministic=True,
-                 benchmark=False
-                ):
+    def __init__(
+            self,
+            x: pd.DataFrame = None,
+            y: pd.DataFrame = None,
+            n_layers=2,
+            hidden_shape=100,
+            output_shape=1,
+            n_training_batches=1,
+            n_epochs: int = 100,
+            learning_rate: float = .0001,
+            device: str = 'cuda',
+            batch_size=None,
+            bias: bool = True,
+            dropout: float = 0,
+            seed: int = 3,
+            deterministic: bool = True,
+            benchmark: bool = False,
+    ):
+
         super(TorchLSTM, self).__init__()
+
         torch.manual_seed(seed)
         torch.backends.cudnn.deterministic = deterministic
         torch.backends.cudnn.benchmark = benchmark
 
         # Network params
         self.n_layers = n_layers
-        self.input_shape = train_x.shape[1]
         self.hidden_shape = hidden_shape
         self.output_shape = output_shape
-        self.batch_size = batch_size if batch_size else len(test_x)
         self.n_training_batches = n_training_batches
-        self.train_input = (
-            int(len(train_x)/self.batch_size/self.n_training_batches),
-            self.batch_size,
-            self.input_shape
-        )
-        self.test_input = (
-            int(len(test_x)/self.batch_size),
-            self.batch_size,
-            self.input_shape
-        )
 
         # Learning params
         self.n_epochs = n_epochs
         self.learning_rate = learning_rate
         self.device = device
 
+        # Data dimensions
+        self.input_shape = x.shape[1]
+        self.batch_size = batch_size or len(x)
+
+        self.input = (
+            int(len(x) / self.batch_size / self.n_training_batches),
+            self.batch_size,
+            self.input_shape
+        )
+
         # Data
-        self.train_x = train_x
-        self.train_y = train_y
-        self.test_x = test_x
-        self.test_y = test_y
+        self.x = x
+        self.y = y
 
         # Network
-        self.lstm = nn.LSTM(input_size=self.input_shape,
-                            hidden_size=self.hidden_shape,
-                            num_layers=n_layers,
-                            bias=bias,
-                            dropout=dropout).to(self.device)
+        self.lstm = nn.LSTM(
+            input_size=self.input_shape,
+            hidden_size=self.hidden_shape,
+            num_layers=self.n_layers,
+            bias=bias,
+            dropout=dropout,
+        ).to(self.device)
+
         self.relu = nn.ReLU()
         self.linear = nn.Linear(self.hidden_shape, self.output_shape).to(self.device)
 
+        # Parallelization
         self.lstm = nn.DataParallel(self.lstm)
         self.relu = nn.DataParallel(self.relu)
         self.linear = nn.DataParallel(self.linear)
@@ -79,8 +80,8 @@ class TorchLSTM(nn.Module):
         self.linear.reset_parameters()
 
     def training_data(self):
-        x = np.array_split(self.train_x, self.n_training_batches)
-        y = np.array_split(self.train_y, self.n_training_batches)
+        x = np.array_split(self.x, self.n_training_batches)
+        y = np.array_split(self.y, self.n_training_batches)
 
         data = []
         for n in range(0, self.n_training_batches):
@@ -123,7 +124,7 @@ class TorchLSTM(nn.Module):
         batch = 0
         for data in self.training_data():
             batch += 1
-            x = torch.tensor(data[0].values).to(self.device).float().detach().requires_grad_(True).view(self.train_input)
+            x = torch.tensor(data[0].values).to(self.device).float().detach().requires_grad_(True).view(self.input)
             y = torch.tensor(data[1].values).to(self.device).float()
 
             for epoch in range(self.n_epochs):
@@ -146,13 +147,13 @@ class TorchLSTM(nn.Module):
 
     def predict(self):
         self.eval()
-        x = torch.tensor(self.test_x.values).to(self.device).float().detach().view(self.test_input)
+        x = torch.tensor(self.x.values).to(self.device).float().detach().view(self.input)
         prediction = self.forward(x)
         return prediction
 
     @property
     def prediction_df(self):
-        df = self.test_x.copy()
+        df = self.x.copy()
         df['prediction'] = self.predict().view(-1).cpu().detach().numpy()
         return df
 
