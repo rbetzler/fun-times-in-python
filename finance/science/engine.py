@@ -10,23 +10,29 @@ class Engine(abc.ABC):
     def __init__(
             self,
             run_datetime=datetime.datetime.utcnow().replace(day=13),
+            is_prod: bool = False,
+            archive_files: bool = False,
+            is_training_run: bool = False,
     ):
         self.run_datetime = run_datetime
+        self._is_prod = is_prod
+        self._archive_files = archive_files
+        self._is_training_run = is_training_run
 
     @property
     def is_prod(self) -> bool:
         """Whether the model is production or not"""
-        return False
+        return self._is_prod
 
     @property
     def archive_files(self) -> bool:
         """Whether to save output files"""
-        return False
+        return self._archive_files
 
     @property
     def is_training_run(self) -> bool:
         """Whether the model will be trained or not"""
-        return False
+        return self._is_training_run
 
     @property
     def location(self) -> str:
@@ -90,7 +96,14 @@ class Engine(abc.ABC):
         return output
 
     def execute(self):
-        print(f'Running in {self.location} {datetime.datetime.utcnow()}')
+        print(f'''
+        Timestamp: {datetime.datetime.utcnow()}
+        Model ID: {self.model_id}
+        Location: {self.location}
+        Training: {self.is_training_run}
+        Archive: {self.archive_files}
+        ''')
+
         print(f'Getting raw data {datetime.datetime.utcnow()}')
         df = utils.query_db(query=self.query)
 

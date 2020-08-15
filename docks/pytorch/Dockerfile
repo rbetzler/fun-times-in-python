@@ -86,6 +86,8 @@ RUN conda install graphviz
 # Set python path
 ENV PYTHONPATH=$PYTHONPATH:/usr/src/app
 
+ENV PYTHONDONTWRITEBYTECODE='rick_disabled_this'
+
 # Set working directory to where i want
 WORKDIR /usr/src/app
 

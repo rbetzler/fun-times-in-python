@@ -16,18 +16,6 @@ DENORMALIZED_PREDICTION = 'denormalized_prediction'
 class Dev(engine.Engine):
 
     @property
-    def is_prod(self) -> bool:
-        return False
-
-    @property
-    def archive_files(self) -> bool:
-        return True
-
-    @property
-    def is_training_run(self) -> bool:
-        return True
-
-    @property
     def model_id(self) -> str:
         return 'v0'
 
