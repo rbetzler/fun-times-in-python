@@ -5,27 +5,15 @@ from finance.science import engine
 from finance.science.utilities import lstm_utils, science_utils
 
 SYMBOL = 'symbol'
-OPEN = 'open'
-OPEN_MAX = 'open_max'
-OPEN_MIN = 'open_min'
+TARGET = 'target'
+DENORMALIZED_TARGET = 'denormalized_target'
 PREDICTION = 'prediction'
-NORMALIZED_OPEN = 'normalized_open'
 DENORMALIZED_PREDICTION = 'denormalized_prediction'
+NORMALIZATION_MIN = 'normalization_min'
+NORMALIZATION_MAX = 'normalization_max'
 
 
 class Dev(engine.Engine):
-
-    @property
-    def is_prod(self) -> bool:
-        return False
-
-    @property
-    def archive_files(self) -> bool:
-        return True
-
-    @property
-    def is_training_run(self) -> bool:
-        return True
 
     @property
     def model_id(self) -> str:
@@ -50,17 +38,17 @@ class Dev(engine.Engine):
                 select
                       s.symbol
                     , s.market_datetime
-                    , max(s.open) over (partition by s.symbol order by s.market_datetime rows between 1 following and 31 following) as target_max_open
+                    , max(s.open) over (partition by s.symbol order by s.market_datetime rows between 1 following and 31 following) as target
                     , s.open
-                    , lag(s.open, 1) over (partition by s.symbol order by s.market_datetime) as open_1
-                    , lag(s.open, 2) over (partition by s.symbol order by s.market_datetime) as open_2
-                    , lag(s.open, 3) over (partition by s.symbol order by s.market_datetime) as open_3
-                    , lag(s.open, 4) over (partition by s.symbol order by s.market_datetime) as open_4
-                    , lag(s.open, 5) over (partition by s.symbol order by s.market_datetime) as open_5
-                    , lag(s.open, 6) over (partition by s.symbol order by s.market_datetime) as open_6
-                    , lag(s.open, 7) over (partition by s.symbol order by s.market_datetime) as open_7
-                    , lag(s.open, 8) over (partition by s.symbol order by s.market_datetime) as open_8
-                    , lag(s.open, 9) over (partition by s.symbol order by s.market_datetime) as open_9
+                    , lag(s.open,  1) over (partition by s.symbol order by s.market_datetime) as open_1
+                    , lag(s.open,  2) over (partition by s.symbol order by s.market_datetime) as open_2
+                    , lag(s.open,  3) over (partition by s.symbol order by s.market_datetime) as open_3
+                    , lag(s.open,  4) over (partition by s.symbol order by s.market_datetime) as open_4
+                    , lag(s.open,  5) over (partition by s.symbol order by s.market_datetime) as open_5
+                    , lag(s.open,  6) over (partition by s.symbol order by s.market_datetime) as open_6
+                    , lag(s.open,  7) over (partition by s.symbol order by s.market_datetime) as open_7
+                    , lag(s.open,  8) over (partition by s.symbol order by s.market_datetime) as open_8
+                    , lag(s.open,  9) over (partition by s.symbol order by s.market_datetime) as open_9
                     , lag(s.open, 10) over (partition by s.symbol order by s.market_datetime) as open_10
                     , lag(s.open, 11) over (partition by s.symbol order by s.market_datetime) as open_11
                     , lag(s.open, 12) over (partition by s.symbol order by s.market_datetime) as open_12
@@ -85,74 +73,70 @@ class Dev(engine.Engine):
                 from td.stocks as s
                 inner join tickers as t
                     on t.ticker = s.symbol
-                where s.market_datetime between '{self.run_datetime.replace(month=7).date()}' and '{self.run_datetime.date()}'
+                where s.market_datetime between '{self.start_date}' and '{self.end_date}'
                 )
             , summarized as (
                 select *
-                    , least(open_1, open_2, open_3, open_4, open_5, open_6, open_7, open_8, open_9, open_10, open_11, open_12, open_13, open_14, open_15, open_16, open_17, open_18, open_19, open_20, open_21, open_22, open_23, open_24, open_25, open_26, open_27, open_28, open_29, open_30) as open_min
-                    , greatest(open_1, open_2, open_3, open_4, open_5, open_6, open_7, open_8, open_9, open_10, open_11, open_12, open_13, open_14, open_15, open_16, open_17, open_18, open_19, open_20, open_21, open_22, open_23, open_24, open_25, open_26, open_27, open_28, open_29, open_30) as open_max
+                    , least(open_1, open_2, open_3, open_4, open_5, open_6, open_7, open_8, open_9, open_10, open_11, open_12, open_13, open_14, open_15, open_16, open_17, open_18, open_19, open_20, open_21, open_22, open_23, open_24, open_25, open_26, open_27, open_28, open_29, open_30) as normalization_min
+                    , greatest(open_1, open_2, open_3, open_4, open_5, open_6, open_7, open_8, open_9, open_10, open_11, open_12, open_13, open_14, open_15, open_16, open_17, open_18, open_19, open_20, open_21, open_22, open_23, open_24, open_25, open_26, open_27, open_28, open_29, open_30) as normalization_max
                 from lagged
-                where open_30 is not null
                 )
             select
                       symbol
                     , market_datetime
-                    , target_max_open
-                    , open
-                    , open_min
-                    , open_max
-                    , (target_max_open - open_min) / (open_max - open_min) as normalized_open
-                    , (open_1 - open_min) / (open_max - open_min) as open_1
-                    , (open_2 - open_min) / (open_max - open_min) as open_2
-                    , (open_3 - open_min) / (open_max - open_min) as open_3
-                    , (open_4 - open_min) / (open_max - open_min) as open_4
-                    , (open_5 - open_min) / (open_max - open_min) as open_5
-                    , (open_6 - open_min) / (open_max - open_min) as open_6
-                    , (open_7 - open_min) / (open_max - open_min) as open_7
-                    , (open_8 - open_min) / (open_max - open_min) as open_8
-                    , (open_9 - open_min) / (open_max - open_min) as open_9
-                    , (open_10 - open_min) / (open_max - open_min) as open_10
-                    , (open_11 - open_min) / (open_max - open_min) as open_11
-                    , (open_12 - open_min) / (open_max - open_min) as open_12
-                    , (open_13 - open_min) / (open_max - open_min) as open_13
-                    , (open_14 - open_min) / (open_max - open_min) as open_14
-                    , (open_15 - open_min) / (open_max - open_min) as open_15
-                    , (open_16 - open_min) / (open_max - open_min) as open_16
-                    , (open_17 - open_min) / (open_max - open_min) as open_17
-                    , (open_18 - open_min) / (open_max - open_min) as open_18
-                    , (open_19 - open_min) / (open_max - open_min) as open_19
-                    , (open_20 - open_min) / (open_max - open_min) as open_20
-                    , (open_21 - open_min) / (open_max - open_min) as open_21
-                    , (open_22 - open_min) / (open_max - open_min) as open_22
-                    , (open_23 - open_min) / (open_max - open_min) as open_23
-                    , (open_24 - open_min) / (open_max - open_min) as open_24
-                    , (open_25 - open_min) / (open_max - open_min) as open_25
-                    , (open_26 - open_min) / (open_max - open_min) as open_26
-                    , (open_27 - open_min) / (open_max - open_min) as open_27
-                    , (open_28 - open_min) / (open_max - open_min) as open_28
-                    , (open_29 - open_min) / (open_max - open_min) as open_29
-                    , (open_30 - open_min) / (open_max - open_min) as open_30
+                    , (target - normalization_min) / (normalization_max - normalization_min) as target
+                    , target as denormalized_target
+                    , normalization_min
+                    , normalization_max
+                    , ( open_1 - normalization_min) / (normalization_max - normalization_min) as open_1
+                    , ( open_2 - normalization_min) / (normalization_max - normalization_min) as open_2
+                    , ( open_3 - normalization_min) / (normalization_max - normalization_min) as open_3
+                    , ( open_4 - normalization_min) / (normalization_max - normalization_min) as open_4
+                    , ( open_5 - normalization_min) / (normalization_max - normalization_min) as open_5
+                    , ( open_6 - normalization_min) / (normalization_max - normalization_min) as open_6
+                    , ( open_7 - normalization_min) / (normalization_max - normalization_min) as open_7
+                    , ( open_8 - normalization_min) / (normalization_max - normalization_min) as open_8
+                    , ( open_9 - normalization_min) / (normalization_max - normalization_min) as open_9
+                    , (open_10 - normalization_min) / (normalization_max - normalization_min) as open_10
+                    , (open_11 - normalization_min) / (normalization_max - normalization_min) as open_11
+                    , (open_12 - normalization_min) / (normalization_max - normalization_min) as open_12
+                    , (open_13 - normalization_min) / (normalization_max - normalization_min) as open_13
+                    , (open_14 - normalization_min) / (normalization_max - normalization_min) as open_14
+                    , (open_15 - normalization_min) / (normalization_max - normalization_min) as open_15
+                    , (open_16 - normalization_min) / (normalization_max - normalization_min) as open_16
+                    , (open_17 - normalization_min) / (normalization_max - normalization_min) as open_17
+                    , (open_18 - normalization_min) / (normalization_max - normalization_min) as open_18
+                    , (open_19 - normalization_min) / (normalization_max - normalization_min) as open_19
+                    , (open_20 - normalization_min) / (normalization_max - normalization_min) as open_20
+                    , (open_21 - normalization_min) / (normalization_max - normalization_min) as open_21
+                    , (open_22 - normalization_min) / (normalization_max - normalization_min) as open_22
+                    , (open_23 - normalization_min) / (normalization_max - normalization_min) as open_23
+                    , (open_24 - normalization_min) / (normalization_max - normalization_min) as open_24
+                    , (open_25 - normalization_min) / (normalization_max - normalization_min) as open_25
+                    , (open_26 - normalization_min) / (normalization_max - normalization_min) as open_26
+                    , (open_27 - normalization_min) / (normalization_max - normalization_min) as open_27
+                    , (open_28 - normalization_min) / (normalization_max - normalization_min) as open_28
+                    , (open_29 - normalization_min) / (normalization_max - normalization_min) as open_29
+                    , (open_30 - normalization_min) / (normalization_max - normalization_min) as open_30
             from summarized
-            where target_max_open is not null
+            where target is not null and open_30 is not null
             order by market_datetime, symbol
             '''
         return query
 
     @property
     def target_column(self) -> str:
-        return NORMALIZED_OPEN
+        return TARGET
 
     @property
     def columns_to_ignore(self) -> list:
         cols = [
             'market_datetime',
-            'target_max_open',
             SYMBOL,
-            OPEN,
-            OPEN_MIN,
-            OPEN_MAX,
-            NORMALIZED_OPEN,
-        ]
+            DENORMALIZED_TARGET,
+            NORMALIZATION_MIN,
+            NORMALIZATION_MAX,
+        ] + [self.target_column]
         return cols
 
     def preprocess_data(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -183,6 +167,7 @@ class Dev(engine.Engine):
             model.load_state_dict(trained_model_params)
 
         prediction = model.prediction_df
+        prediction['model_id'] = self.model_id
         return prediction
 
     def postprocess_data(
@@ -191,7 +176,7 @@ class Dev(engine.Engine):
             output: pd.DataFrame,
     ) -> pd.DataFrame:
         df = input[self.columns_to_ignore].join(output)
-        df[DENORMALIZED_PREDICTION] = df[PREDICTION] * (df[OPEN_MAX] - df[OPEN_MIN]) + df[OPEN_MIN]
+        df[DENORMALIZED_PREDICTION] = df[PREDICTION] * (df[NORMALIZATION_MAX] - df[NORMALIZATION_MIN]) + df[NORMALIZATION_MIN]
         return df
 
 
