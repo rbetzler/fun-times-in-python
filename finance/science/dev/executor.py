@@ -1,11 +1,21 @@
 import argparse
-import engine
+from finance.science.dev import engine
 
 
 def main():
     """Argument parser from lstm engine"""
 
     parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        '--start_date',
+        help='Whether to save the files in prod.',
+    )
+
+    parser.add_argument(
+        '--n_days',
+        help='Whether to save the files in prod.',
+    )
 
     parser.add_argument(
         '--is_prod',
@@ -25,12 +35,12 @@ def main():
         help='Whether to train the lstm',
     )
 
+    # Only pass not none args
+    kwargs = {}
     args = parser.parse_args()
-    kwargs = {
-            'is_prod': args.is_prod,
-            'archive_files': args.archive_files,
-            'is_training_run': args.is_training_run,
-        }
+    for key, arg in args.__dict__.items():
+        if arg is not None:
+            kwargs.update({key: arg})
 
     engine.Dev(**kwargs).execute()
 
