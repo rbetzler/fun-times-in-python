@@ -1,3 +1,4 @@
+import datetime
 import pandas as pd
 import torch
 
@@ -160,8 +161,12 @@ class Dev(engine.Engine):
         )
 
         if self.is_training_run:
+            print(f'Fitting model: {datetime.datetime.utcnow()}')
             model.fit()
+
+            print(f'Saving model to {self.trained_model_filepath}: {datetime.datetime.utcnow()}')
             torch.save(model.state_dict(), self.trained_model_filepath)
+
         else:
             trained_model_params = torch.load(self.trained_model_filepath)
             model.load_state_dict(trained_model_params)
@@ -177,6 +182,12 @@ class Dev(engine.Engine):
     ) -> pd.DataFrame:
         df = input[self.columns_to_ignore].join(output)
         df[DENORMALIZED_PREDICTION] = df[PREDICTION] * (df[NORMALIZATION_MAX] - df[NORMALIZATION_MIN]) + df[NORMALIZATION_MIN]
+        return df
+
+    def optimize(
+            self,
+            df: pd.DataFrame,
+    ) -> pd.DataFrame:
         return df
 
 
