@@ -1,9 +1,8 @@
 import datetime
 import pandas as pd
-import torch
 
-from finance.science import engine
-from finance.science.utilities import lstm_utils, science_utils
+from finance.science import predictor
+from finance.science.utilities import science_utils
 
 SYMBOL = 'symbol'
 TARGET = 'target'
@@ -14,7 +13,7 @@ NORMALIZATION_MIN = 'normalization_min'
 NORMALIZATION_MAX = 'normalization_max'
 
 
-class Dev(engine.Engine):
+class Dev(predictor.Predictor):
 
     @property
     def model_id(self) -> str:
@@ -144,50 +143,14 @@ class Dev(engine.Engine):
         df = science_utils.encode_one_hot(df, [SYMBOL])
         return df
 
-    def run_model(
-            self,
-            df: pd.DataFrame,
-    ) -> pd.DataFrame:
-        model = lstm_utils.TorchLSTM(
-            x=df.drop(self.columns_to_ignore, axis=1),
-            y=df[self.target_column],
-            n_layers=2,
-            n_training_batches=1,
-            n_epochs=250,
-            hidden_shape=1000,
-            dropout=0.1,
-            learning_rate=.0001,
-            seed=44,
-        )
-
-        if self.is_training_run:
-            print(f'Fitting model: {datetime.datetime.utcnow()}')
-            model.fit()
-
-            print(f'Saving model to {self.trained_model_filepath}: {datetime.datetime.utcnow()}')
-            torch.save(model.state_dict(), self.trained_model_filepath)
-
-        else:
-            trained_model_params = torch.load(self.trained_model_filepath)
-            model.load_state_dict(trained_model_params)
-
-        prediction = model.prediction_df
-        prediction['model_id'] = self.model_id
-        return prediction
-
     def postprocess_data(
             self,
             input: pd.DataFrame,
             output: pd.DataFrame,
     ) -> pd.DataFrame:
+        output['model_id'] = self.model_id
         df = input[self.columns_to_ignore].join(output)
         df[DENORMALIZED_PREDICTION] = df[PREDICTION] * (df[NORMALIZATION_MAX] - df[NORMALIZATION_MIN]) + df[NORMALIZATION_MIN]
-        return df
-
-    def optimize(
-            self,
-            df: pd.DataFrame,
-    ) -> pd.DataFrame:
         return df
 
 

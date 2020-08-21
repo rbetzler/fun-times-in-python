@@ -1,5 +1,5 @@
 import argparse
-from finance.science.dev import engine
+from finance.science.dev import predictor
 
 
 def main():
@@ -42,7 +42,7 @@ def main():
         if arg is not None:
             kwargs.update({key: arg})
 
-    engine.Dev(**kwargs).execute()
+    predictor.Dev(**kwargs).execute()
 
 
 if __name__ == '__main__':
