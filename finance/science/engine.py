@@ -105,7 +105,7 @@ class Engine(abc.ABC):
             df: pd.DataFrame,
     ) -> pd.DataFrame:
         """Process data post-model run"""
-        return output
+        return df
 
     def execute(self):
         print(f'''
