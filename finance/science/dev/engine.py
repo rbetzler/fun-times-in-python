@@ -88,15 +88,15 @@ class Dev(engine.Engine):
                     , target as denormalized_target
                     , normalization_min
                     , normalization_max
-                    , ( open_1 - normalization_min) / (normalization_max - normalization_min) as open_1
-                    , ( open_2 - normalization_min) / (normalization_max - normalization_min) as open_2
-                    , ( open_3 - normalization_min) / (normalization_max - normalization_min) as open_3
-                    , ( open_4 - normalization_min) / (normalization_max - normalization_min) as open_4
-                    , ( open_5 - normalization_min) / (normalization_max - normalization_min) as open_5
-                    , ( open_6 - normalization_min) / (normalization_max - normalization_min) as open_6
-                    , ( open_7 - normalization_min) / (normalization_max - normalization_min) as open_7
-                    , ( open_8 - normalization_min) / (normalization_max - normalization_min) as open_8
-                    , ( open_9 - normalization_min) / (normalization_max - normalization_min) as open_9
+                    , (open_1  - normalization_min) / (normalization_max - normalization_min) as open_1
+                    , (open_2  - normalization_min) / (normalization_max - normalization_min) as open_2
+                    , (open_3  - normalization_min) / (normalization_max - normalization_min) as open_3
+                    , (open_4  - normalization_min) / (normalization_max - normalization_min) as open_4
+                    , (open_5  - normalization_min) / (normalization_max - normalization_min) as open_5
+                    , (open_6  - normalization_min) / (normalization_max - normalization_min) as open_6
+                    , (open_7  - normalization_min) / (normalization_max - normalization_min) as open_7
+                    , (open_8  - normalization_min) / (normalization_max - normalization_min) as open_8
+                    , (open_9  - normalization_min) / (normalization_max - normalization_min) as open_9
                     , (open_10 - normalization_min) / (normalization_max - normalization_min) as open_10
                     , (open_11 - normalization_min) / (normalization_max - normalization_min) as open_11
                     , (open_12 - normalization_min) / (normalization_max - normalization_min) as open_12
