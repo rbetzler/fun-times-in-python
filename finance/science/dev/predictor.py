@@ -143,6 +143,19 @@ class Dev(predictor.Predictor):
         df = science_utils.encode_one_hot(df, [SYMBOL])
         return df
 
+    @property
+    def model_args(self) -> dict:
+        kwargs = {
+            'n_layers': 2,
+            'n_training_batches': 1,
+            'n_epochs': 250,
+            'hidden_shape': 1000,
+            'dropout': 0.1,
+            'learning_rate': .0001,
+            'seed': 44,
+        }
+        return kwargs
+
     def postprocess_data(
             self,
             input: pd.DataFrame,
