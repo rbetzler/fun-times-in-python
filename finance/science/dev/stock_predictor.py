@@ -13,11 +13,12 @@ NORMALIZATION_MIN = 'normalization_min'
 NORMALIZATION_MAX = 'normalization_max'
 
 
-class Dev(predictor.Predictor):
+class StockPredictor(predictor.Predictor):
+    """Predict the high stocks prices over the next 30 days"""
 
     @property
     def model_id(self) -> str:
-        return 'v0'
+        return 's0'
 
     @property
     def query(self) -> str:
@@ -168,4 +169,4 @@ class Dev(predictor.Predictor):
 
 
 if __name__ == '__main__':
-    Dev().execute()
+    StockPredictor().execute()
