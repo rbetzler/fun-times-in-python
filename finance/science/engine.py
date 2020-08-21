@@ -99,6 +99,14 @@ class Engine(abc.ABC):
         """Process data post-model run"""
         return output
 
+    @abc.abstractmethod
+    def optimize(
+            self,
+            df: pd.DataFrame,
+    ) -> pd.DataFrame:
+        """Process data post-model run"""
+        return output
+
     def execute(self):
         print(f'''
         Timestamp: {datetime.datetime.utcnow()}
@@ -113,21 +121,25 @@ class Engine(abc.ABC):
         print(f'Getting raw data {datetime.datetime.utcnow()}')
         df = utils.query_db(query=self.query)
 
-        print(f'Processing raw data {datetime.datetime.utcnow()}')
+        print(f'Pre-processing raw data {datetime.datetime.utcnow()}')
         input = self.preprocess_data(df)
 
         print(f'Running model {datetime.datetime.utcnow()}')
         output = self.run_model(input)
+
+        print(f'Post-processing data {datetime.datetime.utcnow()}')
+        predictions = self.postprocess_data(input=input, output=output)
         if self.archive_files:
             print(f'Saving model predictions to {self.location} {datetime.datetime.utcnow()}')
             modeling_utils.save_file(
-                df=output,
+                df=predictions,
                 subfolder='predictions',
                 filename=self.filename,
                 is_prod=self.is_prod,
             )
 
-        trades = self.postprocess_data(input=input, output=output)
+        print(f'Determining trades {datetime.datetime.utcnow()}')
+        trades = self.optimize(df=predictions)
         if self.archive_files:
             print(f'Saving trades to {self.location} {datetime.datetime.utcnow()}')
             modeling_utils.save_file(
