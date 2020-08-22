@@ -77,37 +77,37 @@ class VolatilityPredictor(predictor.Predictor):
                 select
                     symbol
                   , market_datetime
-                  , abs(open_0  / mean) as abs_dev_0
-                  , abs(open_1  / mean) as abs_dev_1
-                  , abs(open_2  / mean) as abs_dev_2
-                  , abs(open_3  / mean) as abs_dev_3
-                  , abs(open_4  / mean) as abs_dev_4
-                  , abs(open_5  / mean) as abs_dev_5
-                  , abs(open_6  / mean) as abs_dev_6
-                  , abs(open_7  / mean) as abs_dev_7
-                  , abs(open_8  / mean) as abs_dev_8
-                  , abs(open_9  / mean) as abs_dev_9
-                  , abs(open_10 / mean) as abs_dev_10
-                  , abs(open_11 / mean) as abs_dev_11
-                  , abs(open_12 / mean) as abs_dev_12
-                  , abs(open_13 / mean) as abs_dev_13
-                  , abs(open_14 / mean) as abs_dev_14
-                  , abs(open_15 / mean) as abs_dev_15
-                  , abs(open_16 / mean) as abs_dev_16
-                  , abs(open_17 / mean) as abs_dev_17
-                  , abs(open_18 / mean) as abs_dev_18
-                  , abs(open_19 / mean) as abs_dev_19
-                  , abs(open_20 / mean) as abs_dev_20
-                  , abs(open_21 / mean) as abs_dev_21
-                  , abs(open_22 / mean) as abs_dev_22
-                  , abs(open_23 / mean) as abs_dev_23
-                  , abs(open_24 / mean) as abs_dev_24
-                  , abs(open_25 / mean) as abs_dev_25
-                  , abs(open_26 / mean) as abs_dev_26
-                  , abs(open_27 / mean) as abs_dev_27
-                  , abs(open_28 / mean) as abs_dev_28
-                  , abs(open_29 / mean) as abs_dev_29
-                  , abs(open_30 / mean) as abs_dev_30
+                  , abs(open_0  - mean) as abs_dev_0
+                  , abs(open_1  - mean) as abs_dev_1
+                  , abs(open_2  - mean) as abs_dev_2
+                  , abs(open_3  - mean) as abs_dev_3
+                  , abs(open_4  - mean) as abs_dev_4
+                  , abs(open_5  - mean) as abs_dev_5
+                  , abs(open_6  - mean) as abs_dev_6
+                  , abs(open_7  - mean) as abs_dev_7
+                  , abs(open_8  - mean) as abs_dev_8
+                  , abs(open_9  - mean) as abs_dev_9
+                  , abs(open_10 - mean) as abs_dev_10
+                  , abs(open_11 - mean) as abs_dev_11
+                  , abs(open_12 - mean) as abs_dev_12
+                  , abs(open_13 - mean) as abs_dev_13
+                  , abs(open_14 - mean) as abs_dev_14
+                  , abs(open_15 - mean) as abs_dev_15
+                  , abs(open_16 - mean) as abs_dev_16
+                  , abs(open_17 - mean) as abs_dev_17
+                  , abs(open_18 - mean) as abs_dev_18
+                  , abs(open_19 - mean) as abs_dev_19
+                  , abs(open_20 - mean) as abs_dev_20
+                  , abs(open_21 - mean) as abs_dev_21
+                  , abs(open_22 - mean) as abs_dev_22
+                  , abs(open_23 - mean) as abs_dev_23
+                  , abs(open_24 - mean) as abs_dev_24
+                  , abs(open_25 - mean) as abs_dev_25
+                  , abs(open_26 - mean) as abs_dev_26
+                  , abs(open_27 - mean) as abs_dev_27
+                  , abs(open_28 - mean) as abs_dev_28
+                  , abs(open_29 - mean) as abs_dev_29
+                  , abs(open_30 - mean) as abs_dev_30
                 from lagged_prices
                 )
             , deviations as (
@@ -202,7 +202,6 @@ class VolatilityPredictor(predictor.Predictor):
         cols = [
             'market_datetime',
             SYMBOL,
-            TARGET,
         ] + [self.target_column]
         return cols
 
