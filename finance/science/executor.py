@@ -1,11 +1,16 @@
 import argparse
-from finance.science.dev import engine
+from finance.science.dev import stock_predictor, volatility_predictor
 
 
 def main():
     """Argument parser from lstm engine"""
 
     parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        '--job',
+        help='Whether to save the files in prod.',
+    )
 
     parser.add_argument(
         '--start_date',
@@ -39,10 +44,14 @@ def main():
     kwargs = {}
     args = parser.parse_args()
     for key, arg in args.__dict__.items():
-        if arg is not None:
+        if arg is not None and key != 'job':
             kwargs.update({key: arg})
 
-    engine.Dev(**kwargs).execute()
+    if args.job == 'stock':
+        stock_predictor.StockPredictor(**kwargs).execute()
+
+    elif args.job == 'volatility':
+        volatility_predictor.VolatilityPredictor(**kwargs).execute()
 
 
 if __name__ == '__main__':

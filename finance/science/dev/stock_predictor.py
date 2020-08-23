@@ -1,8 +1,8 @@
+import datetime
 import pandas as pd
-import torch
 
-from finance.science import engine
-from finance.science.utilities import lstm_utils, science_utils
+from finance.science import predictor
+from finance.science.utilities import science_utils
 
 SYMBOL = 'symbol'
 TARGET = 'target'
@@ -13,11 +13,12 @@ NORMALIZATION_MIN = 'normalization_min'
 NORMALIZATION_MAX = 'normalization_max'
 
 
-class Dev(engine.Engine):
+class StockPredictor(predictor.Predictor):
+    """Predict the high stocks prices over the next 30 days"""
 
     @property
     def model_id(self) -> str:
-        return 'v0'
+        return 's0'
 
     @property
     def query(self) -> str:
@@ -88,15 +89,15 @@ class Dev(engine.Engine):
                     , target as denormalized_target
                     , normalization_min
                     , normalization_max
-                    , ( open_1 - normalization_min) / (normalization_max - normalization_min) as open_1
-                    , ( open_2 - normalization_min) / (normalization_max - normalization_min) as open_2
-                    , ( open_3 - normalization_min) / (normalization_max - normalization_min) as open_3
-                    , ( open_4 - normalization_min) / (normalization_max - normalization_min) as open_4
-                    , ( open_5 - normalization_min) / (normalization_max - normalization_min) as open_5
-                    , ( open_6 - normalization_min) / (normalization_max - normalization_min) as open_6
-                    , ( open_7 - normalization_min) / (normalization_max - normalization_min) as open_7
-                    , ( open_8 - normalization_min) / (normalization_max - normalization_min) as open_8
-                    , ( open_9 - normalization_min) / (normalization_max - normalization_min) as open_9
+                    , (open_1  - normalization_min) / (normalization_max - normalization_min) as open_1
+                    , (open_2  - normalization_min) / (normalization_max - normalization_min) as open_2
+                    , (open_3  - normalization_min) / (normalization_max - normalization_min) as open_3
+                    , (open_4  - normalization_min) / (normalization_max - normalization_min) as open_4
+                    , (open_5  - normalization_min) / (normalization_max - normalization_min) as open_5
+                    , (open_6  - normalization_min) / (normalization_max - normalization_min) as open_6
+                    , (open_7  - normalization_min) / (normalization_max - normalization_min) as open_7
+                    , (open_8  - normalization_min) / (normalization_max - normalization_min) as open_8
+                    , (open_9  - normalization_min) / (normalization_max - normalization_min) as open_9
                     , (open_10 - normalization_min) / (normalization_max - normalization_min) as open_10
                     , (open_11 - normalization_min) / (normalization_max - normalization_min) as open_11
                     , (open_12 - normalization_min) / (normalization_max - normalization_min) as open_12
@@ -143,42 +144,29 @@ class Dev(engine.Engine):
         df = science_utils.encode_one_hot(df, [SYMBOL])
         return df
 
-    def run_model(
-            self,
-            df: pd.DataFrame,
-    ) -> pd.DataFrame:
-        model = lstm_utils.TorchLSTM(
-            x=df.drop(self.columns_to_ignore, axis=1),
-            y=df[self.target_column],
-            n_layers=2,
-            n_training_batches=1,
-            n_epochs=250,
-            hidden_shape=1000,
-            dropout=0.1,
-            learning_rate=.0001,
-            seed=44,
-        )
-
-        if self.is_training_run:
-            model.fit()
-            torch.save(model.state_dict(), self.trained_model_filepath)
-        else:
-            trained_model_params = torch.load(self.trained_model_filepath)
-            model.load_state_dict(trained_model_params)
-
-        prediction = model.prediction_df
-        prediction['model_id'] = self.model_id
-        return prediction
+    @property
+    def model_args(self) -> dict:
+        kwargs = {
+            'n_layers': 2,
+            'n_training_batches': 1,
+            'n_epochs': 250,
+            'hidden_shape': 1000,
+            'dropout': 0.1,
+            'learning_rate': .0001,
+            'seed': 44,
+        }
+        return kwargs
 
     def postprocess_data(
             self,
             input: pd.DataFrame,
             output: pd.DataFrame,
     ) -> pd.DataFrame:
+        output['model_id'] = self.model_id
         df = input[self.columns_to_ignore].join(output)
         df[DENORMALIZED_PREDICTION] = df[PREDICTION] * (df[NORMALIZATION_MAX] - df[NORMALIZATION_MIN]) + df[NORMALIZATION_MIN]
         return df
 
 
 if __name__ == '__main__':
-    Dev().execute()
+    StockPredictor().execute()
