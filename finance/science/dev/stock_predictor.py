@@ -83,42 +83,42 @@ class StockPredictor(predictor.Predictor):
                 from lagged
                 )
             select
-                      symbol
-                    , market_datetime
-                    , (target - normalization_min) / (normalization_max - normalization_min) as target
-                    , target as denormalized_target
-                    , normalization_min
-                    , normalization_max
-                    , (open_1  - normalization_min) / (normalization_max - normalization_min) as open_1
-                    , (open_2  - normalization_min) / (normalization_max - normalization_min) as open_2
-                    , (open_3  - normalization_min) / (normalization_max - normalization_min) as open_3
-                    , (open_4  - normalization_min) / (normalization_max - normalization_min) as open_4
-                    , (open_5  - normalization_min) / (normalization_max - normalization_min) as open_5
-                    , (open_6  - normalization_min) / (normalization_max - normalization_min) as open_6
-                    , (open_7  - normalization_min) / (normalization_max - normalization_min) as open_7
-                    , (open_8  - normalization_min) / (normalization_max - normalization_min) as open_8
-                    , (open_9  - normalization_min) / (normalization_max - normalization_min) as open_9
-                    , (open_10 - normalization_min) / (normalization_max - normalization_min) as open_10
-                    , (open_11 - normalization_min) / (normalization_max - normalization_min) as open_11
-                    , (open_12 - normalization_min) / (normalization_max - normalization_min) as open_12
-                    , (open_13 - normalization_min) / (normalization_max - normalization_min) as open_13
-                    , (open_14 - normalization_min) / (normalization_max - normalization_min) as open_14
-                    , (open_15 - normalization_min) / (normalization_max - normalization_min) as open_15
-                    , (open_16 - normalization_min) / (normalization_max - normalization_min) as open_16
-                    , (open_17 - normalization_min) / (normalization_max - normalization_min) as open_17
-                    , (open_18 - normalization_min) / (normalization_max - normalization_min) as open_18
-                    , (open_19 - normalization_min) / (normalization_max - normalization_min) as open_19
-                    , (open_20 - normalization_min) / (normalization_max - normalization_min) as open_20
-                    , (open_21 - normalization_min) / (normalization_max - normalization_min) as open_21
-                    , (open_22 - normalization_min) / (normalization_max - normalization_min) as open_22
-                    , (open_23 - normalization_min) / (normalization_max - normalization_min) as open_23
-                    , (open_24 - normalization_min) / (normalization_max - normalization_min) as open_24
-                    , (open_25 - normalization_min) / (normalization_max - normalization_min) as open_25
-                    , (open_26 - normalization_min) / (normalization_max - normalization_min) as open_26
-                    , (open_27 - normalization_min) / (normalization_max - normalization_min) as open_27
-                    , (open_28 - normalization_min) / (normalization_max - normalization_min) as open_28
-                    , (open_29 - normalization_min) / (normalization_max - normalization_min) as open_29
-                    , (open_30 - normalization_min) / (normalization_max - normalization_min) as open_30
+                  symbol
+                , market_datetime
+                , (target - normalization_min) / (normalization_max - normalization_min) as target
+                , target as denormalized_target
+                , normalization_min
+                , normalization_max
+                , (open_1  - normalization_min) / (normalization_max - normalization_min) as open_1
+                , (open_2  - normalization_min) / (normalization_max - normalization_min) as open_2
+                , (open_3  - normalization_min) / (normalization_max - normalization_min) as open_3
+                , (open_4  - normalization_min) / (normalization_max - normalization_min) as open_4
+                , (open_5  - normalization_min) / (normalization_max - normalization_min) as open_5
+                , (open_6  - normalization_min) / (normalization_max - normalization_min) as open_6
+                , (open_7  - normalization_min) / (normalization_max - normalization_min) as open_7
+                , (open_8  - normalization_min) / (normalization_max - normalization_min) as open_8
+                , (open_9  - normalization_min) / (normalization_max - normalization_min) as open_9
+                , (open_10 - normalization_min) / (normalization_max - normalization_min) as open_10
+                , (open_11 - normalization_min) / (normalization_max - normalization_min) as open_11
+                , (open_12 - normalization_min) / (normalization_max - normalization_min) as open_12
+                , (open_13 - normalization_min) / (normalization_max - normalization_min) as open_13
+                , (open_14 - normalization_min) / (normalization_max - normalization_min) as open_14
+                , (open_15 - normalization_min) / (normalization_max - normalization_min) as open_15
+                , (open_16 - normalization_min) / (normalization_max - normalization_min) as open_16
+                , (open_17 - normalization_min) / (normalization_max - normalization_min) as open_17
+                , (open_18 - normalization_min) / (normalization_max - normalization_min) as open_18
+                , (open_19 - normalization_min) / (normalization_max - normalization_min) as open_19
+                , (open_20 - normalization_min) / (normalization_max - normalization_min) as open_20
+                , (open_21 - normalization_min) / (normalization_max - normalization_min) as open_21
+                , (open_22 - normalization_min) / (normalization_max - normalization_min) as open_22
+                , (open_23 - normalization_min) / (normalization_max - normalization_min) as open_23
+                , (open_24 - normalization_min) / (normalization_max - normalization_min) as open_24
+                , (open_25 - normalization_min) / (normalization_max - normalization_min) as open_25
+                , (open_26 - normalization_min) / (normalization_max - normalization_min) as open_26
+                , (open_27 - normalization_min) / (normalization_max - normalization_min) as open_27
+                , (open_28 - normalization_min) / (normalization_max - normalization_min) as open_28
+                , (open_29 - normalization_min) / (normalization_max - normalization_min) as open_29
+                , (open_30 - normalization_min) / (normalization_max - normalization_min) as open_30
             from summarized
             where target is not null and open_30 is not null
             order by market_datetime, symbol
