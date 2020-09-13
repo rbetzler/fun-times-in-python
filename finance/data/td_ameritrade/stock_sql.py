@@ -70,7 +70,7 @@ class TDStocksSQLRunner(sql.SQLRunner):
                 group by symbol
               )
               , equities as (
-                select
+                select distinct
                     e.market_datetime
                   , e.symbol
                   , e.open
@@ -90,7 +90,7 @@ class TDStocksSQLRunner(sql.SQLRunner):
                 group by symbol
               )
               , quotes as (
-                select
+                select distinct
                     q.market_datetime
                   , q.symbol
                   , q.open_price as open
