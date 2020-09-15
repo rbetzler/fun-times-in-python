@@ -31,13 +31,13 @@ def main():
     parser.add_argument(
         '--archive_files',
         default=False,
-        help='Whether to save prediction and trade files',
+        help='Whether to save prediction and trade files.',
     )
 
     parser.add_argument(
         '--is_training_run',
         default=False,
-        help='Whether to train the lstm',
+        help='Whether to train the lstm.',
     )
 
     # Only pass not none args

@@ -21,26 +21,36 @@ class Greeks(NamedTuple):
     market_datetime: datetime.datetime
 
 
+def get_report_days() -> list:
+    """Get the last black scholes run date and convert the timestamp type"""
+    query = '''
+        with
+        b as (
+          select max(file_datetime)::date as bs_latest
+          from td.black_scholes
+        )
+        , o as (
+          select max(file_datetime)::date as option_latest
+          from td.options_raw
+          where file_datetime > current_date - 5
+        )
+        select
+            o.option_latest
+          , b.bs_latest + 1 as bs_latest
+        from b, o;
+        '''
+    df = utils.query_db(query=query)
+
+    report_days = pd.date_range(
+        start=df['bs_latest'].values[0],
+        end=df['option_latest'].values[0],
+        freq='b'
+    ).to_list()
+
+    return report_days
+
+
 class BlackScholes(reporter.Reporter):
-
-    @property
-    def market_datetime(self) -> datetime.date:
-        """Get the last black scholes run date and convert the timestamp type"""
-        query = '''
-            select date_trunc('day', max(file_datetime)) as last_run_date
-            from td.black_scholes;
-            '''
-        df = utils.query_db(query=query)
-
-        # Convert np datetime to pandas datetime to python datetime
-        raw_last_run_date = df['last_run_date'].values[0]
-        if raw_last_run_date:
-            last_run_date = pd.Timestamp(raw_last_run_date).to_pydatetime()
-        else:
-            last_run_date = self._report_day
-
-        market_datetime = min(last_run_date, self._report_day).date()
-        return market_datetime
 
     @property
     def export_folder(self) -> str:
@@ -60,7 +70,7 @@ class BlackScholes(reporter.Reporter):
                 , symbol
                 , close
               from td.stocks
-              where market_datetime = '{self.market_datetime}'
+              where market_datetime = '{self._report_day}'
               )
             , options as (
               select
@@ -74,7 +84,7 @@ class BlackScholes(reporter.Reporter):
                 , volatility
                 , expiration_date_from_epoch
               from td.options
-              where file_datetime = '{self.market_datetime}'
+              where file_datetime = '{self._report_day}'
                 and days_to_expiration > 0
               )
             , final as (
@@ -165,4 +175,6 @@ class BlackScholes(reporter.Reporter):
 
 
 if __name__ == '__main__':
-    BlackScholes().execute()
+    report_days = get_report_days()
+    for report_day in report_days:
+        BlackScholes(report_day=report_day).execute()
