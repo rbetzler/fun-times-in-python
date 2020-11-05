@@ -9,11 +9,7 @@ class TDOptionsAPI(scraper.Caller):
         return 'API_TD'
 
     @property
-    def request_type(self) -> str:
-        return 'api'
-
-    @property
-    def requests_query(self) -> str:
+    def calls_query(self) -> str:
         query = r'''
             SELECT DISTINCT ticker
             FROM nasdaq.listed_stocks
@@ -24,17 +20,14 @@ class TDOptionsAPI(scraper.Caller):
             '''
         return query.format(batch_size=self.batch_size, batch_start=self.lower_bound)
 
-    def format_requests(self, row) -> tuple:
+    def format_calls(self, row) -> tuple:
         key = row.ticker
         request = f'https://api.tdameritrade.com/v1/marketdata/chains?apikey={self.api_secret}&symbol={key}&contractType=ALL'
         return key, request
 
     @property
     def export_folder(self) -> str:
-        folder = 'audit/td_ameritrade/options/' \
-                 + self.folder_datetime \
-                 + '/'
-        return folder
+        return f'audit/td_ameritrade/options/{self.folder_datetime}/'
 
     @property
     def export_file_name(self) -> str:
@@ -88,20 +81,17 @@ class TDOptionsAPI(scraper.Caller):
         }
         return names
 
-    def parse_chain(self, chain, key) -> pd.DataFrame:
+    def parse_chain(self, chain: dict) -> pd.DataFrame:
         df = pd.DataFrame()
-        try:
-            for date in chain.keys():
-                for strike in chain.get(date).keys():
-                    temp = pd.DataFrame.from_dict(chain.get(date).get(strike))
-                    temp['expiration_date_from_epoch'] = \
-                        time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(temp['expirationDate'].values[0]/1000))
-                    temp['strike'] = strike
-                    temp['strike_date'] = date.partition(':')[0]
-                    temp['days_to_expiration_date'] = date.partition(':')[2]
-                    df = df.append(temp)
-        except AttributeError:
-            print(key)
+        for date in chain.keys():
+            for strike in chain.get(date).keys():
+                temp = pd.DataFrame.from_dict(chain.get(date).get(strike))
+                temp['expiration_date_from_epoch'] = \
+                    time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(temp['expirationDate'].values[0]/1000))
+                temp['strike'] = strike
+                temp['strike_date'] = date.partition(':')[0]
+                temp['days_to_expiration_date'] = date.partition(':')[2]
+                df = df.append(temp)
         df = df.rename(columns=self.column_renames)
         return df
 
@@ -112,8 +102,8 @@ class TDOptionsAPI(scraper.Caller):
         volatility = res.get('volatility')
         n_contracts = res.get('numberOfContracts')
         interest_rate = res.get('interestRate')
-        calls = self.parse_chain(res.get('callExpDateMap'), key)
-        puts = self.parse_chain(res.get('putExpDateMap'), key)
+        calls = self.parse_chain(res.get('callExpDateMap'))
+        puts = self.parse_chain(res.get('putExpDateMap'))
 
         df = calls.append(puts)
         df['symbol'] = symbol
