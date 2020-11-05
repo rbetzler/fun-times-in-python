@@ -8,11 +8,7 @@ class TDFundamentalsAPI(scraper.Caller):
         return 'API_TD'
 
     @property
-    def request_type(self) -> str:
-        return 'api'
-
-    @property
-    def requests_query(self) -> str:
+    def calls_query(self) -> str:
         query = r'''
             SELECT DISTINCT ticker
             FROM nasdaq.listed_stocks
@@ -23,15 +19,14 @@ class TDFundamentalsAPI(scraper.Caller):
             '''
         return query.format(batch_size=self.batch_size, batch_start=self.lower_bound)
 
-    def format_requests(self, row) -> tuple:
+    def format_calls(self, row) -> tuple:
         key = row.ticker
         request = f'https://api.tdameritrade.com/v1/instruments?apikey={self.api_secret}&symbol={key}&projection=fundamental'
         return key, request
 
     @property
     def export_folder(self) -> str:
-        folder = f'audit/td_ameritrade/fundamentals/{self.folder_datetime}/'
-        return folder
+        return f'audit/td_ameritrade/fundamentals/{self.folder_datetime}/'
 
     @property
     def export_file_name(self) -> str:
@@ -97,21 +92,15 @@ class TDFundamentalsAPI(scraper.Caller):
     def parse(self, res, call) -> pd.DataFrame:
         res = res.json()
         df = pd.DataFrame()
-
-        try:
-            for key in res.keys():
-                dictionary = res.get(key)
-                temp = pd.DataFrame.from_dict(dictionary.get('fundamental'), orient='index').T
-                temp['symbol'] = dictionary.get('symbol')
-                temp['cusip'] = dictionary.get('cusip')
-                temp['description'] = dictionary.get('description')
-                temp['exchange'] = dictionary.get('exchange')
-                temp['asset_type'] = dictionary.get('assetType')
-                df = df.append(temp)
-
-        except AttributeError:
-            print(call)
-
+        for key in res.keys():
+            dictionary = res.get(key)
+            temp = pd.DataFrame.from_dict(dictionary.get('fundamental'), orient='index').T
+            temp['symbol'] = dictionary.get('symbol')
+            temp['cusip'] = dictionary.get('cusip')
+            temp['description'] = dictionary.get('description')
+            temp['exchange'] = dictionary.get('exchange')
+            temp['asset_type'] = dictionary.get('assetType')
+            df = df.append(temp)
         return df
 
 

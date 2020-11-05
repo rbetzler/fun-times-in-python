@@ -1,12 +1,11 @@
 import abc
-import bs4
 import time
 import datetime
 import requests
 import pandas as pd
 import concurrent.futures
-import zlib
 
+from typing import List, Tuple
 from finance.utilities import utils
 
 
@@ -40,23 +39,23 @@ class Caller(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def requests_query(self) -> str:
+    def calls_query(self) -> str:
+        """Query to get api call info from dw"""
         pass
-
-    def get_requests(self) -> pd.DataFrame:
-        keys = []
-        requests_ = []
-        params = utils.query_db(query=self.requests_query)
-        for row in params.itertuples():
-            key, request = self.format_requests(row)
-            keys.append(key)
-            requests_.append(request)
-        df = pd.DataFrame(data=requests_, index=keys, columns=['request'])
-        return df
 
     @abc.abstractmethod
-    def format_requests(self, row) -> tuple:
+    def format_calls(self, row) -> tuple:
+        """Format a pandas record into an api call"""
         pass
+
+    def get_calls(self) -> List[Tuple]:
+        """Generate a list of api calls (as tuples)"""
+        keys_requests = []
+        params = utils.query_db(query=self.calls_query)
+        for row in params.itertuples():
+            key_request = self.format_calls(row)
+            keys_requests.append(key_request)
+        return keys_requests
 
     @property
     @abc.abstractmethod
@@ -73,68 +72,70 @@ class Caller(abc.ABC):
         return '.csv'
 
     def export_file_path(self, key) -> str:
-        file_path = self.export_folder \
-                    + self.export_file_name \
-                    + key + '_' \
-                    + self.folder_datetime \
-                    + self.export_file_type
-        return file_path
+        return f'{self.export_folder}{self.export_file_name}{key}_{self.folder_datetime}{self.export_file_type}'
 
     @property
     def n_workers(self) -> int:
         return 1
 
     @property
-    def request_type(self) -> str:
-        return 'text'
-
-    @property
     def len_of_pause(self) -> int:
         return 0
-
-    def get(self, call) -> bs4.BeautifulSoup:
-        raw_response = requests.get(call)
-        if self.request_type == 'text':
-            raw_html = raw_response.text
-            response = bs4.BeautifulSoup(raw_html, features="html.parser")
-        elif self.request_type == 'json':
-            response = raw_response.json()
-        elif self.request_type == 'gz':
-            response = zlib.decompress(raw_response.content, 16 + zlib.MAX_WBITS)
-        elif self.request_type == 'api':
-            response = raw_response
-        else:
-            raise NotImplementedError('API request type not implemented!')
-        return response
 
     @property
     def column_mapping(self) -> dict:
         return {}
 
-    def parse(self, response, key) -> pd.DataFrame:
+    def parse(
+            self,
+            response: requests.Response,
+            key: str,
+    ) -> pd.DataFrame:
+        """Parsing logic on an api request"""
         pass
 
-    def parallelize(self, idx, row) -> pd.DataFrame:
-        response = self.get(row.request)
-        df = self.parse(response, idx)
-
+    def get(
+            self,
+            key: str,
+            call: str,
+    ):
+        """Get data from an api, parse it, write it as a csv"""
+        response = requests.get(call)
+        df = self.parse(response, key)
         if bool(self.column_mapping):
             df = df.rename(columns=self.column_mapping)
-
-        df.to_csv(self.export_file_path(idx), index=False)
-
+        df.to_csv(self.export_file_path(key), index=False)
         time.sleep(self.len_of_pause)
-        return df
+
+    def parallel_execute(
+            self,
+            key: str,
+            call: str,
+    ):
+        """Run the call function; if errs, sleep and rerun"""
+        try:
+            self.get(key, call)
+        except Exception as e:
+            print(f'''
+                {key} failed with error: {e}
+                Sleeping then retrying {key}
+                ''')
+            time.sleep(self.len_of_pause)
+            self.get(key, call)
 
     def execute(self):
         utils.create_directory(self.export_folder)
-        requests_ = self.get_requests()
+        calls = self.get_calls()
         executor = concurrent.futures.ProcessPoolExecutor(max_workers=self.n_workers)
-        future_to_url = {executor.submit(self.parallelize, idx, row): row for idx, row in requests_.iterrows()}
-
+        future_to_url = {
+            executor.submit(
+                self.parallel_execute,
+                key,
+                call,
+            ): key for key, call in calls
+        }
         failures = []
         for future in concurrent.futures.as_completed(future_to_url):
             if future.exception():
                 failures.append(future.exception())
-
         print(failures)
