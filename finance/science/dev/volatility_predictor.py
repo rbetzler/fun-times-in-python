@@ -1,4 +1,3 @@
-import datetime
 import pandas as pd
 
 from finance.science import predictor
