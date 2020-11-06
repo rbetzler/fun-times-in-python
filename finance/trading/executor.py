@@ -16,18 +16,18 @@ _RAW_DT_FMT = '%Y-%m-%dT%H:%M:%S+0000'
 _DT_FMT = '%Y-%m-%d %H:%M:%S'
 
 
-class Order(NamedTuple):
-    id: str=None
-    status: str=None
-    symbol: str=None
-    price: str=None
-    quantity: int=None
-    instruction: str='BUY'
-    asset_type: str='EQUITY'
-    order_type: str='LIMIT'
-    account: str=_ACCOUNT
-    entered_time: str=datetime.datetime.utcnow().strftime(_DT_FMT)
-    closed_time: str=datetime.datetime.utcnow().strftime(_DT_FMT)
+class TDOrder(NamedTuple):
+    id: str = None
+    status: str = None
+    symbol: str = None
+    price: str = None
+    quantity: int = None
+    instruction: str = 'BUY'
+    asset_type: str = 'EQUITY'
+    order_type: str = 'LIMIT'
+    account: str = _ACCOUNT
+    entered_time: str = datetime.datetime.utcnow().strftime(_DT_FMT)
+    closed_time: str = datetime.datetime.utcnow().strftime(_DT_FMT)
 
 
 def _get_headers(access_token: str) -> dict:
@@ -36,8 +36,8 @@ def _get_headers(access_token: str) -> dict:
 
 
 def get_accounts(
-        access_token: str=_ACCESS_TOKEN,
-        url: str=_ACCOUNTS_URL,
+        access_token: str = _ACCESS_TOKEN,
+        url: str = _ACCOUNTS_URL,
 ) -> dict:
     r = requests.get(url=url, headers=_get_headers(access_token))
     j = r.json()
@@ -45,9 +45,9 @@ def get_accounts(
 
 
 def get_orders(
-        account: str=_ACCOUNT,
-        access_token: str=_ACCESS_TOKEN,
-        url: str=_ORDER_URL,
+        account: str = _ACCOUNT,
+        access_token: str = _ACCESS_TOKEN,
+        url: str = _ORDER_URL,
 ) -> list:
 
     r = requests.get(
@@ -57,7 +57,7 @@ def get_orders(
 
     orders = []
     for order in j:
-        o = Order(
+        o = TDOrder(
             id=str(order.get('orderId')),
             status=order.get('status'),
             symbol=order.get('orderLegCollection')[0].get('instrument').get('symbol'),
@@ -75,9 +75,9 @@ def get_orders(
 
 
 def place_order(
-        order: Order,
-        access_token: str=_ACCESS_TOKEN,
-        url: str=_ORDER_URL,
+        order: TDOrder,
+        access_token: str = _ACCESS_TOKEN,
+        url: str = _ORDER_URL,
 ):
     json = {
         "orderType": order.order_type,
@@ -108,9 +108,9 @@ def place_order(
 
 def cancel_order(
         order_id: str,
-        account: str=_ACCOUNT,
-        access_token: str=_ACCESS_TOKEN,
-        url: str=_ORDER_URL,
+        account: str = _ACCOUNT,
+        access_token: str = _ACCESS_TOKEN,
+        url: str = _ORDER_URL,
 ):
     cancel_url = url.format(account=account) + '/' + order_id
     r = requests.delete(
@@ -124,8 +124,8 @@ def cancel_order(
 
 if __name__ == '__main__':
     orders = [
-        Order(symbol='AA', price='1.5', quantity=2),
-        Order(symbol='AIG', price='1.5', quantity=3),
+        TDOrder(symbol='AA', price='1.5', quantity=2),
+        TDOrder(symbol='AIG', price='1.5', quantity=3),
     ]
     for order in orders:
         place_order(order)

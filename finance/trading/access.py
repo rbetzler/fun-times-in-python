@@ -14,10 +14,11 @@ _REFRESH_TOKEN = utils.retrieve_secret('API_TD_REFRESH_TOKEN')
 
 # Manually refresh API_TD_LOGIN_URL in env
 def _get_refresh_token(
-        access_code=_ACCESS_CODE,
-        auth_url=_AUTH_URL,
-        client_id=_CLIENT_ID,
-        redirect_uri=_REDIRECT_URI) -> dict:
+        access_code: str = _ACCESS_CODE,
+        auth_url: str = _AUTH_URL,
+        client_id: str = _CLIENT_ID,
+        redirect_uri: str = _REDIRECT_URI,
+):
     """
     Get TD Refresh Token to store in env vars
 
@@ -43,16 +44,16 @@ def _get_refresh_token(
     j = r.json()
 
     if j.get('error'):
-        raise PermissionError(
-            'Access token retrieval failed. Maybe refresh: API_TD_ACCESS_CODE')
+        raise PermissionError('Access token retrieval failed. Maybe refresh: API_TD_ACCESS_CODE')
     else:
         print('Add to env vars as API_TD_REFRESH_TOKEN: ' + j.get('refresh_token'))
 
 
 def get_access_token(
-        refresh_token: str=_REFRESH_TOKEN,
-        auth_url: str=_AUTH_URL,
-        client_id: str=_CLIENT_ID) -> str:
+        refresh_token: str = _REFRESH_TOKEN,
+        auth_url: str = _AUTH_URL,
+        client_id: str = _CLIENT_ID,
+) -> str:
     """
     Get TD Access Token, valid for 30 minutes
     """
@@ -65,8 +66,7 @@ def get_access_token(
     r = requests.post(url=auth_url, headers=_HEADERS, data=data)
     j = r.json()
     if j.get('error'):
-        raise PermissionError(
-            'Access token retrieval failed. Maybe refresh: API_TD_REFRESH_TOKEN')
+        raise PermissionError('Access token retrieval failed. Maybe refresh: API_TD_REFRESH_TOKEN')
     access_token = j.get('access_token')
     return access_token
 
