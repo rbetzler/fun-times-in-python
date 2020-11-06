@@ -9,17 +9,17 @@ def main():
 
     parser.add_argument(
         '--job',
-        help='Whether to save the files in prod.',
+        help='Which job to run: stock, volatility.',
     )
 
     parser.add_argument(
         '--start_date',
-        help='Whether to save the files in prod.',
+        help='First date for training or testing.',
     )
 
     parser.add_argument(
         '--n_days',
-        help='Whether to save the files in prod.',
+        help='How many days to include.',
     )
 
     parser.add_argument(

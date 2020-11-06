@@ -41,10 +41,10 @@ class SQLRunner(abc.ABC):
 
         if self.schema_name:
             schema_query = f'''
-                SELECT EXISTS (
-                    SELECT 1
-                    FROM information_schema.schemata
-                    WHERE schema_name = '{self.schema_name}'
+                select exists (
+                    select 1
+                    from information_schema.schemata
+                    where schema_name = '{self.schema_name}'
                 )
                 '''
             print(f'Checking if schema exists: {datetime.datetime.utcnow()}')
@@ -52,15 +52,16 @@ class SQLRunner(abc.ABC):
             schema_exists = cursor.fetchone()[0]
             if not schema_exists:
                 print(f'Schema does not exist; creating now: {datetime.datetime.utcnow()}')
-                cursor.execute(f'CREATE SCHEMA {self.schema_name};')
+                cursor.execute(f'create schema {self.schema_name};')
                 conn.commit()
 
         if self.table_name:
             table_query = f'''
-                SELECT EXISTS (
-                    SELECT 1
-                    FROM information_schema.tables
-                    WHERE table_name = '{self.table_name}'
+                select exists (
+                    select 1
+                    from information_schema.tables
+                    where table_schema = '{self.schema_name}'
+                      and table_name = '{self.table_name}'
                 )
                 '''
             print(f'Checking if table exists: {datetime.datetime.utcnow()}')

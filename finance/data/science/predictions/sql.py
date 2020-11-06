@@ -1,20 +1,16 @@
+import abc
 from finance.data import sql
 
 
-class DevTradesSQLRunner(sql.SQLRunner):
-
-    @property
-    def schema_name(self) -> str:
-        return 'dev'
-
+class PredictionsSQLRunner(sql.SQLRunner, abc.ABC):
     @property
     def table_name(self) -> str:
-        return 'trades'
+        return 'predictions'
 
     @property
     def table_ddl(self) -> str:
-        ddl = '''
-        create table dev.trades (
+        ddl = f'''
+        create table {self.schema_name}.{self.table_name} (
               model_id                  varchar
             , market_datetime           date
             , symbol                    varchar
@@ -35,5 +31,18 @@ class DevTradesSQLRunner(sql.SQLRunner):
         return None
 
 
+class DevPredictionsSQLRunner(PredictionsSQLRunner):
+    @property
+    def schema_name(self) -> str:
+        return 'dev'
+
+
+class ProdPredictionsSQLRunner(PredictionsSQLRunner):
+    @property
+    def schema_name(self) -> str:
+        return 'prod'
+
+
 if __name__ == '__main__':
-    DevTradesSQLRunner().execute()
+    DevPredictionsSQLRunner().execute()
+    ProdPredictionsSQLRunner().execute()

@@ -1,46 +1,31 @@
+import abc
 import pandas as pd
 from finance.data import loader
 
-COLUMNS = [
-    'model_id',
-    'market_datetime',
-    'symbol',
-    'target',
-    'denormalized_target',
-    'prediction',
-    'denormalized_prediction',
-    'normalization_min',
-    'normalization_max',
-    'file_datetime',
-]
 
-
-class DevTradesLoader(loader.FileIngestion):
+class ScienceLoader(loader.FileIngestion, abc.ABC):
+    @property
+    @abc.abstractmethod
+    def environment(self) -> str:
+        pass
 
     @property
     def job_name(self) -> str:
-        return 'dev_trades_loader'
+        return f'{self.environment}_{self.table}_loader'
 
     @property
     def directory(self) -> str:
-        return 'science/dev/trades'
-
-    @property
-    def import_file_prefix(self) -> str:
-        return 'v'
+        return f'science/{self.environment}/{self.table}'
 
     @property
     def schema(self) -> str:
-        return 'dev'
+        return self.environment
 
     @property
-    def table(self) -> str:
-        return 'trades'
+    @abc.abstractmethod
+    def columns(self) -> list:
+        pass
 
     def clean_df(self, df) -> pd.DataFrame:
-        df = df[COLUMNS]
+        df = df[self.columns]
         return df
-
-
-if __name__ == '__main__':
-    DevTradesLoader().execute()
