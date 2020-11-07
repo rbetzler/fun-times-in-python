@@ -1,9 +1,10 @@
 import argparse
+from datetime import datetime
 from finance.science.dev import stock_predictor, volatility_predictor
 
 
 def main():
-    """Argument parser from lstm engine"""
+    """Argument parser from science jobs"""
 
     parser = argparse.ArgumentParser()
 
@@ -14,6 +15,7 @@ def main():
 
     parser.add_argument(
         '--start_date',
+        default=datetime.utcnow().replace().date(),
         help='First date for training or testing.',
     )
 
@@ -45,6 +47,8 @@ def main():
     args = parser.parse_args()
     for key, arg in args.__dict__.items():
         if arg is not None and key != 'job':
+            if key == 'start_date':
+                arg = datetime.strptime(arg, '%Y-%m-%d').date()
             kwargs.update({key: arg})
 
     if args.job == 'stock':

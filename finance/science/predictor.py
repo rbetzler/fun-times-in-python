@@ -11,7 +11,7 @@ class Predictor(abc.ABC):
     def __init__(
             self,
             run_datetime: datetime.datetime = datetime.datetime.utcnow(),
-            start_date: datetime.datetime = datetime.date(year=2000, month=1, day=1),
+            start_date: datetime.datetime = datetime.date(year=2010, month=1, day=1),
             n_days: int = 1000,
             is_prod: bool = False,
             archive_files: bool = False,

@@ -12,7 +12,6 @@ _REDIRECT_URI = utils.retrieve_secret('API_TD_REDIRECT_URI')
 _REFRESH_TOKEN = utils.retrieve_secret('API_TD_REFRESH_TOKEN')
 
 
-# Manually refresh API_TD_LOGIN_URL in env
 def _get_refresh_token(
         access_code: str = _ACCESS_CODE,
         auth_url: str = _AUTH_URL,
@@ -22,15 +21,11 @@ def _get_refresh_token(
     """
     Get TD Refresh Token to store in env vars
 
-    1. Update API_TD_ACCESS_CODE in env vars
+    1. Using URL in env vars file, update API_TD_ACCESS_CODE
     2. Run this function
     3. Update API_TD_REFRESH_TOKEN in env vars
     """
-
-    # Url encode access code
     code = urllib.parse.unquote(access_code)
-
-    # Post request
     data = {
         'grant_type': 'authorization_code',
         'access_type': 'offline',
@@ -38,11 +33,8 @@ def _get_refresh_token(
         'client_id': client_id,
         'redirect_uri': redirect_uri
     }
-
-    # Check if headers are needed
     r = requests.post(url=auth_url, headers=_HEADERS, data=data)
     j = r.json()
-
     if j.get('error'):
         raise PermissionError('Access token retrieval failed. Maybe refresh: API_TD_ACCESS_CODE')
     else:
@@ -57,7 +49,6 @@ def get_access_token(
     """
     Get TD Access Token, valid for 30 minutes
     """
-
     data = {
         'grant_type': 'refresh_token',
         'refresh_token': refresh_token,
