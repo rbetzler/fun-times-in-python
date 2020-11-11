@@ -31,14 +31,13 @@ class StockPredictor(predictor.Predictor):
                 from nasdaq.listed_stocks
                 where   ticker !~ '[\^.~]'
                     and character_length(ticker) between 1 and 4
-                    and ticker in ('KO', 'JPM', 'AA')
-                limit 30
+                    and ticker in ('KO', 'CB', 'AA', 'GE', 'NVDA')
                 )
             , lagged as (
                 select
                       s.symbol
                     , s.market_datetime
-                    , max(s.open) over (partition by s.symbol order by s.market_datetime rows between 1 following and 31 following) as target
+                    , min(s.open) over (partition by s.symbol order by s.market_datetime rows between 1 following and 31 following) as target
                     , s.open
                     , lag(s.open,  1) over (partition by s.symbol order by s.market_datetime) as open_1
                     , lag(s.open,  2) over (partition by s.symbol order by s.market_datetime) as open_2
@@ -73,7 +72,7 @@ class StockPredictor(predictor.Predictor):
                 from td.stocks as s
                 inner join tickers as t
                     on t.ticker = s.symbol
-                where s.market_datetime between '{self.start_date}' and '{self.end_date}'
+                where s.market_datetime between '{self.start_date}'::date - 60 and '{self.end_date}'::date + 1
                 )
             , summarized as (
                 select *
@@ -119,7 +118,10 @@ class StockPredictor(predictor.Predictor):
                 , (open_29 - normalization_min) / (normalization_max - normalization_min) as open_29
                 , (open_30 - normalization_min) / (normalization_max - normalization_min) as open_30
             from summarized
-            where target is not null and open_30 is not null
+            where market_datetime between '{self.start_date}' and '{self.end_date}'
+              {'and target is not null' if self.is_training_run else ''}
+              and open_30 is not null
+              and normalization_max <> normalization_min
             order by market_datetime, symbol
             '''
         return query

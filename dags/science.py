@@ -26,14 +26,11 @@ dag = DAG(
 
 kwargs = {
     'auto_remove': True,
+    'image': 'py-dw-stocks',
     'volumes': ['/media/nautilus/fun-times-in-python:/usr/src/app'],
     'network_mode': 'bridge',
     'dag': dag,
 }
-
-loader_kwargs = kwargs.copy()
-loader_kwargs['image'] = 'py-dw-stocks'
-
 prediction_kwargs = kwargs.copy()
 prediction_kwargs['image'] = 'pytorch'
 
@@ -45,14 +42,32 @@ start_time = BashOperator(
 
 predict_stocks = DockerOperator(
     task_id='stock_predictor',
-    command='python finance/science/executor.py --job=stock --n_days=100 --archive_files=True',
+    command='python finance/science/executor.py --job=stock --start_date=2020-11-09 --archive_files=True',
     **prediction_kwargs,
 )
 
 load_stock_predictions = DockerOperator(
     task_id='stock_prediction_loader',
     command='python finance/data/science/predictions/loader.py',
-    **loader_kwargs,
+    **kwargs,
+)
+
+decision_stocks = DockerOperator(
+    task_id='stock_decision',
+    command='python finance/science/dev/decisioner.py',
+    **kwargs,
+)
+
+load_stock_decisions = DockerOperator(
+    task_id='stock_decision_loader',
+    command='python finance/data/science/decisions/loader.py',
+    **kwargs,
+)
+
+execute_trades = DockerOperator(
+    task_id='execute_trades',
+    command='python finance/trading/executor.py',
+    **kwargs,
 )
 
 end_time = BashOperator(
@@ -63,4 +78,7 @@ end_time = BashOperator(
 
 predict_stocks.set_upstream(start_time)
 load_stock_predictions.set_upstream(predict_stocks)
-end_time.set_upstream(load_stock_predictions)
+decision_stocks.set_upstream(load_stock_predictions)
+load_stock_decisions.set_upstream(decision_stocks)
+execute_trades.set_upstream(load_stock_decisions)
+end_time.set_upstream(execute_trades)
