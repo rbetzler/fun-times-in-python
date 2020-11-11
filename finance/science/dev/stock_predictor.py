@@ -24,14 +24,14 @@ class StockPredictor(predictor.Predictor):
         query = f'''
             with
             tickers as (
-                select distinct
-                      ticker
-                    , sector
-                    , industry
-                from nasdaq.listed_stocks
-                where   ticker !~ '[\^.~]'
-                    and character_length(ticker) between 1 and 4
-                    and ticker in ('KO', 'CB', 'AA', 'GE', 'NVDA')
+                select symbol as ticker
+                from td.stocks
+                where market_datetime between '2010-01-15' and '2020-11-10'
+                group by 1
+                having bool_or(market_datetime = ('2015-01-15'))
+                   and bool_or(market_datetime = ('2020-11-10'))
+                order by count(*) desc
+                limit 1000
                 )
             , lagged as (
                 select
@@ -123,6 +123,7 @@ class StockPredictor(predictor.Predictor):
               and open_30 is not null
               and normalization_max <> normalization_min
             order by market_datetime, symbol
+            limit 10000
             '''
         return query
 
@@ -149,12 +150,12 @@ class StockPredictor(predictor.Predictor):
     def model_args(self) -> dict:
         kwargs = {
             'n_layers': 2,
-            'n_training_batches': 1,
             'n_epochs': 250,
             'hidden_shape': 1000,
             'dropout': 0.1,
             'learning_rate': .0001,
             'seed': 44,
+            'batch_size': 100,
         }
         return kwargs
 
