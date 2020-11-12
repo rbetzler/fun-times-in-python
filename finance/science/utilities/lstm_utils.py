@@ -46,13 +46,19 @@ class TorchLSTM(nn.Module):
 
         # Data dimensions
         self.input_shape = x.shape[1]
-        self.batch_size = batch_size or len(x)
+        if batch_size:
+            self.batch_size = batch_size
+            self.n_training_batches = max(int(len(x) / batch_size), 1)
+        else:
+            self.batch_size = int(len(x) / self.n_training_batches)
+            self.n_training_batches = n_training_batches
 
         self.input = (
-            int(len(x) / self.batch_size / self.n_training_batches),
+            1,
             self.batch_size,
             self.input_shape
         )
+        print(self.input)
 
         # Data
         self.x = x
@@ -147,14 +153,18 @@ class TorchLSTM(nn.Module):
 
     def predict(self):
         self.eval()
-        x = torch.tensor(self.x.values).to(self.device).float().detach().view(self.input)
-        prediction = self.forward(x)
-        return prediction
+        predictions = np.array([])
+        arrays = np.array_split(self.x, self.n_training_batches)
+        for array in arrays:
+            x = torch.tensor(array.values).to(self.device).float().detach().view(self.input)
+            prediction = self.forward(x)
+            predictions = np.append(predictions, prediction.view(-1).cpu().detach().numpy())
+        return predictions
 
     @property
     def prediction_df(self):
         df = self.x.copy()
-        df['prediction'] = self.predict().view(-1).cpu().detach().numpy()
+        df['prediction'] = self.predict()
         return df
 
     # TODO: Add and refine basic performance features
