@@ -62,6 +62,7 @@ class TDStocksSQLRunner(sql.SQLRunner):
     @property
     def sql_script(self):
         query = '''
+            truncate td.stocks;
             insert into td.stocks (
               with
               stocks as (

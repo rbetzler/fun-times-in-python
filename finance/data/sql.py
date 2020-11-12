@@ -79,6 +79,7 @@ class SQLRunner(abc.ABC):
 
         cursor.close()
         conn.close()
+        print(f'Disconnected from db: {datetime.datetime.utcnow()}')
 
         if self.run_maintenance:
             print('reconnecting to db to run maintenance scripts')
