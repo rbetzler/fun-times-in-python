@@ -15,12 +15,13 @@ def main():
 
     parser.add_argument(
         '--start_date',
-        default=datetime.utcnow().replace().date(),
+        default=datetime.utcnow().date().strftime('%Y-%m-%d'),
         help='First date for training or testing.',
     )
 
     parser.add_argument(
         '--n_days',
+        default=0,
         help='How many days to include.',
     )
 
