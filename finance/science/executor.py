@@ -1,6 +1,7 @@
 import argparse
 from datetime import datetime
 from finance.science.dev import stock_predictor, volatility_predictor
+from finance.science.utilities import modeling_utils
 
 
 def main():
@@ -15,7 +16,7 @@ def main():
 
     parser.add_argument(
         '--start_date',
-        default=datetime.utcnow().date().strftime('%Y-%m-%d'),
+        default=modeling_utils.get_latest_market_datetime(),
         help='First date for training or testing.',
     )
 

@@ -42,7 +42,7 @@ start_time = BashOperator(
 
 predict_stocks = DockerOperator(
     task_id='stock_predictor',
-    command='python finance/science/executor.py --job=stock --start_date=2020-11-09 --archive_files=True',
+    command='python finance/science/executor.py --job=stock --archive_files=True',
     **prediction_kwargs,
 )
 
@@ -64,6 +64,12 @@ load_stock_decisions = DockerOperator(
     **kwargs,
 )
 
+report_stock_decisions = DockerOperator(
+    task_id='stock_decision_report',
+    command='python finance/data/science/decisions/report.py',
+    **kwargs,
+)
+
 execute_trades = DockerOperator(
     task_id='execute_trades',
     command='python finance/trading/executor.py',
@@ -80,5 +86,6 @@ predict_stocks.set_upstream(start_time)
 load_stock_predictions.set_upstream(predict_stocks)
 decision_stocks.set_upstream(load_stock_predictions)
 load_stock_decisions.set_upstream(decision_stocks)
-execute_trades.set_upstream(load_stock_decisions)
+report_stock_decisions.set_upstream(load_stock_decisions)
+execute_trades.set_upstream(report_stock_decisions)
 end_time.set_upstream(execute_trades)

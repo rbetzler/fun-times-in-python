@@ -58,7 +58,6 @@ class TorchLSTM(nn.Module):
             self.batch_size,
             self.input_shape
         )
-        print(self.input)
 
         # Data
         self.x = x
