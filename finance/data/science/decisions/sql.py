@@ -19,7 +19,7 @@ class DecisionsSQLRunner(sql.SQLRunner, abc.ABC):
             , thirty_day_low_prediction            numeric(20,6)
             , close                                numeric(20,6)
             , put_call                             varchar
-            , days_to_expiration                   integer
+            , days_to_expiration                   numeric(20,6)
             , strike                               numeric(20,6)
             , price                                numeric(20,6)
             , potential_annual_return              numeric(20,6)
