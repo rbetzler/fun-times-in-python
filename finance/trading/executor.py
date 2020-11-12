@@ -23,7 +23,7 @@ class TDOrderExecutor:
               model_id
             , direction
             , asset
-            , denormalized_prediction as price
+            , thirty_day_low_prediction as price
             , quantity
             , symbol
             , dense_rank() over (order by model_datetime desc) as dr
