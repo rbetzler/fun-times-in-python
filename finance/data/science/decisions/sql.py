@@ -11,18 +11,27 @@ class DecisionsSQLRunner(sql.SQLRunner, abc.ABC):
     def table_ddl(self) -> str:
         ddl = f'''
         create table {self.schema_name}.{self.table_name} (
-              model_id                  varchar
-            , model_datetime            timestamp
-            , direction                 varchar
-            , asset                     varchar
-            , target                    numeric(20,6)
-            , denormalized_target        numeric(20,6)
-            , prediction                numeric(20,6)
-            , denormalized_prediction    numeric(20,6)
-            , quantity                  numeric(20,6)
-            , symbol                    varchar
-            , file_datetime             timestamp
-            , ingest_datetime           timestamp
+              model_id                             varchar
+            , decisioner_id                        varchar
+            , model_datetime                       timestamp
+            , market_datetime                      timestamp
+            , symbol                               varchar
+            , thirty_day_low_prediction            numeric(20,6)
+            , close                                numeric(20,6)
+            , put_call                             varchar
+            , days_to_expiration                   integer
+            , strike                               numeric(20,6)
+            , price                                numeric(20,6)
+            , potential_annual_return              numeric(20,6)
+            , oom_percent                          numeric(20,6)
+            , is_sufficiently_profitable           boolean
+            , is_sufficiently_oom                  boolean
+            , is_strike_below_predicted_low_price  boolean
+            , quantity                             numeric(20,6)
+            , asset                                varchar
+            , direction                            varchar
+            , file_datetime                        timestamp
+            , ingest_datetime                      timestamp
         );
         '''
         return ddl

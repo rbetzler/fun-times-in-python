@@ -15,16 +15,24 @@ class DecisionsLoader(loader.ScienceLoader, abc.ABC):
     def columns(self) -> list:
         return [
             'model_id',
+            'decisioner_id',
             'model_datetime',
-            'direction',
-            'asset',
-            'target',
-            'denormalized_target',
-            'prediction',
-            'denormalized_prediction',
-            'quantity',
+            'market_datetime',
             'symbol',
-            'file_datetime',
+            'thirty_day_low_prediction',
+            'close',
+            'put_call',
+            'days_to_expiration',
+            'strike',
+            'price',
+            'potential_annual_return',
+            'oom_percent',
+            'is_sufficiently_profitable',
+            'is_sufficiently_oom',
+            'is_strike_below_predicted_low_price',
+            'quantity',
+            'asset',
+            'direction',
         ]
 
 
