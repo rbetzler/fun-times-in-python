@@ -85,7 +85,7 @@ class TDAccounts:
             accounts.append(account)
         return accounts
 
-    def get_positions(self):
+    def get_positions(self) -> List[TDPosition]:
         positions = []
         for a in self.get_accounts():
             positions.extend(a.positions)

@@ -2,6 +2,7 @@ import abc
 import datetime
 import pandas as pd
 
+from finance.trading import utils as trading_utils
 from finance.utilities import utils
 from finance.science.utilities import modeling_utils
 
@@ -48,6 +49,24 @@ class Decisioner(abc.ABC):
         """Query to retrieve raw data"""
         pass
 
+    @property
+    def available_funds(self) -> int:
+        """Get available funds from all TD Accounts"""
+        funds = 0
+        for account in trading_utils.TDAccounts().get_accounts():
+            funds += account.available_funds
+        return funds
+
+    @property
+    def n_trades(self) -> int:
+        """Max number of trades"""
+        return 3
+
+    @property
+    def max_position_size(self) -> int:
+        """Max position size per trade"""
+        return 200
+
     @abc.abstractmethod
     def decision(self, df: pd.DataFrame) -> pd.DataFrame:
         """Decision & optimization step"""
@@ -63,10 +82,10 @@ class Decisioner(abc.ABC):
         ''')
 
         print(f'Getting raw data {datetime.datetime.utcnow()}')
-        input = utils.query_db(query=self.query)
+        df = utils.query_db(query=self.query)
 
         print(f'Running optimization {datetime.datetime.utcnow()}')
-        output = self.decision(input)
+        output = self.decision(df)
         output['decisioner_id'] = self.decisioner_id
 
         print(f'Saving output to {self.location} {datetime.datetime.utcnow()}')
