@@ -2,6 +2,7 @@ import pandas as pd
 
 from finance.science import predictor
 from finance.science.utilities import science_utils
+from finance.utilities import utils
 
 SYMBOL = 'symbol'
 TARGET = 'target'
@@ -20,6 +21,26 @@ class StockPredictor(predictor.Predictor):
         return 's0'
 
     @property
+    def generate_one_hot_encoding_sql(self) -> str:
+        query = '''
+            select distinct ticker as symbol
+            from nasdaq.listed_stocks
+            where ticker !~ '[\^.~]'
+              and character_length(ticker) between 1 and 4
+            order by 1
+            limit 1000
+            '''
+        df = utils.query_db(query=query)
+        base = "\n, case when symbol = '{symbol}' then 1 else 0 end as is_{symbol_lowercase}"
+        sql = ''
+        for row in df.itertuples():
+            sql += base.format(
+                symbol=row.symbol,
+                symbol_lowercase=row.symbol.lower(),
+            )
+        return sql
+
+    @property
     def query(self) -> str:
         query = f'''
             with
@@ -30,8 +51,8 @@ class StockPredictor(predictor.Predictor):
                 group by 1
                 having bool_or(market_datetime = ('2015-01-15'))
                    and bool_or(market_datetime = ('2020-11-10'))
-                order by count(*) desc
-                limit 1000
+                order by symbol --count(*) desc
+                limit 75
                 )
             , lagged as (
                 select
@@ -117,6 +138,7 @@ class StockPredictor(predictor.Predictor):
                 , (open_28 - normalization_min) / (normalization_max - normalization_min) as open_28
                 , (open_29 - normalization_min) / (normalization_max - normalization_min) as open_29
                 , (open_30 - normalization_min) / (normalization_max - normalization_min) as open_30
+                {self.generate_one_hot_encoding_sql}
             from summarized
             where market_datetime between '{self.start_date}' and '{self.end_date}'
               {'and target is not null' if self.is_training_run else ''}
@@ -141,10 +163,6 @@ class StockPredictor(predictor.Predictor):
             NORMALIZATION_MAX,
         ] + [self.target_column]
         return cols
-
-    def preprocess_data(self, df: pd.DataFrame) -> pd.DataFrame:
-        df = science_utils.encode_one_hot(df, [SYMBOL])
-        return df
 
     @property
     def model_args(self) -> dict:

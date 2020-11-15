@@ -78,7 +78,6 @@ class Predictor(abc.ABC):
         """Columns to ignore when running the model"""
         pass
 
-    @abc.abstractmethod
     def preprocess_data(self, df: pd.DataFrame) -> pd.DataFrame:
         """Process data pre-model run"""
         return df

@@ -2,6 +2,7 @@
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
+from typing import Tuple
 
 import torch
 from torch import nn, optim
@@ -25,6 +26,7 @@ class TorchLSTM(nn.Module):
             seed: int = 3,
             deterministic: bool = True,
             benchmark: bool = False,
+            pad: bool = True,
     ):
 
         super(TorchLSTM, self).__init__()
@@ -44,24 +46,22 @@ class TorchLSTM(nn.Module):
         self.learning_rate = learning_rate
         self.device = device
 
-        # Data dimensions
+        # Data and dimensions
         self.input_shape = x.shape[1]
-        if batch_size:
-            self.batch_size = batch_size
-            self.n_training_batches = max(int(len(x) / batch_size), 1)
-        else:
-            self.batch_size = int(len(x) / self.n_training_batches)
-            self.n_training_batches = n_training_batches
+        if n_training_batches:
+            batch_size = int(len(x) / n_training_batches)
+
+        x, y = self.pad(batch_size, x, y)
+        self.x = x
+        self.y = y
+        self.batch_size = batch_size
+        self.n_training_batches = max(int(len(x) / batch_size), 1)
 
         self.input = (
             1,
             self.batch_size,
             self.input_shape
         )
-
-        # Data
-        self.x = x
-        self.y = y
 
         # Network
         self.lstm = nn.LSTM(
@@ -83,6 +83,24 @@ class TorchLSTM(nn.Module):
     def reset_network(self):
         self.lstm.reset_parameters()
         self.linear.reset_parameters()
+
+    @staticmethod
+    def pad(
+            batch_size: int,
+            x: pd.DataFrame,
+            y: pd.DataFrame,
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        """Pad raw pandas df with zeros"""
+        n = len(x)
+        while n % batch_size > 0:
+            n += 1
+        padding = n - len(x)
+        if padding > 0:
+            x_zeros = pd.DataFrame(np.zeros(shape=(padding, x.shape[1])), columns=x.columns)
+            y_zeros = pd.Series(np.zeros(padding), name=y.name)
+            x = x.append(x_zeros)
+            y = y.append(y_zeros)
+        return x, y
 
     def training_data(self):
         x = np.array_split(self.x, self.n_training_batches)
