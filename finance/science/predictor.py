@@ -84,7 +84,7 @@ class Predictor(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def model_args(self) -> dict:
+    def model_kwargs(self) -> dict:
         """LSTM model keyword arguments"""
         pass
 
@@ -118,7 +118,7 @@ class Predictor(abc.ABC):
         model = lstm_utils.TorchLSTM(
             x=input.drop(self.columns_to_ignore, axis=1),
             y=input[self.target_column],
-            **self.model_args,
+            **self.model_kwargs,
         )
 
         if self.is_training_run:

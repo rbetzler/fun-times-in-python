@@ -209,7 +209,7 @@ class VolatilityPredictor(predictor.Predictor):
         return df
 
     @property
-    def model_args(self) -> dict:
+    def model_kwargs(self) -> dict:
         kwargs = {
             'n_layers': 2,
             'n_training_batches': 1,

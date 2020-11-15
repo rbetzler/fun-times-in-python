@@ -21,6 +21,7 @@ class StockPredictor(predictor.Predictor):
 
     @property
     def generate_one_hot_encoding_sql(self) -> str:
+        """Generate sql for one hot encoding columns in query"""
         query = '''
             select distinct ticker as symbol
             from nasdaq.listed_stocks
@@ -164,7 +165,7 @@ class StockPredictor(predictor.Predictor):
         return cols
 
     @property
-    def model_args(self) -> dict:
+    def model_kwargs(self) -> dict:
         kwargs = {
             'n_layers': 2,
             'n_epochs': 250,
