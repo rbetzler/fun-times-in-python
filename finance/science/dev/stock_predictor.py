@@ -1,7 +1,6 @@
 import pandas as pd
 
 from finance.science import predictor
-from finance.science.utilities import science_utils
 from finance.utilities import utils
 
 SYMBOL = 'symbol'

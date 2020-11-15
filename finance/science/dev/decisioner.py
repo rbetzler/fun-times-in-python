@@ -1,8 +1,5 @@
-import numpy as np
 import pandas as pd
-from finance.utilities import utils
 from finance.science import decisioner
-from finance.science.utilities import science_utils
 
 N_TRADES = 2
 AVAILABLE_BALANCE = 48
