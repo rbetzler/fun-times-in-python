@@ -1,8 +1,9 @@
 import pandas as pd
 from finance.science import decisioner
+from finance.science.utilities import science_utils
 
-N_TRADES = 2
-AVAILABLE_BALANCE = 48
+ASSET = 'OPTION'
+DIRECTION = 'SELL'
 
 
 class StockDecisioner(decisioner.Decisioner):
@@ -76,10 +77,17 @@ class StockDecisioner(decisioner.Decisioner):
 
     def decision(self, df: pd.DataFrame) -> pd.DataFrame:
         df['quantity'] = 0
-        df['asset'] = 'OPTION'
-        df['direction'] = 'SELL'
-        df = df.reset_index()
-        return df
+        df['asset'] = ASSET
+        df['direction'] = DIRECTION
+        df['kelly_criterion'] = science_utils.kelly_criterion(
+            predicted_win=df['price'],
+            predicted_loss=df['strike'],
+            p_win=df['oom_percent'],
+        )
+        potential_trades = df[
+            df['is_sufficiently_profitable'] & df['is_sufficiently_oom'] & df['is_strike_below_predicted_low_price']]
+        potential_trades = potential_trades.reset_index()
+        return potential_trades
 
 
 if __name__ == '__main__':
