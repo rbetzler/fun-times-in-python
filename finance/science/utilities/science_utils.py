@@ -5,16 +5,17 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-def encode_one_hot(df: pd.DataFrame, columns: str or list):
-    """Add one hot endcoding columns to pandas dataframe"""
-    if isinstance(columns, str):
-        columns = [columns]
-
-    for column in columns:
-        one_hot_encoding = pd.get_dummies(df[column], prefix=column)
-        df = df.join(one_hot_encoding)
-
-    return df
+def encode_one_hot(
+    df: pd.DataFrame,
+    column: str,
+    keys: list,
+) -> pd.DataFrame:
+    """Add one hot encoding columns to pandas dataframe"""
+    df_keys = pd.DataFrame(0, index=np.arange(len(df)), columns=keys)
+    data = df.join(df_keys)
+    for key in keys:
+        data.loc[data[column] == key, key] = 1
+    return data
 
 
 def plot_groups(

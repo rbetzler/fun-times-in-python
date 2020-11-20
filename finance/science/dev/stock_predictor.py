@@ -1,6 +1,7 @@
 import pandas as pd
 
 from finance.science import predictor
+from finance.science.utilities import science_utils
 from finance.utilities import utils
 
 SYMBOL = 'symbol'
@@ -20,7 +21,7 @@ class StockPredictor(predictor.Predictor):
         return 's0'
 
     @property
-    def generate_one_hot_encoding_sql(self) -> str:
+    def get_symbols(self) -> pd.DataFrame:
         """Generate sql for one hot encoding columns in query"""
         query = '''
             select distinct ticker as symbol
@@ -28,17 +29,9 @@ class StockPredictor(predictor.Predictor):
             where ticker !~ '[\^.~]'
               and character_length(ticker) between 1 and 4
             order by 1
-            limit 1000
             '''
         df = utils.query_db(query=query)
-        base = "\n, case when symbol = '{symbol}' then 1 else 0 end as is_{symbol_lowercase}"
-        sql = ''
-        for row in df.itertuples():
-            sql += base.format(
-                symbol=row.symbol,
-                symbol_lowercase=row.symbol.lower(),
-            )
-        return sql
+        return df
 
     @property
     def query(self) -> str:
@@ -138,7 +131,6 @@ class StockPredictor(predictor.Predictor):
                 , (open_28 - normalization_min) / (normalization_max - normalization_min) as open_28
                 , (open_29 - normalization_min) / (normalization_max - normalization_min) as open_29
                 , (open_30 - normalization_min) / (normalization_max - normalization_min) as open_30
-                {self.generate_one_hot_encoding_sql}
             from summarized
             where market_datetime between '{self.start_date}' and '{self.end_date}'
               {'and target is not null' if self.is_training_run else ''}
@@ -168,7 +160,7 @@ class StockPredictor(predictor.Predictor):
     def model_kwargs(self) -> dict:
         kwargs = {
             'n_layers': 2,
-            'n_epochs': 250,
+            'n_epochs': 500,
             'hidden_shape': 1000,
             'dropout': 0.1,
             'learning_rate': .0001,
@@ -176,6 +168,16 @@ class StockPredictor(predictor.Predictor):
             'batch_size': 100,
         }
         return kwargs
+
+    def preprocess_data(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Process data pre-model run"""
+        symbols = self.get_symbols
+        final = science_utils.encode_one_hot(
+            df=df,
+            column='symbol',
+            keys=symbols['symbol'].to_list(),
+        )
+        return final
 
     def postprocess_data(
             self,
