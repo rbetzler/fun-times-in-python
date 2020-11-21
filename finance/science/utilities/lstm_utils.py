@@ -93,8 +93,8 @@ class TorchLSTM(nn.Module):
         if padding > 0:
             x_zeros = pd.DataFrame(np.zeros(shape=(padding, x.shape[1])), columns=x.columns)
             y_zeros = pd.Series(np.zeros(padding), name=y.name)
-            x = x.append(x_zeros)
-            y = y.append(y_zeros)
+            x = x.append(x_zeros, ignore_index=True)
+            y = y.append(y_zeros, ignore_index=True)
         return x, y
 
     def training_data(self):
