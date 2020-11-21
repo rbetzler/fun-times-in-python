@@ -16,11 +16,11 @@ class TorchLSTM(nn.Module):
             n_layers=2,
             hidden_shape=100,
             output_shape=1,
-            n_training_batches=1,
+            sequence_length=1,
+            batch_size=None,
             n_epochs: int = 100,
             learning_rate: float = .0001,
             device: str = 'cuda',
-            batch_size=None,
             bias: bool = True,
             dropout: float = 0,
             seed: int = 3,
@@ -39,7 +39,6 @@ class TorchLSTM(nn.Module):
         self.n_layers = n_layers
         self.hidden_shape = hidden_shape
         self.output_shape = output_shape
-        self.n_training_batches = n_training_batches
 
         # Learning params
         self.n_epochs = n_epochs
@@ -48,17 +47,13 @@ class TorchLSTM(nn.Module):
 
         # Data and dimensions
         self.input_shape = x.shape[1]
-        if n_training_batches:
-            batch_size = int(len(x) / n_training_batches)
 
-        x, y = self.pad(batch_size, x, y)
-        self.x = x
-        self.y = y
-        self.batch_size = batch_size
-        self.n_training_batches = max(int(len(x) / batch_size), 1)
+        self.batch_size = int(batch_size / sequence_length)
+        self.x, self.y = self.pad(self.batch_size, x, y)
+        self.n_training_batches = max(int(len(self.x) / batch_size), 1)
 
         self.input = (
-            1,
+            sequence_length,
             self.batch_size,
             self.input_shape
         )
