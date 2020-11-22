@@ -165,7 +165,7 @@ class StockPredictor(predictor.Predictor):
             'dropout': 0.1,
             'learning_rate': .0001,
             'seed': 44,
-            'sequence_length': 100,
+            'sequence_length': 1,
             'batch_size': 10000,
         }
         return kwargs

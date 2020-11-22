@@ -64,5 +64,12 @@ def annualized_return(start_price, end_price, n_days):
 
 
 def kelly_criterion(predicted_win, predicted_loss, p_win):
-    bet_size = (predicted_win * p_win - predicted_loss * (1 - p_win)) / predicted_win
+    """
+    Kelly Criterion for bet sizing.
+
+    Bet Size = P(Win) - P(Loss) / Net Winnings
+
+    Where, Net Winnings = Win / Loss
+    """
+    bet_size = p_win - ((1 - p_win) / predicted_win / predicted_loss)
     return bet_size

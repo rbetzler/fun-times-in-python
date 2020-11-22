@@ -30,6 +30,9 @@ class DecisionsSQLRunner(sql.SQLRunner, abc.ABC):
             , quantity                             numeric(20,6)
             , asset                                varchar
             , direction                            varchar
+            , first_order_difference               numeric(20,6)
+            , smoothed_first_order_difference      numeric(20,6)
+            , kelly_criterion                      numeric(20,6)
             , file_datetime                        timestamp
             , ingest_datetime                      timestamp
         );

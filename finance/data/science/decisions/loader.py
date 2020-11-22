@@ -33,6 +33,10 @@ class DecisionsLoader(loader.ScienceLoader, abc.ABC):
             'quantity',
             'asset',
             'direction',
+            'first_order_difference',
+            'smoothed_first_order_difference',
+            'kelly_criterion',
+            'file_datetime',
         ]
 
 

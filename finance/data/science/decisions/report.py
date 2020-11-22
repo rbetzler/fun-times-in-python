@@ -9,7 +9,42 @@ class Decisions(reporter.Reporter):
 
     @property
     def query(self) -> str:
-        return decisioner.StockDecisioner(model_id='s0').query
+        query = '''
+        with
+        raw as (
+            select *
+                , dense_rank() over (order by file_datetime desc, market_datetime desc) as dr
+            from dev.decisions
+            where model_id = 's0'
+              and decisioner_id = 'z2'
+        )
+        select
+              model_id
+            , decisioner_id
+            , model_datetime
+            , market_datetime
+            , symbol
+            , thirty_day_low_prediction
+            , close as closing_stock_price
+            , put_call as option_type
+            , days_to_expiration
+            , strike
+            , price as option_price
+            , potential_annual_return
+            , oom_percent
+            , is_sufficiently_profitable
+            , is_sufficiently_oom
+            , is_strike_below_predicted_low_price
+            , quantity > 0 as should_place_trade
+            , direction
+            , first_order_difference as raw_probability_of_profit
+            , smoothed_first_order_difference as adj_probability_of_profit
+            , kelly_criterion
+        from raw
+        where dr = 1
+        order by symbol, days_to_expiration, strike
+        '''
+        return query
 
     @property
     def email_recipients(self) -> list:

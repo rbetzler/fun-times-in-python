@@ -34,3 +34,13 @@ docker run -it --name jupyter-explorer -p 8888:8888 -v /Users/rickbetzler/person
 ```
 jupyter lab --ip=0.0.0.0 --port=8888 --notebook-dir=/usr/src/app --allow-root
 ```
+
+##### Running executor.py locally
+Training Run:
+```
+python finance/science/executor.py --job=stock --start_date='2015-01-15' --n_days=500 --is_training_run=True
+```
+Production Run:
+```
+python finance/science/executor.py --job=stock --n_days=0
+```

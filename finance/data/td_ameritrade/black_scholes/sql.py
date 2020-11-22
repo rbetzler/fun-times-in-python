@@ -18,7 +18,7 @@ class BlackScholesSQLRunner(sql.SQLRunner):
                 implied_volatility numeric(20,6),
                 strike numeric(20,6),
                 days_to_maturity numeric(20,6),
-                put_call text,
+                is_call boolean,
                 market_datetime timestamp without time zone,
                 file_datetime timestamp without time zone,
                 ingest_datetime timestamp without time zone
