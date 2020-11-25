@@ -18,7 +18,7 @@ class StockPredictor(predictor.Predictor):
 
     @property
     def model_id(self) -> str:
-        return 's0'
+        return 's1'
 
     @property
     def get_symbols(self) -> pd.DataFrame:
@@ -137,7 +137,6 @@ class StockPredictor(predictor.Predictor):
               and open_30 is not null
               and normalization_max <> normalization_min
             order by market_datetime, symbol
-            limit 10000
             '''
         return query
 
@@ -165,8 +164,8 @@ class StockPredictor(predictor.Predictor):
             'dropout': 0.1,
             'learning_rate': .0001,
             'seed': 44,
-            'sequence_length': 1,
-            'batch_size': 10000,
+            'sequence_length': 20,
+            'batch_size': 13000,
         }
         return kwargs
 

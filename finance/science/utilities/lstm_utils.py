@@ -1,4 +1,5 @@
 """lstm utils"""
+import math
 import numpy as np
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -48,15 +49,25 @@ class TorchLSTM(nn.Module):
         # Data and dimensions
         self.input_shape = x.shape[1]
 
-        self.batch_size = int(batch_size / sequence_length)
-        self.x, self.y = self.pad(self.batch_size, x, y)
-        self.n_training_batches = max(int(len(self.x) / batch_size), 1)
+        self.batch_size = math.ceil(batch_size / sequence_length)
+        self.x, self.y = self.pad(batch_size, x, y)
+        self.n_training_batches = int(len(self.x) / self.batch_size / sequence_length)
 
         self.input = (
             sequence_length,
             self.batch_size,
             self.input_shape
         )
+
+        print(f'''
+        LSTM Config
+            Sequence Length: {sequence_length}
+            Batch Size: {batch_size}
+            Adj. Batch Size: {self.batch_size}
+            Dataset: {len(x)}
+            Padded Dataset: {len(self.x)}
+            N Training Batches: {self.n_training_batches}
+        ''')
 
         # Network
         self.lstm = nn.LSTM(
