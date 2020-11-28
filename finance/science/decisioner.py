@@ -10,28 +10,37 @@ from finance.science.utilities import modeling_utils
 class Decisioner(abc.ABC):
     def __init__(
             self,
-            model_id: str,
             run_datetime: datetime.datetime = datetime.datetime.utcnow(),
             start_date: datetime.datetime = datetime.date(year=2000, month=1, day=1),
-            n_days: int = 1000,
             is_prod: bool = False,
+            archive_files: bool = False,
     ):
-        self.model_id = model_id
         self.run_datetime = run_datetime
         self.start_date = start_date
-        self.end_date = start_date + datetime.timedelta(days=int(n_days))
         self._is_prod = is_prod
+        self._archive_files = archive_files
+
+    @property
+    def is_prod(self) -> bool:
+        """Whether the model is production or not"""
+        return self._is_prod
+
+    @property
+    def archive_files(self) -> bool:
+        """Whether to save output files"""
+        return self._archive_files
+
+    @property
+    @abc.abstractmethod
+    def model_id(self) -> str:
+        """Unique id for prediction method"""
+        pass
 
     @property
     @abc.abstractmethod
     def decisioner_id(self) -> str:
         """Unique id for optimization method"""
         pass
-
-    @property
-    def is_prod(self) -> bool:
-        """Whether the model is production or not"""
-        return self._is_prod
 
     @property
     def location(self) -> str:
@@ -78,7 +87,6 @@ class Decisioner(abc.ABC):
         Optimizer ID: {self.decisioner_id}
         Location: {self.location}
         Start Date: {self.start_date}
-        End Date: {self.end_date}
         ''')
 
         print(f'Getting raw data {datetime.datetime.utcnow()}')
@@ -88,10 +96,11 @@ class Decisioner(abc.ABC):
         output = self.decision(df)
         output['decisioner_id'] = self.decisioner_id
 
-        print(f'Saving output to {self.location} {datetime.datetime.utcnow()}')
-        modeling_utils.save_file(
-            df=output,
-            subfolder='decisions',
-            filename=self.filename,
-            is_prod=self.is_prod,
-        )
+        if self.archive_files:
+            print(f'Saving output to {self.location} {datetime.datetime.utcnow()}')
+            modeling_utils.save_file(
+                df=output,
+                subfolder='decisions',
+                filename=self.filename,
+                is_prod=self.is_prod,
+            )

@@ -37,8 +37,8 @@ class Decisions(reporter.Reporter):
             , is_strike_below_predicted_low_price
             , quantity > 0 as should_place_trade
             , direction
-            , first_order_difference as raw_probability_of_profit
-            , smoothed_first_order_difference as adj_probability_of_profit
+            , 1 - first_order_difference as raw_probability_of_profit
+            , 1 - smoothed_first_order_difference as adj_probability_of_profit
             , kelly_criterion
         from raw
         where dr = 1

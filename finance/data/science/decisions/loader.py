@@ -35,6 +35,7 @@ class DecisionsLoader(loader.ScienceLoader, abc.ABC):
             'direction',
             'first_order_difference',
             'smoothed_first_order_difference',
+            'probability_of_profit',
             'kelly_criterion',
             'file_datetime',
         ]

@@ -9,6 +9,10 @@ DIRECTION = 'SELL'
 
 class StockDecisioner(decisioner.Decisioner):
     @property
+    def model_id(self) -> str:
+        return 's1'
+
+    @property
     def decisioner_id(self) -> str:
         return 'z2'
 
@@ -29,7 +33,7 @@ class StockDecisioner(decisioner.Decisioner):
             , close
             , row_number() over (partition by symbol order by market_datetime desc) as rn
           from td.stocks
-          where market_datetime >= current_date - 3
+          where market_datetime between '{self.start_date}'::date - 5 and '{self.start_date}'
         )
         , raw_options as (
           select
@@ -40,7 +44,7 @@ class StockDecisioner(decisioner.Decisioner):
             , (bid + ask)/2 as price
             , row_number() over (w) as rn
           from td.options
-          where file_datetime >= current_date - 3
+          where file_datetime between '{self.start_date}'::date - 5 and '{self.start_date}'
             and days_to_expiration between 10 and 60
             and put_call = 'PUT'
           window w as (partition by symbol, strike, days_to_expiration, put_call order by file_datetime desc)
@@ -101,13 +105,14 @@ class StockDecisioner(decisioner.Decisioner):
         df['smoothed_first_order_difference'] = np.polyval(p, df['strike'])
         df.loc[df['smoothed_first_order_difference'] < 0, 'smoothed_first_order_difference'] = 0
         df.loc[df['smoothed_first_order_difference'] > 1, 'smoothed_first_order_difference'] = 1
+        df['probability_of_profit'] = 1 - df['smoothed_first_order_difference']
         return df
 
     @staticmethod
     def select_trades(
         df: pd.DataFrame,
-        n_stocks: int = 10,
-        n_trades: int = 5,
+        n_stocks: int = 35,
+        n_trades: int = 25,
     ) -> pd.DataFrame:
         """
         Select trades to place: Of the ten stocks with the highest average
@@ -138,7 +143,7 @@ class StockDecisioner(decisioner.Decisioner):
         df['kelly_criterion'] = science_utils.kelly_criterion(
             predicted_win=df['price'],
             predicted_loss=df['strike'],
-            p_win=df['smoothed_first_order_difference'],
+            p_win=df['probability_of_profit'],
         )
 
         print('Finalize trades to place')
@@ -147,4 +152,4 @@ class StockDecisioner(decisioner.Decisioner):
 
 
 if __name__ == '__main__':
-    StockDecisioner(model_id='s0').execute()
+    StockDecisioner().execute()
