@@ -2,7 +2,8 @@ import argparse
 import inspect
 
 from datetime import datetime
-from finance.science.dev import decisioner, stock_predictor, volatility_predictor
+from finance.science import science
+from finance.science.dev import decisioner, stock_predictor
 from finance.science.utilities import modeling_utils
 
 
@@ -57,11 +58,13 @@ def main():
     job_id = args.job[0]
     if job_id == 's':
         cls = stock_predictor.StockPredictor
-    elif job_id == 'v':
-        cls = volatility_predictor.VolatilityPredictor
     elif job_id == 'd':
         cls = decisioner.StockDecisioner
-    cls_kwargs = inspect.getfullargspec(cls.__init__).args
+
+    # TODO: Find a more elegant solution to cls inspection
+    sub_cls_kwargs = inspect.getfullargspec(cls.__init__).args
+    base_cls_kwargs = inspect.getfullargspec(science.Science.__init__).args
+    cls_kwargs = set(base_cls_kwargs + sub_cls_kwargs)
 
     # Parse args
     kwargs = {}

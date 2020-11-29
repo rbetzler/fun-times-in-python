@@ -3,36 +3,22 @@ import datetime
 import pandas as pd
 import torch
 
+from finance.science import science
 from finance.utilities import utils
 from finance.science.utilities import lstm_utils, modeling_utils
 
 
-class Predictor(abc.ABC):
+class Predictor(science.Science, abc.ABC):
     def __init__(
             self,
-            run_datetime: datetime.datetime = datetime.datetime.utcnow(),
-            start_date: datetime.datetime = datetime.date(year=2010, month=1, day=1),
             n_days: int = 1000,
-            is_prod: bool = False,
-            archive_files: bool = False,
             is_training_run: bool = False,
+            *args,
+            **kwargs,
     ):
-        self.run_datetime = run_datetime
-        self.start_date = start_date
-        self.end_date = start_date + datetime.timedelta(days=int(n_days))
-        self._is_prod = is_prod
-        self._archive_files = archive_files
+        super().__init__(*args, **kwargs)
+        self.end_date = self.start_date + datetime.timedelta(days=int(n_days))
         self._is_training_run = is_training_run
-
-    @property
-    def is_prod(self) -> bool:
-        """Whether the model is production or not"""
-        return self._is_prod
-
-    @property
-    def archive_files(self) -> bool:
-        """Whether to save output files"""
-        return self._archive_files
 
     @property
     def is_training_run(self) -> bool:
@@ -40,31 +26,9 @@ class Predictor(abc.ABC):
         return self._is_training_run
 
     @property
-    def location(self) -> str:
-        """String representation of whether the model will be trained or not"""
-        return 'prod' if self.is_prod else 'dev'
-
-    @property
-    @abc.abstractmethod
-    def model_id(self) -> str:
-        """Model id for filename(s)"""
-        pass
-
-    @property
-    def filename(self) -> str:
-        """Filename for archiving results"""
-        return f"{self.model_id}_{self.run_datetime.strftime('%Y%m%d%H%M%S')}"
-
-    @property
     def trained_model_filepath(self) -> str:
         """Filepath from where to load and to where to save a trained model"""
         return f'/usr/src/app/audit/science/{self.location}/models/{self.model_id}'
-
-    @property
-    @abc.abstractmethod
-    def query(self) -> str:
-        """Query to retrieve raw data"""
-        pass
 
     @property
     @abc.abstractmethod
@@ -143,6 +107,6 @@ class Predictor(abc.ABC):
             modeling_utils.save_file(
                 df=predictions,
                 subfolder='predictions',
-                filename=self.filename,
+                filename=self.filename(self.model_id),
                 is_prod=self.is_prod,
             )
