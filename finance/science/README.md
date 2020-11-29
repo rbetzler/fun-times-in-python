@@ -1,4 +1,4 @@
-### Data
+### Science
 
 Herein are two frameworks:
 * Predictor, which runs an LSTM to generate predictions
@@ -44,3 +44,9 @@ Production Run:
 ```
 python finance/science/executor.py --job=stock --n_days=0
 ```
+
+##### Development Process
+1. Using fake data, develop models that beat benchmarks, i.e., simple strategies
+2. Repeat back test on historical data
+3. Shadow deploy and monitor model
+4. Fully deploy model
