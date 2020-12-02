@@ -145,6 +145,7 @@ class StockDecisioner(decisioner.Decisioner):
             predicted_loss=df['strike'],
             p_win=df['probability_of_profit'],
         )
+        df.loc[df['kelly_criterion']==-np.inf, 'kelly_criterion'] = None
 
         print('Finalize trades to place')
         trades = self.select_trades(df)

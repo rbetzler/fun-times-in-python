@@ -42,7 +42,7 @@ start_time = BashOperator(
 
 predict_stocks = DockerOperator(
     task_id='stock_predictor',
-    command='python finance/science/executor.py --job=stock --archive_files=True',
+    command='python finance/science/executor.py --job=stock --archive_files',
     **prediction_kwargs,
 )
 
@@ -54,7 +54,7 @@ load_stock_predictions = DockerOperator(
 
 decision_stocks = DockerOperator(
     task_id='stock_decision',
-    command='python finance/science/dev/decisioner.py',
+    command='python finance/science/executor.py -j=d --archive_files',
     **kwargs,
 )
 
