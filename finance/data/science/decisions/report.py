@@ -15,7 +15,7 @@ class Decisions(reporter.Reporter):
             select *
                 , dense_rank() over (order by file_datetime desc, market_datetime desc) as dr
             from dev.decisions
-            where model_id = 's0'
+            where model_id = 's1'
               and decisioner_id = 'z2'
         )
         select
