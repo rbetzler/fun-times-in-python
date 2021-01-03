@@ -41,12 +41,19 @@ def get_report_days() -> list:
         '''
     df = utils.query_db(query=query)
 
-    report_days = pd.date_range(
+    days = pd.date_range(
         start=df['bs_latest'].values[0],
         end=df['option_latest'].values[0],
         freq='b'
-    ).to_list()
+    ).to_frame(index=False, name='dates')
 
+    query = '''
+        select distinct day_date
+        from utils.holidays;
+        '''
+    holidays = utils.query_db(query=query)
+
+    report_days = days.loc[~days['dates'].isin(holidays['day_date']), 'dates'].to_list()
     return report_days
 
 
