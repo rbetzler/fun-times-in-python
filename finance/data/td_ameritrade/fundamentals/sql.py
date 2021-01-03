@@ -70,6 +70,7 @@ class TdFundamentalsSQLRunner(sql.SQLRunner):
             CREATE TABLE IF NOT EXISTS td.fundamentals_2019_2 PARTITION OF td.fundamentals FOR VALUES FROM ('2019-07-01') TO ('2020-01-01');
             CREATE TABLE IF NOT EXISTS td.fundamentals_2020_1 PARTITION OF td.fundamentals FOR VALUES FROM ('2020-01-01') TO ('2020-07-01');
             CREATE TABLE IF NOT EXISTS td.fundamentals_2020_2 PARTITION OF td.fundamentals FOR VALUES FROM ('2020-07-01') TO ('2021-01-01');
+            CREATE TABLE IF NOT EXISTS td.fundamentals_2021_1 PARTITION OF td.fundamentals FOR VALUES FROM ('2021-01-01') TO ('2021-07-01');
             '''
         return ddl
 
