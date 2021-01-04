@@ -53,6 +53,7 @@ class StockDecisioner(decisioner.Decisioner):
             select *
                 , (lead(price) over (w) - price) / (lead(strike) over (w) - strike) as first_order_difference
             from raw_options
+            where rn = 1
             window w as (partition by symbol, days_to_expiration order by strike)
         )
         , final as (
