@@ -3,7 +3,7 @@ import inspect
 
 from datetime import datetime
 from finance.science import science
-from finance.science.dev import decisioner, stock_predictor
+from finance.science.dev import decisioner, predictor
 from finance.science.utilities import modeling_utils
 
 
@@ -57,7 +57,7 @@ def main():
     args = parser.parse_args()
     job_id = args.job[0]
     if job_id == 's':
-        cls = stock_predictor.StockPredictor
+        cls = predictor.StockPredictor
     elif job_id == 'd':
         cls = decisioner.StockDecisioner
 
