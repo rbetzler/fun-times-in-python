@@ -1,3 +1,4 @@
+import abc
 import numpy as np
 import pandas as pd
 from finance.science import decisioner
@@ -7,14 +8,10 @@ ASSET = 'OPTION'
 DIRECTION = 'SELL'
 
 
-class StockDecisioner(decisioner.Decisioner):
+class Decisioner(decisioner.Decisioner, abc.ABC):
     @property
     def model_id(self) -> str:
         return 's1'
-
-    @property
-    def decisioner_id(self) -> str:
-        return 'z2'
 
     @property
     def query(self) -> str:
@@ -153,5 +150,7 @@ class StockDecisioner(decisioner.Decisioner):
         return trades
 
 
-if __name__ == '__main__':
-    StockDecisioner().execute()
+class DecisionerD1(Decisioner, abc.ABC):
+    @property
+    def decisioner_id(self) -> str:
+        return 'd1'

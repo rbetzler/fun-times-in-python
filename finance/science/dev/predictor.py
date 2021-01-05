@@ -1,3 +1,4 @@
+import abc
 import pandas as pd
 
 from finance.science import predictor
@@ -13,12 +14,8 @@ NORMALIZATION_MIN = 'normalization_min'
 NORMALIZATION_MAX = 'normalization_max'
 
 
-class StockPredictor(predictor.Predictor):
+class Predictor(predictor.Predictor, abc.ABC):
     """Predict the high stocks prices over the next 30 days"""
-
-    @property
-    def model_id(self) -> str:
-        return 's1'
 
     @property
     def get_symbols(self) -> pd.DataFrame:
@@ -155,20 +152,6 @@ class StockPredictor(predictor.Predictor):
         ] + [self.target_column]
         return cols
 
-    @property
-    def model_kwargs(self) -> dict:
-        kwargs = {
-            'n_layers': 2,
-            'n_epochs': 500,
-            'hidden_shape': 1000,
-            'dropout': 0.1,
-            'learning_rate': .0001,
-            'seed': 44,
-            'sequence_length': 20,
-            'batch_size': 13000,
-        }
-        return kwargs
-
     def preprocess_data(self, df: pd.DataFrame) -> pd.DataFrame:
         """Process data pre-model run"""
         symbols = self.get_symbols
@@ -190,5 +173,41 @@ class StockPredictor(predictor.Predictor):
         return df
 
 
-if __name__ == '__main__':
-    StockPredictor().execute()
+class PredictorS1(Predictor):
+    @property
+    def model_id(self) -> str:
+        return 's1'
+
+    @property
+    def model_kwargs(self) -> dict:
+        kwargs = {
+            'n_layers': 2,
+            'n_epochs': 500,
+            'hidden_shape': 1000,
+            'dropout': 0.1,
+            'learning_rate': .0001,
+            'seed': 44,
+            'sequence_length': 20,
+            'batch_size': 13000,
+        }
+        return kwargs
+
+
+class PredictorS2(Predictor):
+    @property
+    def model_id(self) -> str:
+        return 's2'
+
+    @property
+    def model_kwargs(self) -> dict:
+        kwargs = {
+            'n_layers': 2,
+            'n_epochs': 500,
+            'hidden_shape': 500,
+            'dropout': 0.1,
+            'learning_rate': .0001,
+            'seed': 44,
+            'sequence_length': 20,
+            'batch_size': 1000,
+        }
+        return kwargs

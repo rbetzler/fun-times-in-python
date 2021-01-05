@@ -1,4 +1,5 @@
 import argparse
+import importlib
 import inspect
 
 from datetime import datetime
@@ -55,11 +56,20 @@ def main():
 
     # Determine which job to run
     args = parser.parse_args()
-    job_id = args.job[0]
-    if job_id == 's':
-        cls = predictor.StockPredictor
-    elif job_id == 'd':
-        cls = decisioner.StockDecisioner
+    job_id = args.job
+
+    if args.is_prod:
+        dev_or_prod = 'prod'
+    else:
+        dev_or_prod = 'dev'
+
+    if job_id[0] == 's':
+        type = 'Predictor'
+    elif job_id[0] == 'd':
+        type = 'Decisioner'
+
+    module = importlib.import_module(f'finance.science.{dev_or_prod}.{type.lower()}')
+    cls = getattr(module, f'{type}{job_id.upper()}')
 
     # TODO: Find a more elegant solution to cls inspection
     sub_cls_kwargs = inspect.getfullargspec(cls.__init__).args
