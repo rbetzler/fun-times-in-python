@@ -13,3 +13,4 @@ nltk
 apache-airflow
 docker
 torch
+dbt

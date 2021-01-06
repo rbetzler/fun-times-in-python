@@ -1,0 +1,9 @@
+name: 'dw_stocks'
+version: '1.0.0'
+config-version: 2
+profile: 'dw_stocks'
+source-paths: ["models"]
+clean-targets:
+    - "logs"
+    - "dbt_modules"
+    - "target"
