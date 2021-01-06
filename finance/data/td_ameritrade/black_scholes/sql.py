@@ -64,6 +64,16 @@ class BlackScholesSQLRunner(sql.SQLRunner):
             create table if not exists td.black_scholes_20201215 partition of td.black_scholes for values from ('2020-12-15') to ('2020-12-22');
             create table if not exists td.black_scholes_20201222 partition of td.black_scholes for values from ('2020-12-22') to ('2020-12-29');
             create table if not exists td.black_scholes_20201229 partition of td.black_scholes for values from ('2020-12-29') to ('2021-01-05');
+            create table if not exists td.black_scholes_20210105 partition of td.black_scholes for values from ('2021-01-05') to ('2021-01-15');
+            create table if not exists td.black_scholes_20210115 partition of td.black_scholes for values from ('2021-01-15') to ('2021-01-30');
+            create table if not exists td.black_scholes_20210130 partition of td.black_scholes for values from ('2021-01-30') to ('2021-02-15');
+            create table if not exists td.black_scholes_20210215 partition of td.black_scholes for values from ('2021-02-15') to ('2021-02-28');
+            create table if not exists td.black_scholes_20210515 partition of td.black_scholes for values from ('2021-05-15') to ('2021-05-30');
+            create table if not exists td.black_scholes_20210228 partition of td.black_scholes for values from ('2021-02-28') to ('2021-03-15');
+            create table if not exists td.black_scholes_20210315 partition of td.black_scholes for values from ('2021-03-15') to ('2021-03-30');
+            create table if not exists td.black_scholes_20210330 partition of td.black_scholes for values from ('2021-03-30') to ('2021-04-15');
+            create table if not exists td.black_scholes_20210415 partition of td.black_scholes for values from ('2021-04-15') to ('2021-04-30');
+            create table if not exists td.black_scholes_20210430 partition of td.black_scholes for values from ('2021-04-30') to ('2021-05-15');
 
             create index if not exists black_scholes_symbol_idx on td.black_scholes (symbol);
             create index if not exists black_scholes_file_datetime_idx on td.black_scholes (market_datetime);
