@@ -2,14 +2,14 @@ import abc
 import datetime
 import pandas as pd
 
-from science import science
+from science import core
 from trading import utils as trading_utils
 from utilities import utils
 
 from science.utilities import modeling_utils
 
 
-class Decisioner(science.Science, abc.ABC):
+class Decisioner(core.Science, abc.ABC):
 
     @property
     @abc.abstractmethod

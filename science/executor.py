@@ -3,8 +3,7 @@ import importlib
 import inspect
 
 from datetime import datetime
-from science import science
-from science.dev import predictor, decisioner
+from science import core
 from science.utilities import modeling_utils
 
 
@@ -68,12 +67,12 @@ def main():
     elif job_id[0] == 'd':
         type = 'Decisioner'
 
-    module = importlib.import_module(f'finance.science.{dev_or_prod}.{type.lower()}')
+    module = importlib.import_module(f'science.{dev_or_prod}.{type.lower()}')
     cls = getattr(module, f'{type}{job_id.upper()}')
 
     # TODO: Find a more elegant solution to cls inspection
     sub_cls_kwargs = inspect.getfullargspec(cls.__init__).args
-    base_cls_kwargs = inspect.getfullargspec(science.Science.__init__).args
+    base_cls_kwargs = inspect.getfullargspec(core.Science.__init__).args
     cls_kwargs = set(base_cls_kwargs + sub_cls_kwargs)
 
     # Parse args

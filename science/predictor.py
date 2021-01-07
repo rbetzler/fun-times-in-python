@@ -3,12 +3,12 @@ import datetime
 import pandas as pd
 import torch
 
-from science import science
+from science import core
 from utilities import utils
 from science.utilities import modeling_utils, lstm_utils
 
 
-class Predictor(science.Science, abc.ABC):
+class Predictor(core.Science, abc.ABC):
     def __init__(
             self,
             n_days: int = 1000,
