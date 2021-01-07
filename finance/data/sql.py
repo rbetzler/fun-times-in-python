@@ -26,9 +26,8 @@ class SQLRunner(abc.ABC):
         pass
 
     @property
-    @abc.abstractmethod
-    def sql_script(self) -> str:
-        pass
+    def sql_script(self) -> None or str:
+        return None
 
     @property
     def run_maintenance(self) -> bool:
