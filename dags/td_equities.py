@@ -40,19 +40,19 @@ start_time = BashOperator(
 
 scrape_equities = DockerOperator(
     task_id='scrape_td_equities',
-    command='python finance/data/td_ameritrade/equities/scrape.py',
+    command='python data/td_ameritrade/equities/scrape.py',
     **kwargs,
 )
 
 load_equities = DockerOperator(
     task_id='load_td_equities',
-    command='python finance/data/td_ameritrade/equities/load.py',
+    command='python data/td_ameritrade/equities/load.py',
     **kwargs,
 )
 
 table_creator_equities = DockerOperator(
     task_id='update_td_equities_table',
-    command='python finance/data/td_ameritrade/equities/sql.py',
+    command='python data/td_ameritrade/equities/sql.py',
     **kwargs,
 )
 

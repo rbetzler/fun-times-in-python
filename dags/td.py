@@ -41,84 +41,84 @@ start_time = BashOperator(
 # options
 scrape_options = DockerOperator(
     task_id='scrape_td_options',
-    command='python finance/data/td_ameritrade/options/scrape.py',
+    command='python data/td_ameritrade/options/scrape.py',
     **kwargs,
 )
 
 load_options = DockerOperator(
     task_id='load_td_options',
-    command='python finance/data/td_ameritrade/options/load.py',
+    command='python data/td_ameritrade/options/load.py',
     **kwargs,
 )
 
 table_creator_options = DockerOperator(
     task_id='update_td_options_table',
-    command='python finance/data/td_ameritrade/options/sql.py',
+    command='python data/td_ameritrade/options/sql.py',
     **kwargs,
 )
 
 # quotes
 scrape_quotes = DockerOperator(
     task_id='scrape_td_quotes',
-    command='python finance/data/td_ameritrade/quotes/scrape.py',
+    command='python data/td_ameritrade/quotes/scrape.py',
     **kwargs,
 )
 
 load_quotes = DockerOperator(
     task_id='load_td_quotes',
-    command='python finance/data/td_ameritrade/quotes/load.py',
+    command='python data/td_ameritrade/quotes/load.py',
     **kwargs,
 )
 
 table_creator_quotes = DockerOperator(
     task_id='update_td_quotes_table',
-    command='python finance/data/td_ameritrade/quotes/sql.py',
+    command='python data/td_ameritrade/quotes/sql.py',
     **kwargs,
 )
 
 # derived stocks table
 table_creator_stocks = DockerOperator(
     task_id='update_td_stocks_table',
-    command='python finance/data/td_ameritrade/stock_sql.py',
+    command='python data/td_ameritrade/stock_sql.py',
     **kwargs,
 )
 
 # options report
 report_options = DockerOperator(
     task_id='report_options',
-    command='python finance/data/td_ameritrade/options/report.py',
+    command='python data/td_ameritrade/options/report.py',
     **kwargs,
 )
 
 # fundamentals
 scrape_fundamentals = DockerOperator(
     task_id='scrape_td_fundamentals',
-    command='python finance/data/td_ameritrade/fundamentals/scrape.py',
+    command='python data/td_ameritrade/fundamentals/scrape.py',
     **kwargs,
 )
 
 load_fundamentals = DockerOperator(
     task_id='load_td_fundamentals',
-    command='python finance/data/td_ameritrade/fundamentals/load.py',
+    command='python data/td_ameritrade/fundamentals/load.py',
     **kwargs,
 )
 
 table_creator_fundamentals = DockerOperator(
     task_id='update_td_fundamentals_table',
-    command='python finance/data/td_ameritrade/fundamentals/sql.py',
+    command='python data/td_ameritrade/fundamentals/sql.py',
     **kwargs,
 )
 
 # black scholes
 report_black_scholes = DockerOperator(
     task_id='report_black_scholes',
-    command='python finance/data/td_ameritrade/black_scholes/report.py',
+    command='python data/td_ameritrade/black_scholes/report.py',
     **kwargs,
 )
 
 load_black_scholes = DockerOperator(
     task_id='load_black_scholes',
-    command='python finance/data/td_ameritrade/black_scholes/load.py',
+    command='python data/td_ameritrade/black_scholes/load.py',
     **kwargs,
 )
 
