@@ -36,7 +36,7 @@ class Predictor(predictor.Predictor, abc.ABC):
             with
             tickers as (
                 select symbol as ticker
-                from td.stocks
+                from dbt.stocks
                 where market_datetime between '2010-01-15' and '2020-11-10'
                 group by 1
                 having bool_or(market_datetime = ('2015-01-15'))
@@ -80,7 +80,7 @@ class Predictor(predictor.Predictor, abc.ABC):
                     , lag(s.open, 28) over (partition by s.symbol order by s.market_datetime) as open_28
                     , lag(s.open, 29) over (partition by s.symbol order by s.market_datetime) as open_29
                     , lag(s.open, 30) over (partition by s.symbol order by s.market_datetime) as open_30
-                from td.stocks as s
+                from dbt.stocks as s
                 inner join tickers as t
                     on t.ticker = s.symbol
                 where s.market_datetime between '{self.start_date}'::date - 60 and '{self.end_date}'::date + 1

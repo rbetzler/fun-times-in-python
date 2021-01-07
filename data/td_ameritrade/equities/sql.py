@@ -57,6 +57,9 @@ class TdEquitiesSQLRunner(sql.SQLRunner):
             create table if not exists td.equities_2023 partition of td.equities for values from ('2023-01-01') to ('2024-01-01');
             create table if not exists td.equities_2024 partition of td.equities for values from ('2024-01-01') to ('2025-01-01');
 
+            create index if not exists equities_symbol_idx on td.equities (symbol);
+            create index if not exists equities_market_datetime_idx on td.equities (market_datetime);
+
             create table if not exists td.equities_raw (
                 symbol                  text,
                 open                    numeric(20,6),
@@ -100,9 +103,6 @@ class TdEquitiesSQLRunner(sql.SQLRunner):
             create table if not exists td.equities_raw_2022 partition of td.equities_raw for values from ('2022-01-01') to ('2023-01-01');
             create table if not exists td.equities_raw_2023 partition of td.equities_raw for values from ('2023-01-01') to ('2024-01-01');
             create table if not exists td.equities_raw_2024 partition of td.equities_raw for values from ('2024-01-01') to ('2025-01-01');
-
-            create index if not exists equities_symbol_idx on td.equities (symbol);
-            create index if not exists equities_market_datetime_idx on td.equities (market_datetime);
             '''
         return ddl
 

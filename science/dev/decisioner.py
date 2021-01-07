@@ -29,7 +29,7 @@ class Decisioner(decisioner.Decisioner, abc.ABC):
             , symbol
             , close
             , row_number() over (partition by symbol order by market_datetime desc) as rn
-          from td.stocks
+          from dbt.stocks
           where market_datetime between '{self.start_date}'::date - 5 and '{self.start_date}'
         )
         , raw_options as (

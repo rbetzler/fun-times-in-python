@@ -31,6 +31,8 @@ kwargs = {
     'network_mode': 'bridge',
     'dag': dag,
 }
+dbt_kwargs = kwargs.copy()
+dbt_kwargs['volumes'] = ['/media/nautilus/fun-times-in-python/dbt:/usr/src/app']
 
 start_time = BashOperator(
     task_id='start_pipeline',
@@ -78,9 +80,9 @@ table_creator_quotes = DockerOperator(
 
 # derived stocks table
 table_creator_stocks = DockerOperator(
-    task_id='update_td_stocks_table',
-    command='python data/td_ameritrade/stock_sql.py',
-    **kwargs,
+    task_id='update_dbt_stocks_table',
+    command='dbt run -m stocks --profiles-dir .',
+    **dbt_kwargs,
 )
 
 # options report

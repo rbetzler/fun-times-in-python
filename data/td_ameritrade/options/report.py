@@ -19,8 +19,8 @@ class Options(reporter.Reporter):
                 , close
                 , volume
                 , market_datetime
-              from td.stocks
-              where market_datetime = (select max(market_datetime) from td.stocks)
+              from dbt.stocks
+              where market_datetime = (select max(market_datetime) from dbt.stocks)
               )
             , options as (
               select

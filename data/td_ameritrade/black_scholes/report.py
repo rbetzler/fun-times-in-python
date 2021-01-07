@@ -76,7 +76,7 @@ class BlackScholes(reporter.Reporter):
                   market_datetime
                 , symbol
                 , close
-              from td.stocks
+              from dbt.stocks
               where market_datetime = '{self._report_day}'
               )
             , options as (
