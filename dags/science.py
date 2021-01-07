@@ -34,10 +34,20 @@ kwargs = {
 prediction_kwargs = kwargs.copy()
 prediction_kwargs['image'] = 'pytorch'
 
+dbt_kwargs = kwargs.copy()
+dbt_kwargs['volumes'] = ['/media/nautilus/fun-times-in-python/dbt:/usr/src/app']
+
 start_time = BashOperator(
     task_id='start_pipeline',
     bash_command='date',
     dag=dag,
+)
+
+# derived stocks table
+update_training_data = DockerOperator(
+    task_id='update_dbt_training_table',
+    command='dbt run -m training --profiles-dir .',
+    **dbt_kwargs,
 )
 
 predict_stocks = DockerOperator(
@@ -82,7 +92,8 @@ end_time = BashOperator(
     dag=dag,
 )
 
-predict_stocks.set_upstream(start_time)
+update_training_data.set_upstream(start_time)
+predict_stocks.set_upstream(update_training_data)
 load_stock_predictions.set_upstream(predict_stocks)
 decision_stocks.set_upstream(load_stock_predictions)
 load_stock_decisions.set_upstream(decision_stocks)
