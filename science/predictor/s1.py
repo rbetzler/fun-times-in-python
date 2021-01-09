@@ -22,7 +22,7 @@ class Predictor(base.Predictor, abc.ABC):
         """Generate sql for one hot encoding columns in query"""
         query = '''
             select symbol
-            from nasdaq.listed_stocks
+            from dbt.tickers
             order by 1
             '''
         df = utils.query_db(query=query)
@@ -31,7 +31,43 @@ class Predictor(base.Predictor, abc.ABC):
     @property
     def query(self) -> str:
         query = f'''
-            select *
+            select
+                symbol
+              , market_datetime
+              , target
+              , denormalized_target
+              , normalization_min
+              , normalization_max
+              , open_1
+              , open_2
+              , open_3
+              , open_4
+              , open_5
+              , open_6
+              , open_7
+              , open_8
+              , open_9
+              , open_10
+              , open_11
+              , open_12
+              , open_13
+              , open_14
+              , open_15
+              , open_16
+              , open_17
+              , open_18
+              , open_19
+              , open_20
+              , open_21
+              , open_22
+              , open_23
+              , open_24
+              , open_25
+              , open_26
+              , open_27
+              , open_28
+              , open_29
+              , open_30
             from dbt.training
             where market_datetime between '{self.start_date}' and '{self.end_date}'
               {'and target is not null' if self.is_training_run else ''}
