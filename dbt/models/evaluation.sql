@@ -9,7 +9,11 @@
 }}
 
 with
-p as (
+i as (
+  select *
+  from {{ ref('tickers') }}
+)
+, p as (
   select *
     , row_number() over (partition by model_id, symbol, market_datetime order by file_datetime desc) as rn
   from {{ source('dev', 'predictions') }}
@@ -19,10 +23,13 @@ p as (
       p.model_id
     , t.market_datetime
     , t.symbol
+    , i.sector
+    , i.industry
     , t.denormalized_target as target
     , p.denormalized_prediction as prediction
     , p.denormalized_prediction - t.denormalized_target as error
     , abs(p.denormalized_prediction - t.denormalized_target) as abs_error
+    , p.denormalized_prediction > t.denormalized_target as is_loss
     , t.mean_deviation_10
     , t.mean_deviation_30
     , t.mean_deviation_60
@@ -36,15 +43,22 @@ p as (
     on  p.symbol = t.symbol
     and p.market_datetime = t.market_datetime
     and p.rn = 1
+  left join i
+    on  i.symbol = t.symbol
+    and i.symbol = p.symbol
 )
 select
     model_id
   , market_datetime
   , symbol
+  , sector
+  , industry
   , target
   , prediction
   , error
   , abs_error
+  , is_loss
+  , case when is_loss then 1 else 0 end as n_loss
   , avg(abs_error) over (w rows between 10 preceding and current row) as mean_error_10
   , avg(abs_error) over (w rows between 30 preceding and current row) as mean_error_30
   , avg(abs_error) over (w rows between 60 preceding and current row) as mean_error_60
