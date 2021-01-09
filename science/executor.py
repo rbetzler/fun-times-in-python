@@ -2,7 +2,8 @@ import argparse
 import importlib
 import inspect
 
-from datetime import datetime
+import pandas as pd
+from datetime import datetime, timedelta
 from science import core
 from science.utilities import modeling_utils
 
@@ -30,19 +31,42 @@ def get_class_kwargs(cls: classmethod) -> set:
     return cls_kwargs
 
 
+def configure_backtest(run_kwargs: dict) -> list:
+    start_date = run_kwargs['start_date']
+    end_date = start_date + timedelta(days=int(run_kwargs['n_days']))
+    run_kwargs.update({'n_days': 0})
+
+    days = pd.date_range(
+        start=start_date,
+        end=end_date,
+        freq='b',
+    ).to_list()
+
+    kwargs = []
+    for day in days:
+        run_kwargs.update({'start_date': day.to_pydatetime().date()})
+        kwargs.append(run_kwargs.copy())
+    return kwargs
+
+
 def parse(
         args,
         cls_kwargs: set,
-) -> dict:
-    """Parse cli arguments into kwargs dict"""
-    kwargs = {}
+) -> list:
+    """Parse cli arguments into a list of kwargs dicts"""
+    run_kwargs = {}
     for key, arg in args.__dict__.items():
         if arg is not None and key != 'job' and key in cls_kwargs:
             if key == 'start_date':
                 arg = datetime.strptime(arg, '%Y-%m-%d').date()
                 # TODO: Assert on stock market holidays as well
                 assert arg.weekday() < 5, 'Start date must be a weekday'
-            kwargs.update({key: arg})
+            run_kwargs.update({key: arg})
+
+    if args.is_backtest:
+        kwargs = configure_backtest(run_kwargs)
+    else:
+        kwargs = [run_kwargs]
     return kwargs
 
 
@@ -72,6 +96,13 @@ def main():
     )
 
     parser.add_argument(
+        '-b',
+        '--is_backtest',
+        action='store_true',
+        help='Whether to run a backtest.',
+    )
+
+    parser.add_argument(
         '-p',
         '--is_prod',
         action='store_true',
@@ -92,14 +123,13 @@ def main():
         help='Whether to train the lstm.',
     )
 
-    # Determine which job to run
     args = parser.parse_args()
     job_id = args.job
     cls = get_class(job_id=job_id)
     cls_kwargs = get_class_kwargs(cls)
     kwargs = parse(args=args, cls_kwargs=cls_kwargs)
-
-    cls(**kwargs).execute()
+    for k in kwargs:
+        cls(**k).execute()
 
 
 if __name__ == '__main__':
