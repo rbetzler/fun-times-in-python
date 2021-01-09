@@ -57,18 +57,13 @@ def main():
     args = parser.parse_args()
     job_id = args.job
 
-    if args.is_prod:
-        dev_or_prod = 'prod'
-    else:
-        dev_or_prod = 'dev'
-
     if job_id[0] == 's':
-        type = 'Predictor'
+        job_type = 'predictor'
     elif job_id[0] == 'd':
-        type = 'Decisioner'
+        job_type = 'decisioner'
 
-    module = importlib.import_module(f'science.{dev_or_prod}.{type.lower()}')
-    cls = getattr(module, f'{type}{job_id.upper()}')
+    module = importlib.import_module(f'science.{job_type.lower()}.{job_id}')
+    cls = getattr(module, f'{job_id.upper()}')
 
     # TODO: Find a more elegant solution to cls inspection
     sub_cls_kwargs = inspect.getfullargspec(cls.__init__).args

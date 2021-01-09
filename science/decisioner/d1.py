@@ -1,14 +1,18 @@
 import abc
 import numpy as np
 import pandas as pd
-from science import decisioner
+from science.decisioner import base
 from science.utilities import science_utils
 
 ASSET = 'OPTION'
 DIRECTION = 'SELL'
 
 
-class Decisioner(decisioner.Decisioner, abc.ABC):
+class D1(base.Decisioner, abc.ABC):
+    @property
+    def decisioner_id(self) -> str:
+        return 'd1'
+
     @property
     def model_id(self) -> str:
         return 's1'
@@ -143,14 +147,8 @@ class Decisioner(decisioner.Decisioner, abc.ABC):
             predicted_loss=df['strike'],
             p_win=df['probability_of_profit'],
         )
-        df.loc[df['kelly_criterion']==-np.inf, 'kelly_criterion'] = None
+        df.loc[df['kelly_criterion'] == -np.inf, 'kelly_criterion'] = None
 
         print('Finalize trades to place')
         trades = self.select_trades(df)
         return trades
-
-
-class DecisionerD1(Decisioner, abc.ABC):
-    @property
-    def decisioner_id(self) -> str:
-        return 'd1'

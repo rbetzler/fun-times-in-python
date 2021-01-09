@@ -1,7 +1,7 @@
 import abc
 import pandas as pd
 
-from science import predictor
+from science.predictor import base
 from science.utilities import science_utils
 from utilities import utils
 
@@ -14,7 +14,7 @@ NORMALIZATION_MIN = 'normalization_min'
 NORMALIZATION_MAX = 'normalization_max'
 
 
-class Predictor(predictor.Predictor, abc.ABC):
+class Predictor(base.Predictor, abc.ABC):
     """Predict the high stocks prices over the next 30 days"""
 
     @property
@@ -77,7 +77,7 @@ class Predictor(predictor.Predictor, abc.ABC):
         return df
 
 
-class PredictorS1(Predictor):
+class S1(Predictor):
     @property
     def model_id(self) -> str:
         return 's1'
@@ -93,25 +93,5 @@ class PredictorS1(Predictor):
             'seed': 44,
             'sequence_length': 20,
             'batch_size': 13000,
-        }
-        return kwargs
-
-
-class PredictorS2(Predictor):
-    @property
-    def model_id(self) -> str:
-        return 's2'
-
-    @property
-    def model_kwargs(self) -> dict:
-        kwargs = {
-            'n_layers': 2,
-            'n_epochs': 500,
-            'hidden_shape': 500,
-            'dropout': 0.1,
-            'learning_rate': .0001,
-            'seed': 44,
-            'sequence_length': 20,
-            'batch_size': 1000,
         }
         return kwargs
