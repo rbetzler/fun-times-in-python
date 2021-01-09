@@ -1,6 +1,9 @@
 version: 2
 
 sources:
+  - name: dev
+    tables:
+      - name: predictions
   - name: nasdaq
     tables:
       - name: listed_stocks
