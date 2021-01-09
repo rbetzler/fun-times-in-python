@@ -11,7 +11,7 @@
 with
 tickers as (
     select symbol as ticker
-    from dbt.stocks
+    from {{ ref('stocks') }}
     where market_datetime between '2010-01-15' and '2020-11-10'
     group by 1
     having bool_or(market_datetime = ('2015-01-15'))
@@ -55,7 +55,7 @@ tickers as (
         , lag(s.open, 28) over (partition by s.symbol order by s.market_datetime) as open_28
         , lag(s.open, 29) over (partition by s.symbol order by s.market_datetime) as open_29
         , lag(s.open, 30) over (partition by s.symbol order by s.market_datetime) as open_30
-    from dbt.stocks as s
+    from {{ ref('stocks') }} as s
     inner join tickers as t
         on t.ticker = s.symbol
     )

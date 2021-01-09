@@ -18,7 +18,7 @@ equities as (
     , low
     , close
     , volume
-  from td.equities
+  from {{ source('td', 'equities') }}
 )
 , latest_equities as (
   select
@@ -36,7 +36,7 @@ equities as (
     , q.low_price as low
     , q.regular_market_last_price as close
     , q.volume
-  from td.quotes as q
+  from {{ source('td', 'quotes') }} as q
   left join latest_equities as l
     on q.symbol = l.symbol
   where (l.symbol is null and l.market_datetime is null)

@@ -1,0 +1,11 @@
+version: 2
+
+sources:
+  - name: nasdaq
+    tables:
+      - name: listed_stocks
+  - name: td
+    tables:
+      - name: equities
+      - name: options
+      - name: quotes
