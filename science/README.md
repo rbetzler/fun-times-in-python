@@ -7,11 +7,11 @@
 ## Running executor.py locally
 * Training Run:
   ```
-  python science/executor.py --job=stock --start_date='2015-01-15' --n_days=500 --is_training_run=True
+  python science/executor.py --job=s1 --start_date='2015-01-15' --n_days=500 --is_training_run
   ```
 * Production Run:
   ```
-  python science/executor.py --job=stock --n_days=0
+  python science/executor.py --job=s1
   ```
 
 ## Development Process
