@@ -21,10 +21,8 @@ class Predictor(base.Predictor, abc.ABC):
     def get_symbols(self) -> pd.DataFrame:
         """Generate sql for one hot encoding columns in query"""
         query = '''
-            select distinct ticker as symbol
+            select symbol
             from nasdaq.listed_stocks
-            where ticker !~ '[\^.~]'
-              and character_length(ticker) between 1 and 4
             order by 1
             '''
         df = utils.query_db(query=query)
