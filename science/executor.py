@@ -7,6 +7,44 @@ from science import core
 from science.utilities import modeling_utils
 
 
+def get_class(job_id: str) -> classmethod:
+    """Determine which class to run"""
+    if job_id[0] == 's':
+        job_type = 'predictor'
+    elif job_id[0] == 'd':
+        job_type = 'decisioner'
+    else:
+        raise NotImplementedError('Missing job_id arg')
+
+    module = importlib.import_module(f'science.{job_type.lower()}.{job_id}')
+    cls = getattr(module, f'{job_id.upper()}')
+    return cls
+
+
+# TODO: Find a more elegant solution to cls inspection
+def get_class_kwargs(cls: classmethod) -> set:
+    """Get keyword arguments for classes"""
+    sub_cls_kwargs = inspect.getfullargspec(cls.__init__).args
+    base_cls_kwargs = inspect.getfullargspec(core.Science.__init__).args
+    cls_kwargs = set(base_cls_kwargs + sub_cls_kwargs)
+    return cls_kwargs
+
+
+def parse(
+        args,
+        cls_kwargs: set,
+) -> dict:
+    """Parse cli arguments into kwargs dict"""
+    kwargs = {}
+    for key, arg in args.__dict__.items():
+        if arg is not None and key != 'job' and key in cls_kwargs:
+            if key == 'start_date':
+                arg = datetime.strptime(arg, '%Y-%m-%d').date()
+                assert arg.weekday() < 5, 'Start date must be a weekday'
+            kwargs.update({key: arg})
+    return kwargs
+
+
 def main():
     """Argument parser from science jobs"""
 
@@ -56,27 +94,9 @@ def main():
     # Determine which job to run
     args = parser.parse_args()
     job_id = args.job
-
-    if job_id[0] == 's':
-        job_type = 'predictor'
-    elif job_id[0] == 'd':
-        job_type = 'decisioner'
-
-    module = importlib.import_module(f'science.{job_type.lower()}.{job_id}')
-    cls = getattr(module, f'{job_id.upper()}')
-
-    # TODO: Find a more elegant solution to cls inspection
-    sub_cls_kwargs = inspect.getfullargspec(cls.__init__).args
-    base_cls_kwargs = inspect.getfullargspec(core.Science.__init__).args
-    cls_kwargs = set(base_cls_kwargs + sub_cls_kwargs)
-
-    # Parse args
-    kwargs = {}
-    for key, arg in args.__dict__.items():
-        if arg is not None and key != 'job' and key in cls_kwargs:
-            if key == 'start_date':
-                arg = datetime.strptime(arg, '%Y-%m-%d').date()
-            kwargs.update({key: arg})
+    cls = get_class(job_id=job_id)
+    cls_kwargs = get_class_kwargs(cls)
+    kwargs = parse(args=args, cls_kwargs=cls_kwargs)
 
     cls(**kwargs).execute()
 

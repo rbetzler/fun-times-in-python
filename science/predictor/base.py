@@ -75,6 +75,8 @@ class Predictor(core.Science, abc.ABC):
         print(f'Getting raw data {datetime.datetime.utcnow()}')
         df = utils.query_db(query=self.query)
 
+        assert not df.empty, 'Prediction dataframe cannot be empty'
+
         print(f'Pre-processing raw data {datetime.datetime.utcnow()}')
         input = self.preprocess_data(df)
 
