@@ -40,6 +40,7 @@ def parse(
         if arg is not None and key != 'job' and key in cls_kwargs:
             if key == 'start_date':
                 arg = datetime.strptime(arg, '%Y-%m-%d').date()
+                # TODO: Assert on stock market holidays as well
                 assert arg.weekday() < 5, 'Start date must be a weekday'
             kwargs.update({key: arg})
     return kwargs
@@ -53,21 +54,21 @@ def main():
     parser.add_argument(
         '-j',
         '--job',
-        help='Which job to run: stock, volatility, decisioner.',
+        help='Which job to run: stock, decisioner.',
     )
 
     parser.add_argument(
         '-s',
         '--start_date',
         default=modeling_utils.get_latest_market_datetime(),
-        help='First date for training or testing.',
+        help='First date for training or testing. Must be a weekday',
     )
 
     parser.add_argument(
         '-n',
         '--n_days',
         default=0,
-        help='How many days to include.',
+        help='How many days to include, whether for training or backtesting.',
     )
 
     parser.add_argument(
@@ -81,7 +82,7 @@ def main():
         '-a',
         '--archive_files',
         action='store_true',
-        help='Whether to save prediction and trade files.',
+        help='Whether to save output files.',
     )
 
     parser.add_argument(

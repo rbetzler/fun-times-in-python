@@ -28,6 +28,7 @@ class IngestLoadTimesTable(sql.SQLRunner):
         pass
 
 
+# TODO: Migrate to dbt
 class HolidaysTable(sql.SQLRunner):
 
     @property
