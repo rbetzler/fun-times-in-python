@@ -25,39 +25,40 @@ tickers as (
         , s.market_datetime
         , min(s.open) over (partition by s.symbol order by s.market_datetime rows between 1 following and 31 following) as target
         , s.open
-        , lag(s.open,  1) over (partition by s.symbol order by s.market_datetime) as open_1
-        , lag(s.open,  2) over (partition by s.symbol order by s.market_datetime) as open_2
-        , lag(s.open,  3) over (partition by s.symbol order by s.market_datetime) as open_3
-        , lag(s.open,  4) over (partition by s.symbol order by s.market_datetime) as open_4
-        , lag(s.open,  5) over (partition by s.symbol order by s.market_datetime) as open_5
-        , lag(s.open,  6) over (partition by s.symbol order by s.market_datetime) as open_6
-        , lag(s.open,  7) over (partition by s.symbol order by s.market_datetime) as open_7
-        , lag(s.open,  8) over (partition by s.symbol order by s.market_datetime) as open_8
-        , lag(s.open,  9) over (partition by s.symbol order by s.market_datetime) as open_9
-        , lag(s.open, 10) over (partition by s.symbol order by s.market_datetime) as open_10
-        , lag(s.open, 11) over (partition by s.symbol order by s.market_datetime) as open_11
-        , lag(s.open, 12) over (partition by s.symbol order by s.market_datetime) as open_12
-        , lag(s.open, 13) over (partition by s.symbol order by s.market_datetime) as open_13
-        , lag(s.open, 14) over (partition by s.symbol order by s.market_datetime) as open_14
-        , lag(s.open, 15) over (partition by s.symbol order by s.market_datetime) as open_15
-        , lag(s.open, 16) over (partition by s.symbol order by s.market_datetime) as open_16
-        , lag(s.open, 17) over (partition by s.symbol order by s.market_datetime) as open_17
-        , lag(s.open, 18) over (partition by s.symbol order by s.market_datetime) as open_18
-        , lag(s.open, 19) over (partition by s.symbol order by s.market_datetime) as open_19
-        , lag(s.open, 20) over (partition by s.symbol order by s.market_datetime) as open_20
-        , lag(s.open, 21) over (partition by s.symbol order by s.market_datetime) as open_21
-        , lag(s.open, 22) over (partition by s.symbol order by s.market_datetime) as open_22
-        , lag(s.open, 23) over (partition by s.symbol order by s.market_datetime) as open_23
-        , lag(s.open, 24) over (partition by s.symbol order by s.market_datetime) as open_24
-        , lag(s.open, 25) over (partition by s.symbol order by s.market_datetime) as open_25
-        , lag(s.open, 26) over (partition by s.symbol order by s.market_datetime) as open_26
-        , lag(s.open, 27) over (partition by s.symbol order by s.market_datetime) as open_27
-        , lag(s.open, 28) over (partition by s.symbol order by s.market_datetime) as open_28
-        , lag(s.open, 29) over (partition by s.symbol order by s.market_datetime) as open_29
-        , lag(s.open, 30) over (partition by s.symbol order by s.market_datetime) as open_30
+        , lag(s.open,  1) over w as open_1
+        , lag(s.open,  2) over w as open_2
+        , lag(s.open,  3) over w as open_3
+        , lag(s.open,  4) over w as open_4
+        , lag(s.open,  5) over w as open_5
+        , lag(s.open,  6) over w as open_6
+        , lag(s.open,  7) over w as open_7
+        , lag(s.open,  8) over w as open_8
+        , lag(s.open,  9) over w as open_9
+        , lag(s.open, 10) over w as open_10
+        , lag(s.open, 11) over w as open_11
+        , lag(s.open, 12) over w as open_12
+        , lag(s.open, 13) over w as open_13
+        , lag(s.open, 14) over w as open_14
+        , lag(s.open, 15) over w as open_15
+        , lag(s.open, 16) over w as open_16
+        , lag(s.open, 17) over w as open_17
+        , lag(s.open, 18) over w as open_18
+        , lag(s.open, 19) over w as open_19
+        , lag(s.open, 20) over w as open_20
+        , lag(s.open, 21) over w as open_21
+        , lag(s.open, 22) over w as open_22
+        , lag(s.open, 23) over w as open_23
+        , lag(s.open, 24) over w as open_24
+        , lag(s.open, 25) over w as open_25
+        , lag(s.open, 26) over w as open_26
+        , lag(s.open, 27) over w as open_27
+        , lag(s.open, 28) over w as open_28
+        , lag(s.open, 29) over w as open_29
+        , lag(s.open, 30) over w as open_30
     from {{ ref('stocks') }} as s
     inner join tickers as t
         on t.ticker = s.symbol
+    window w as (partition by s.symbol order by s.market_datetime)
     )
 , summarized as (
     select *
