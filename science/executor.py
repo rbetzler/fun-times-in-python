@@ -129,7 +129,7 @@ def main():
     cls_kwargs = get_class_kwargs(cls)
     kwargs = parse(args=args, cls_kwargs=cls_kwargs)
     for k in kwargs:
-        cls(**k).execute()
+        cls(run_datetime=datetime.utcnow(), **k).execute()
 
 
 if __name__ == '__main__':
