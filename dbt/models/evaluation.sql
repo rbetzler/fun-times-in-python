@@ -9,11 +9,7 @@
 }}
 
 with
-i as (
-  select *
-  from {{ ref('tickers') }}
-)
-, p as (
+p as (
   select *
     , row_number() over (partition by model_id, symbol, market_datetime order by file_datetime desc) as rn
   from {{ source('dev', 'predictions') }}
@@ -35,7 +31,7 @@ i as (
     on  p.symbol = t.symbol
     and p.market_datetime = t.market_datetime
     and p.rn = 1
-  left join i
+  left join {{ ref('tickers') }} as i
     on  i.symbol = t.symbol
     and i.symbol = p.symbol
 )
