@@ -75,40 +75,44 @@ class Predictor(core.Science, abc.ABC):
         print(f'Getting raw data {datetime.datetime.utcnow()}')
         df = utils.query_db(query=self.query)
 
-        assert not df.empty, 'Prediction dataframe cannot be empty'
+        # TODO: Raise an error if data is missing; accommodate holidays
+        if not df.empty:
 
-        print(f'Pre-processing raw data {datetime.datetime.utcnow()}')
-        input = self.preprocess_data(df)
+            print(f'Pre-processing raw data {datetime.datetime.utcnow()}')
+            input = self.preprocess_data(df)
 
-        print(f'Configuring model {datetime.datetime.utcnow()}')
-        model = lstm_utils.TorchLSTM(
-            x=input.drop(self.columns_to_ignore, axis=1),
-            y=input[self.target_column],
-            **self.model_kwargs,
-        )
+            print(f'Configuring model {datetime.datetime.utcnow()}')
+            model = lstm_utils.TorchLSTM(
+                x=input.drop(self.columns_to_ignore, axis=1),
+                y=input[self.target_column],
+                **self.model_kwargs,
+            )
 
-        if self.is_training_run:
-            print(f'Fitting model {datetime.datetime.utcnow()}')
-            model.fit()
+            if self.is_training_run:
+                print(f'Fitting model {datetime.datetime.utcnow()}')
+                model.fit()
 
-            print(f'Saving model to {self.trained_model_filepath}: {datetime.datetime.utcnow()}')
-            torch.save(model.state_dict(), self.trained_model_filepath)
+                print(f'Saving model to {self.trained_model_filepath}: {datetime.datetime.utcnow()}')
+                torch.save(model.state_dict(), self.trained_model_filepath)
+
+            else:
+                print(f'Loading pre-trained model {datetime.datetime.utcnow()}')
+                trained_model_params = torch.load(self.trained_model_filepath)
+                model.load_state_dict(trained_model_params)
+
+            print(f'Generating prediction {datetime.datetime.utcnow()}')
+            output = model.prediction_df
+
+            print(f'Post-processing data {datetime.datetime.utcnow()}')
+            predictions = self.postprocess_data(input=input, output=output)
+            if self.archive_files:
+                print(f'Saving model predictions to {self.location} {datetime.datetime.utcnow()}')
+                modeling_utils.save_file(
+                    df=predictions,
+                    subfolder='predictions',
+                    filename=self.filename(self.model_id),
+                    is_prod=self.is_prod,
+                )
 
         else:
-            print(f'Loading pre-trained model {datetime.datetime.utcnow()}')
-            trained_model_params = torch.load(self.trained_model_filepath)
-            model.load_state_dict(trained_model_params)
-
-        print(f'Generating prediction {datetime.datetime.utcnow()}')
-        output = model.prediction_df
-
-        print(f'Post-processing data {datetime.datetime.utcnow()}')
-        predictions = self.postprocess_data(input=input, output=output)
-        if self.archive_files:
-            print(f'Saving model predictions to {self.location} {datetime.datetime.utcnow()}')
-            modeling_utils.save_file(
-                df=predictions,
-                subfolder='predictions',
-                filename=self.filename(self.model_id),
-                is_prod=self.is_prod,
-            )
+            print(f'Dataframe is empty. Check if data is missing: {self.start_date}')
