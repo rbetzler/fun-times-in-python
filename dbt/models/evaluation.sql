@@ -27,8 +27,8 @@ i as (
     , i.industry
     , t.denormalized_target as target
     , p.denormalized_prediction as prediction
-    , p.denormalized_prediction - t.denormalized_target as error
-    , abs(p.denormalized_prediction - t.denormalized_target) as abs_error
+    , (p.denormalized_prediction - t.denormalized_target) / t.denormalized_target as error
+    , abs(p.denormalized_prediction - t.denormalized_target) / t.denormalized_target as abs_error
     , p.denormalized_prediction > t.denormalized_target as is_loss
     , t.mean_deviation_10
     , t.mean_deviation_30
