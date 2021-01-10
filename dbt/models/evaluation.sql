@@ -30,14 +30,6 @@ i as (
     , (p.denormalized_prediction - t.denormalized_target) / t.denormalized_target as error
     , abs(p.denormalized_prediction - t.denormalized_target) / t.denormalized_target as abs_error
     , p.denormalized_prediction > t.denormalized_target as is_loss
-    , t.mean_deviation_10
-    , t.mean_deviation_30
-    , t.mean_deviation_60
-    , t.mean_deviation_90
-    , t.max_deviation_10
-    , t.max_deviation_30
-    , t.max_deviation_60
-    , t.max_deviation_90
   from {{ ref('training') }} as t
   inner join p
     on  p.symbol = t.symbol
@@ -67,13 +59,5 @@ select
   , max(abs_error) over (w rows between 30 preceding and current row) as max_error_30
   , max(abs_error) over (w rows between 60 preceding and current row) as max_error_60
   , max(abs_error) over (w rows between 90 preceding and current row) as max_error_90
-  , mean_deviation_10
-  , mean_deviation_30
-  , mean_deviation_60
-  , mean_deviation_90
-  , max_deviation_10
-  , max_deviation_30
-  , max_deviation_60
-  , max_deviation_90
 from base
 window w as (partition by model_id, symbol order by market_datetime)

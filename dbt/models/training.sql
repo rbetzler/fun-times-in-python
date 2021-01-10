@@ -55,10 +55,10 @@ tickers as (
         , lag(s.open, 28) over w as open_28
         , lag(s.open, 29) over w as open_29
         , lag(s.open, 30) over w as open_30
-        , abs(s.open - avg(s.open) over (w rows between 10 preceding and current row)) / avg(s.open) over (w rows between 10 preceding and current row) as abs_deviation_10
-        , abs(s.open - avg(s.open) over (w rows between 30 preceding and current row)) / avg(s.open) over (w rows between 30 preceding and current row) as abs_deviation_30
-        , abs(s.open - avg(s.open) over (w rows between 60 preceding and current row)) / avg(s.open) over (w rows between 60 preceding and current row) as abs_deviation_60
-        , abs(s.open - avg(s.open) over (w rows between 90 preceding and current row)) / avg(s.open) over (w rows between 90 preceding and current row) as abs_deviation_90
+        , abs(s.open - avg(s.open) over (w rows between 11 preceding and 1 preceding)) / avg(s.open) over (w rows between 11 preceding and 1 preceding) as abs_deviation_10
+        , abs(s.open - avg(s.open) over (w rows between 31 preceding and 1 preceding)) / avg(s.open) over (w rows between 31 preceding and 1 preceding) as abs_deviation_30
+        , abs(s.open - avg(s.open) over (w rows between 61 preceding and 1 preceding)) / avg(s.open) over (w rows between 61 preceding and 1 preceding) as abs_deviation_60
+        , abs(s.open - avg(s.open) over (w rows between 91 preceding and 1 preceding)) / avg(s.open) over (w rows between 91 preceding and 1 preceding) as abs_deviation_90
     from {{ ref('stocks') }} as s
     inner join tickers as t
         on t.ticker = s.symbol
@@ -130,14 +130,14 @@ tickers as (
             , open_29
             , open_30
           ) as normalization_max
-        , avg(abs_deviation_10) over (w rows between 10 preceding and current row) as mean_deviation_10
-        , avg(abs_deviation_30) over (w rows between 30 preceding and current row) as mean_deviation_30
-        , avg(abs_deviation_60) over (w rows between 60 preceding and current row) as mean_deviation_60
-        , avg(abs_deviation_90) over (w rows between 90 preceding and current row) as mean_deviation_90
-        , max(abs_deviation_10) over (w rows between 10 preceding and current row) as max_deviation_10
-        , max(abs_deviation_30) over (w rows between 30 preceding and current row) as max_deviation_30
-        , max(abs_deviation_60) over (w rows between 60 preceding and current row) as max_deviation_60
-        , max(abs_deviation_90) over (w rows between 90 preceding and current row) as max_deviation_90
+        , avg(abs_deviation_10) over (w rows between 11 preceding and 1 preceding) as mean_deviation_10
+        , avg(abs_deviation_30) over (w rows between 31 preceding and 1 preceding) as mean_deviation_30
+        , avg(abs_deviation_60) over (w rows between 61 preceding and 1 preceding) as mean_deviation_60
+        , avg(abs_deviation_90) over (w rows between 91 preceding and 1 preceding) as mean_deviation_90
+        , max(abs_deviation_10) over (w rows between 11 preceding and 1 preceding) as max_deviation_10
+        , max(abs_deviation_30) over (w rows between 31 preceding and 1 preceding) as max_deviation_30
+        , max(abs_deviation_60) over (w rows between 61 preceding and 1 preceding) as max_deviation_60
+        , max(abs_deviation_90) over (w rows between 91 preceding and 1 preceding) as max_deviation_90
     from lagged
     window w as (partition by symbol order by market_datetime)
     )
@@ -178,14 +178,12 @@ select
     , (open_28 - normalization_min) / (normalization_max - normalization_min) as open_28
     , (open_29 - normalization_min) / (normalization_max - normalization_min) as open_29
     , (open_30 - normalization_min) / (normalization_max - normalization_min) as open_30
-    , mean_deviation_10
-    , mean_deviation_30
-    , mean_deviation_60
-    , mean_deviation_90
-    , max_deviation_10
-    , max_deviation_30
-    , max_deviation_60
-    , max_deviation_90
+    , (mean_deviation_10 - mean_deviation_30) / mean_deviation_30 as mean_deviation_10_over_30
+    , (mean_deviation_10 - mean_deviation_60) / mean_deviation_60 as mean_deviation_10_over_60
+    , (mean_deviation_10 - mean_deviation_90) / mean_deviation_90 as mean_deviation_10_over_90
+    , (max_deviation_10 - max_deviation_30) / max_deviation_30 as max_deviation_10_over_30
+    , (max_deviation_10 - max_deviation_60) / max_deviation_60 as max_deviation_10_over_60
+    , (max_deviation_10 - max_deviation_90) / max_deviation_90 as max_deviation_10_over_90
 from summarized
 where open_30 is not null
   and normalization_max <> normalization_min
