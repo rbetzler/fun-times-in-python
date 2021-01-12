@@ -24,9 +24,6 @@ class DecisionsSQLRunner(sql.SQLRunner, abc.ABC):
             , price                                numeric(20,6)
             , potential_annual_return              numeric(20,6)
             , oom_percent                          numeric(20,6)
-            , is_sufficiently_profitable           boolean
-            , is_sufficiently_oom                  boolean
-            , is_strike_below_predicted_low_price  boolean
             , quantity                             numeric(20,6)
             , asset                                varchar
             , direction                            varchar

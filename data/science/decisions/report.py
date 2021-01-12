@@ -32,9 +32,6 @@ class Decisions(reporter.Reporter):
             , price as option_price
             , potential_annual_return
             , oom_percent
-            , is_sufficiently_profitable
-            , is_sufficiently_oom
-            , is_strike_below_predicted_low_price
             , quantity > 0 as should_place_trade
             , direction
             , 1 - first_order_difference as raw_probability_of_profit

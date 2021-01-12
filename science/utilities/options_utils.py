@@ -1,5 +1,6 @@
 """options utils"""
 import numpy as np
+import pandas as pd
 import scipy.stats as stats
 import scipy.optimize as opt
 
@@ -207,3 +208,23 @@ class BlackScholes:
         )
         vega = vega / 100
         return vega
+
+
+def smooth_first_order_difference(
+        df: pd.DataFrame,
+        degree: int = 2,
+) -> pd.DataFrame:
+    """
+    Smooth the first order differences of an option chain. Recall that an
+    option's first order difference is its cumulative density function.
+    """
+    p = np.polyfit(
+        x=df['strike'],
+        y=df['first_order_difference'],
+        deg=degree,
+    )
+    df['smoothed_first_order_difference'] = np.polyval(p, df['strike'])
+    df.loc[df['smoothed_first_order_difference'] < 0, 'smoothed_first_order_difference'] = 0
+    df.loc[df['smoothed_first_order_difference'] > 1, 'smoothed_first_order_difference'] = 1
+    df['probability_of_profit'] = 1 - df['smoothed_first_order_difference']
+    return df

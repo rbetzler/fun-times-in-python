@@ -2,7 +2,7 @@ import abc
 import numpy as np
 import pandas as pd
 from science.decisioner import base
-from science.utilities import science_utils
+from science.utilities import options_utils, science_utils
 
 ASSET = 'OPTION'
 DIRECTION = 'SELL'
@@ -91,46 +91,27 @@ class D1(base.Decisioner, abc.ABC):
         return query
 
     @staticmethod
-    def smooth_first_order_difference(
-            df: pd.DataFrame,
-            degree: int = 2,
-    ) -> pd.DataFrame:
-        """
-        Smooth the first order differences of an option chain. Recall that an
-        option's first order difference is its cumulative density function.
-        """
-        p = np.polyfit(
-            x=df['strike'],
-            y=df['first_order_difference'],
-            deg=degree,
-        )
-        df['smoothed_first_order_difference'] = np.polyval(p, df['strike'])
-        df.loc[df['smoothed_first_order_difference'] < 0, 'smoothed_first_order_difference'] = 0
-        df.loc[df['smoothed_first_order_difference'] > 1, 'smoothed_first_order_difference'] = 1
-        df['probability_of_profit'] = 1 - df['smoothed_first_order_difference']
-        return df
-
-    @staticmethod
     def select_trades(
         df: pd.DataFrame,
-        n_stocks: int = 35,
-        n_trades: int = 25,
+        n_stocks: int = 250,
+        n_trades: int = 250,
     ) -> pd.DataFrame:
         """
         Select trades to place: Of the ten stocks with the highest average
         kelly, pick the five most profitable trades.
         """
-        x = df[
+
+        temp = df[
             df['is_sufficiently_profitable'] &
             df['is_sufficiently_oom'] &
             df['is_strike_below_predicted_low_price'] &
             df['kelly_criterion'] > 0
         ]
-        symbols = x.groupby('symbol')['kelly_criterion'].mean().nlargest(n_stocks).index
-        x_symbols = x[x['symbol'].isin(symbols)]
-        idx = x_symbols.groupby('symbol')['kelly_criterion'].transform(max) == x_symbols['kelly_criterion']
-        trades = x_symbols[idx].nlargest(n_trades, 'kelly_criterion')
-        df.loc[df.index.isin(trades.index), 'quantity'] = 1
+
+        symbols = temp.groupby('symbol')['kelly_criterion'].mean().nlargest(n_stocks).index
+        x = temp[temp['symbol'].isin(symbols)]
+        idx = x.groupby('symbol')['kelly_criterion'].transform(max) == x['kelly_criterion']
+        df.loc[df.index.isin(idx[idx].index), 'quantity'] = 1
         return df
 
     def decision(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -139,7 +120,7 @@ class D1(base.Decisioner, abc.ABC):
         df['direction'] = DIRECTION
 
         print('Smoothing first order differences')
-        df = df.groupby(['symbol', 'days_to_expiration']).apply(self.smooth_first_order_difference)
+        df = df.groupby(['symbol', 'days_to_expiration']).apply(options_utils.smooth_first_order_difference)
 
         print('Calculating kelly criterion')
         df['kelly_criterion'] = science_utils.kelly_criterion(
