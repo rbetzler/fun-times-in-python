@@ -9,7 +9,7 @@ class DecisionsLoader(loader.ScienceLoader, abc.ABC):
 
     @property
     def import_file_prefix(self) -> str:
-        return 'z'
+        return 'd'
 
     @property
     def columns(self) -> list:
