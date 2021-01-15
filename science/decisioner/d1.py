@@ -43,21 +43,21 @@ class D1(base.Decisioner, abc.ABC):
             , days_to_expiration
             , strike
             , (bid + ask)/2 as price
-            , row_number() over (w) as rn
+            , dense_rank() over (w) as dr
           from td.options
           where file_datetime between '{self.start_date}'::date - 5 and '{self.start_date}'
             and days_to_expiration between 10 and 60
             and put_call = 'PUT'
-          window w as (partition by symbol, strike, days_to_expiration, put_call order by file_datetime desc)
+          window w as (partition by symbol order by file_datetime desc)
         )
         , options as (
             select *
                 , (lead(price) over (w) - price) / (lead(strike) over (w) - strike) as first_order_difference
             from raw_options
-            where rn = 1
+            where dr = 1
             window w as (partition by symbol, days_to_expiration order by strike)
         )
-        , final as (
+        , base as (
           select
               p.model_id
             , p.file_datetime as model_datetime
@@ -77,16 +77,20 @@ class D1(base.Decisioner, abc.ABC):
             on  p.symbol = s.symbol
           inner join options as o
             on  s.symbol = o.symbol
-            and s.rn = 1
-            and o.rn = 1
           where p.dr = 1
+            and s.rn = 1
+            and o.dr = 1
+        )
+        , final as (
+            select *
+              , potential_annual_return > .2 as is_sufficiently_profitable
+              , oom_percent > .15 as is_sufficiently_oom
+              , strike < thirty_day_low_prediction as is_strike_below_predicted_low_price
+            from base
+            order by symbol, days_to_expiration, strike
         )
         select *
-          , potential_annual_return > .2 as is_sufficiently_profitable
-          , oom_percent > .15 as is_sufficiently_oom
-          , strike < thirty_day_low_prediction as is_strike_below_predicted_low_price
         from final
-        order by symbol, days_to_expiration, strike
         '''
         return query
 
