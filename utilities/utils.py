@@ -42,13 +42,3 @@ def insert_record(db_connection=DW_STOCKS, query=None):
 def create_directory(directory):
     if not os.path.exists(directory):
         os.mkdir(directory)
-
-
-def iter_date_range(start_date, end_date):
-    if not isinstance(start_date, datetime.datetime):
-        start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
-    if not isinstance(end_date, datetime.datetime):
-        end_date = datetime.datetime.strptime(end_date, '%Y-%m-%d')
-    days_diff = (end_date - start_date).days
-    for n in range(days_diff):
-        yield start_date + datetime.timedelta(n)
