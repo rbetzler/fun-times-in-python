@@ -40,7 +40,6 @@ start_time = BashOperator(
     dag=dag,
 )
 
-# options
 scrape_options = DockerOperator(
     task_id='scrape_td_options',
     command='python data/td_ameritrade/options/scrape.py',
@@ -53,13 +52,12 @@ load_options = DockerOperator(
     **kwargs,
 )
 
-table_creator_options = DockerOperator(
-    task_id='update_td_options_table',
-    command='python data/td_ameritrade/options/sql.py',
-    **kwargs,
+dbt_options = DockerOperator(
+    task_id='update_dbt_options_table',
+    command='dbt run -m options --profiles-dir .',
+    **dbt_kwargs,
 )
 
-# quotes
 scrape_quotes = DockerOperator(
     task_id='scrape_td_quotes',
     command='python data/td_ameritrade/quotes/scrape.py',
@@ -72,27 +70,24 @@ load_quotes = DockerOperator(
     **kwargs,
 )
 
-table_creator_quotes = DockerOperator(
-    task_id='update_td_quotes_table',
-    command='python data/td_ameritrade/quotes/sql.py',
-    **kwargs,
+dbt_quotes = DockerOperator(
+    task_id='update_dbt_quotes_table',
+    command='dbt run -m quotes --profiles-dir .',
+    **dbt_kwargs,
 )
 
-# derived stocks table
-table_creator_stocks = DockerOperator(
+dbt_stocks = DockerOperator(
     task_id='update_dbt_stocks_table',
     command='dbt run -m stocks --profiles-dir .',
     **dbt_kwargs,
 )
 
-# options report
 report_options = DockerOperator(
     task_id='report_options',
     command='python data/td_ameritrade/options/report.py',
     **kwargs,
 )
 
-# fundamentals
 scrape_fundamentals = DockerOperator(
     task_id='scrape_td_fundamentals',
     command='python data/td_ameritrade/fundamentals/scrape.py',
@@ -105,13 +100,12 @@ load_fundamentals = DockerOperator(
     **kwargs,
 )
 
-table_creator_fundamentals = DockerOperator(
-    task_id='update_td_fundamentals_table',
-    command='python data/td_ameritrade/fundamentals/sql.py',
-    **kwargs,
+dbt_fundamentals = DockerOperator(
+    task_id='update_dbt_fundamentals_table',
+    command='dbt run -m fundamentals --profiles-dir .',
+    **dbt_kwargs,
 )
 
-# black scholes
 report_black_scholes = DockerOperator(
     task_id='report_black_scholes',
     command='python data/td_ameritrade/black_scholes/report.py',
@@ -124,6 +118,12 @@ load_black_scholes = DockerOperator(
     **kwargs,
 )
 
+dbt_tests = DockerOperator(
+    task_id='test_dbt_tables',
+    command='dbt test --profiles-dir .',
+    **dbt_kwargs,
+)
+
 end_time = BashOperator(
     task_id='end_pipeline',
     bash_command='date',
@@ -132,24 +132,26 @@ end_time = BashOperator(
 
 scrape_options.set_upstream(start_time)
 load_options.set_upstream(scrape_options)
-table_creator_options.set_upstream(load_options)
+dbt_options.set_upstream(load_options)
 
 scrape_quotes.set_upstream(scrape_options)
 load_quotes.set_upstream(scrape_quotes)
-table_creator_quotes.set_upstream(load_quotes)
-table_creator_stocks.set_upstream(table_creator_quotes)
+dbt_quotes.set_upstream(load_quotes)
+dbt_stocks.set_upstream(dbt_quotes)
 
-report_black_scholes.set_upstream(table_creator_options)
-report_black_scholes.set_upstream(table_creator_stocks)
+report_black_scholes.set_upstream(dbt_options)
+report_black_scholes.set_upstream(dbt_stocks)
 load_black_scholes.set_upstream(report_black_scholes)
 
-report_options.set_upstream(table_creator_options)
-report_options.set_upstream(table_creator_stocks)
+report_options.set_upstream(dbt_options)
+report_options.set_upstream(dbt_stocks)
 
 scrape_fundamentals.set_upstream(scrape_quotes)
 load_fundamentals.set_upstream(scrape_fundamentals)
-table_creator_fundamentals.set_upstream(load_fundamentals)
+dbt_fundamentals.set_upstream(load_fundamentals)
 
-end_time.set_upstream(report_options)
-end_time.set_upstream(load_black_scholes)
-end_time.set_upstream(table_creator_fundamentals)
+dbt_tests.set_upstream(report_options)
+dbt_tests.set_upstream(load_black_scholes)
+dbt_tests.set_upstream(dbt_fundamentals)
+
+end_time.set_upstream(dbt_tests)
