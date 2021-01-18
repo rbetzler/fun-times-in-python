@@ -30,6 +30,10 @@
   ```
   sudo docker run -d -p 5432:5432 --name dw-stocks -e POSTGRES_PASSWORD=password -v /media/nautilus/docks/postgres:/var/lib/postgresql/data -v /media/nautilus/fun-times-in-python:/mnt -v /mnt:/media --network bridge postgres
   ```
+* Edit configs
+  ```
+  sudo vim /media/nautilus/docks/postgres/postgresql.conf
+  ```
 * Create tablespace on SSD
   ```
   create tablespace ssd_tablespace location '/media/dw-stocks-tablespace';
