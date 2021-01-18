@@ -11,35 +11,78 @@ class Decisions(reporter.Reporter):
     def query(self) -> str:
         query = '''
         with
-        raw as (
+        decisions as (
             select *
                 , dense_rank() over (order by file_datetime desc, market_datetime desc) as dr
             from dev.decisions
             where model_id = 's1'
               and decisioner_id = 'd1'
         )
+        , fundamentals as (
+          select
+              symbol
+            , pe_ratio
+            , dividend_amount as current_dividend
+            , dividend_date
+            , market_capitalization as market_cap
+            , eps_ttm as eps_trailing_twelve_months
+            , quick_ratio
+            , current_ratio
+            , total_debt_to_equity
+            , row_number() over (partition by symbol order by file_datetime desc) as rn
+          from td.fundamentals
+        )
         select
-              model_id
-            , decisioner_id
-            , model_datetime
-            , market_datetime
-            , symbol
-            , thirty_day_low_prediction
-            , close as closing_stock_price
-            , put_call as option_type
-            , days_to_expiration
-            , strike
-            , price as option_price
-            , potential_annual_return
-            , oom_percent
-            , quantity > 0 as should_place_trade
-            , direction
-            , 1 - first_order_difference as raw_probability_of_profit
-            , 1 - smoothed_first_order_difference as adj_probability_of_profit
-            , kelly_criterion
-        from raw
-        where dr = 1
-        order by symbol, days_to_expiration, strike
+              d.model_id
+            , d.decisioner_id
+            , d.model_datetime
+            , d.market_datetime
+            , d.symbol
+            , d.thirty_day_low_prediction
+            , d.close as closing_stock_price
+            , d.put_call as option_type
+            , d.days_to_expiration
+            , d.strike
+            , d.price as option_price
+            , d.potential_annual_return
+            , d.oom_percent
+            , d.quantity > 0 as should_place_trade
+            , d.direction
+            , 1 - d.first_order_difference as raw_probability_of_profit
+            , 1 - d.smoothed_first_order_difference as adj_probability_of_profit
+            , d.kelly_criterion
+            , f.pe_ratio
+            , f.current_dividend
+            , f.dividend_date
+            , f.market_cap
+            , f.eps_trailing_twelve_months
+            , f.quick_ratio
+            , f.current_ratio
+            , f.total_debt_to_equity
+            , t.avg_open_10
+            , t.avg_open_20
+            , t.avg_open_30
+            , t.avg_open_60
+            , t.avg_open_90
+            , t.avg_open_120
+            , t.avg_open_180
+            , t.avg_open_240
+            , b.implied_volatility
+        from decisions as d
+        left join fundamentals as f
+          on  d.symbol = f.symbol
+          and f.rn = 1
+        left join dbt.technicals as t
+          on  d.symbol = t.symbol
+          and d.market_datetime = t.market_datetime
+        left join td.black_scholes as b
+          on  d.symbol = b.symbol
+          and d.market_datetime = b.market_datetime
+          and d.strike = b.strike
+          and d.days_to_expiration = b.days_to_maturity
+          and b.put_call = 'False'
+        where d.dr = 1
+        order by d.symbol, d.days_to_expiration, d.strike
         '''
         return query
 
