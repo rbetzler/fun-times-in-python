@@ -46,7 +46,7 @@ start_time = BashOperator(
 # derived stocks table
 update_training_data = DockerOperator(
     task_id='update_dbt_training_table',
-    command='dbt run -m training --profiles-dir .',
+    command='dbt run -m training technicals --profiles-dir .',
     **dbt_kwargs,
 )
 
