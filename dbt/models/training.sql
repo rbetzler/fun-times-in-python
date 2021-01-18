@@ -10,12 +10,8 @@
 
 with
 tickers as (
-    select symbol as ticker
-    from {{ ref('stocks') }}
-    where market_datetime between '2010-01-15' and '2020-11-10'
-    group by 1
-    having bool_or(market_datetime = ('2015-01-15'))
-       and bool_or(market_datetime = ('2019-06-10'))
+    select symbol
+    from {{ ref('tickers') }}
     order by symbol
     limit 75
     )
@@ -61,7 +57,7 @@ tickers as (
         , abs(s.open - avg(s.open) over (w rows between 91 preceding and 1 preceding)) / avg(s.open) over (w rows between 91 preceding and 1 preceding) as abs_deviation_90
     from {{ ref('stocks') }} as s
     inner join tickers as t
-        on t.ticker = s.symbol
+        on t.symbol = s.symbol
     window w as (partition by s.symbol order by s.market_datetime)
     )
 , summarized as (
