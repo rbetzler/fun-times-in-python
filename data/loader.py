@@ -104,9 +104,16 @@ class FileIngestion(abc.ABC):
         return cols
 
     def add_and_order_columns(self, df) -> pd.DataFrame:
+        """
+        1. Convert strings to lower case
+        2. Get list of columns in database
+        3. Fill None for missing columns
+        4. Reorder
+        """
+        df.columns = df.columns.str.lower()
         cols = self.get_columns_in_db
         for col in cols:
-            if col not in df:
+            if col.lower() not in df:
                 df[col] = None
         df = df[cols]
         return df
