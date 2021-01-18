@@ -18,20 +18,6 @@ class Decisions(reporter.Reporter):
             where model_id = 's1'
               and decisioner_id = 'd1'
         )
-        , fundamentals as (
-          select
-              symbol
-            , pe_ratio
-            , dividend_amount as current_dividend
-            , dividend_date
-            , market_capitalization as market_cap
-            , eps_ttm as eps_trailing_twelve_months
-            , quick_ratio
-            , current_ratio
-            , total_debt_to_equity
-            , row_number() over (partition by symbol order by file_datetime desc) as rn
-          from td.fundamentals
-        )
         select
               d.model_id
             , d.decisioner_id
@@ -52,10 +38,10 @@ class Decisions(reporter.Reporter):
             , 1 - d.smoothed_first_order_difference as adj_probability_of_profit
             , d.kelly_criterion
             , f.pe_ratio
-            , f.current_dividend
+            , f.dividend_amount
             , f.dividend_date
-            , f.market_cap
-            , f.eps_trailing_twelve_months
+            , f.market_capitalization
+            , f.eps_ttm as eps_trailing_twelve_months
             , f.quick_ratio
             , f.current_ratio
             , f.total_debt_to_equity
@@ -69,9 +55,9 @@ class Decisions(reporter.Reporter):
             , t.avg_open_240
             , b.implied_volatility
         from decisions as d
-        left join fundamentals as f
+        left join dbt.fundamentals as f
           on  d.symbol = f.symbol
-          and f.rn = 1
+          and d.market_datetime = f.market_datetime
         left join dbt.technicals as t
           on  d.symbol = t.symbol
           and d.market_datetime = t.market_datetime

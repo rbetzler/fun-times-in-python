@@ -10,5 +10,6 @@ sources:
   - name: td
     tables:
       - name: equities_raw
+      - name: fundamentals
       - name: options_raw
       - name: quotes_raw
