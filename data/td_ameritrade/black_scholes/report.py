@@ -49,7 +49,7 @@ def get_report_days() -> list:
 
     query = '''
         select distinct day_date
-        from utils.holidays;
+        from dbt.holidays;
         '''
     holidays = utils.query_db(query=query)
 

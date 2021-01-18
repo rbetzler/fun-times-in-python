@@ -49,7 +49,7 @@ raw as (
     , o.ingest_datetime
     , case when h.day_date is not null then o.file_datetime - interval '1 days' else o.file_datetime end as file_datetime
   from {{ source('td', 'options_raw') }} as o
-  left join utils.holidays as h
+  left join {{ ref('holidays') }} as h
     on  o.file_datetime::date = h.day_date
   where o.file_datetime > current_date - 7 and o.file_datetime < current_date + 1
 )

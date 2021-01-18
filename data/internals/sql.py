@@ -28,46 +28,5 @@ class IngestLoadTimesTable(sql.SQLRunner):
         pass
 
 
-# TODO: Migrate to dbt
-class HolidaysTable(sql.SQLRunner):
-
-    @property
-    def schema_name(self) -> str:
-        return 'utils'
-
-    @property
-    def table_name(self) -> str:
-        return 'holidays'
-
-    @property
-    def table_ddl(self) -> str:
-        return '''
-            create table if not exists utils.holidays as (
-              select '2021-01-01'::date as day_date, 'new_years_day' as holiday
-              union
-              select '2021-01-18', 'mlk_day'
-              union
-              select '2021-02-15', 'washingtons_bday'
-              union
-              select '2021-04-02', 'good_friday'
-              union
-              select '2021-05-31', 'memorial_day'
-              union
-              select '2021-07-05', 'independence_day'
-              union
-              select '2021-09-06', 'labor_day'
-              union
-              select '2021-11-25', 'thanksgiving'
-              union
-              select '2021-12-24', 'christmas'
-            );
-            '''
-
-    @property
-    def sql_script(self) -> str:
-        pass
-
-
 if __name__ == '__main__':
     IngestLoadTimesTable().execute()
-    HolidaysTable().execute()
