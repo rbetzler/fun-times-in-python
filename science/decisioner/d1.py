@@ -44,7 +44,7 @@ class D1(base.Decisioner, abc.ABC):
             , strike
             , (bid + ask)/2 as price
             , dense_rank() over (w) as dr
-          from td.options
+          from dbt.options
           where file_datetime between '{self.start_date}'::date - 5 and '{self.start_date}'
             and days_to_expiration between 10 and 60
             and put_call = 'PUT'

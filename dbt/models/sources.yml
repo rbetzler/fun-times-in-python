@@ -9,6 +9,6 @@ sources:
       - name: listed_stocks
   - name: td
     tables:
-      - name: equities
-      - name: options
-      - name: quotes
+      - name: equities_raw
+      - name: options_raw
+      - name: quotes_raw

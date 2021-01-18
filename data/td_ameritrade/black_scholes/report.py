@@ -90,7 +90,7 @@ class BlackScholes(reporter.Reporter):
                 , ask
                 , volatility
                 , expiration_date_from_epoch
-              from td.options
+              from dbt.options
               where file_datetime = '{self._report_day}'
                 and days_to_expiration > 0
               )

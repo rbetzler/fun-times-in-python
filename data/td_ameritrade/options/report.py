@@ -33,8 +33,8 @@ class Options(reporter.Reporter):
                 , last
                 , open_interest
                 , file_datetime
-              from td.options
-              where file_datetime >= (select max(file_datetime)::date from td.options)
+              from dbt.options
+              where file_datetime >= (select max(file_datetime)::date from dbt.options)
                 and put_call = 'PUT'
                 and open_interest > 1
                 and days_to_expiration < 60

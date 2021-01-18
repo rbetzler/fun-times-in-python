@@ -4,7 +4,7 @@ from data import sql
 class TDQuotesSQLRunner(sql.SQLRunner):
     @property
     def table_name(self) -> str:
-        return 'quotes'
+        return 'quotes_raw'
 
     @property
     def schema_name(self) -> str:
@@ -13,20 +13,6 @@ class TDQuotesSQLRunner(sql.SQLRunner):
     @property
     def table_ddl(self) -> str:
         ddl = '''
-            create table td.quotes (
-                  market_datetime date
-                , symbol varchar
-                , open_price numeric(12,2)
-                , high_price numeric(12,2)
-                , low_price numeric(12,2)
-                , close_price numeric(12,2)
-                , last_price numeric(12,2)
-                , last_size integer
-                , regular_market_last_price numeric(12,2)
-                , regular_market_last_size integer
-                , volume integer
-            );
-
             create table td.quotes_raw (
                 asset_type varchar
               , asset_main_type varchar
@@ -102,52 +88,6 @@ class TDQuotesSQLRunner(sql.SQLRunner):
             create table td.quotes_raw_202111 partition of td.quotes_raw for values from ('2021-11-01') to ('2021-12-01');
             '''
         return ddl
-
-    @property
-    def sql_script(self):
-        query = '''
-            truncate td.quotes;
-
-            insert into td.quotes (
-                with
-                raw_quotes as (
-                  select
-                      case when extract(hour from trade_time_in_long_datetime) < 10 then trade_time_in_long_datetime::date - 1 else trade_time_in_long_datetime::date end as market_datetime
-                    , symbol
-                    , open_price
-                    , high_price
-                    , low_price
-                    , close_price
-                    , last_price
-                    , last_size
-                    , regular_market_last_price
-                    , regular_market_last_size
-                    , total_volume
-                    , file_datetime
-                  from td.quotes_raw
-                  )
-                , partitioned as (
-                  select *
-                    , row_number() over (partition by symbol, market_datetime order by file_datetime desc) as rn
-                  from raw_quotes
-                  )
-                select
-                    market_datetime
-                  , symbol
-                  , open_price
-                  , high_price
-                  , low_price
-                  , close_price
-                  , last_price
-                  , last_size
-                  , regular_market_last_price
-                  , regular_market_last_size
-                  , total_volume
-                from partitioned
-                where rn = 1
-                );
-            '''
-        return query
 
 
 if __name__ == '__main__':
