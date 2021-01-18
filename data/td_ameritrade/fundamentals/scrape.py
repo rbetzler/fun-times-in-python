@@ -33,7 +33,7 @@ class TDFundamentalsAPI(scraper.Caller):
 
     @property
     def n_workers(self) -> int:
-        return 15
+        return 8
 
     @property
     def len_of_pause(self) -> int:
