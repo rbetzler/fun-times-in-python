@@ -4,6 +4,7 @@ config-version: 2
 profile: 'dw_stocks'
 data-paths: ["seeds"]
 source-paths: ["models"]
+test-paths: ["tests"]
 clean-targets:
     - "logs"
     - "dbt_modules"
