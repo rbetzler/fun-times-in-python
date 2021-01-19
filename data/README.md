@@ -6,5 +6,3 @@ Herein are four different frameworks:
   * Generate reports, which may get sent via email
 * Scraper
   * Scrape data from the internet and store it locally
-* SQL Runner
-  * Run queries on Postgres: DDLs, DMLs, and Administration like VACUUMs
