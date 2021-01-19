@@ -1,7 +1,7 @@
 
 with
 b as (
-  select generate_series(current_date - 7, current_date, '1 day'::interval)::date as day_date
+  select generate_series(current_date at time zone 'America/New_York' - '7 day'::interval, current_date at time zone 'America/New_York', '1 day'::interval)::date as day_date
 )
 select max(b.day_date) as latest_business_day
 from b
