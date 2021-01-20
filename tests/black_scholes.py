@@ -3,8 +3,8 @@ from science.utilities import options_utils
 
 D1 = -0.3253
 D2 = -0.4753
-PDF = 0.3725
-PDF_2 = 0.3173
+CDF = 0.3725
+CDF_2 = 0.3173
 CALL = 2.1334
 DELTA_CALL = 0.6629
 DELTA_PUT = -0.2884
@@ -14,6 +14,9 @@ GAMMA = 0.0278
 VEGA = 18.5027
 THETA_PUT = -31.1924
 RHO = 38.7325
+VOLATILITY = .2202
+VOLATILITY_2 = .217
+VOLATILITY_3 = .231
 
 
 class BlackScholes(unittest.TestCase):
@@ -33,7 +36,7 @@ class BlackScholes(unittest.TestCase):
             is_future=False,
         )
         d1 = round(raw_d1, 4)
-        self.assertEqual(d1, D1)
+        self.assertEqual(D1, d1)
 
     def test_d2(self):
         """
@@ -45,23 +48,23 @@ class BlackScholes(unittest.TestCase):
             time=.25,
         )
         d2 = round(raw_d2, 4)
-        self.assertEqual(d2, D2)
+        self.assertEqual(D2, d2)
 
     def test_cdf(self):
         """
         Whether we calculate cdf correctly
         """
-        raw_pdf = options_utils.BlackScholes()._cumulative_density_function(
+        raw_cdf = options_utils.BlackScholes()._cumulative_density_function(
             d=D1,
         )
-        pdf = round(raw_pdf, 4)
-        self.assertEqual(pdf, PDF)
+        cdf = round(raw_cdf, 4)
+        self.assertEqual(CDF, cdf)
 
-        raw_pdf_2 = options_utils.BlackScholes()._cumulative_density_function(
+        raw_cdf_2 = options_utils.BlackScholes()._cumulative_density_function(
             d=D2,
         )
-        pdf_2 = round(raw_pdf_2, 4)
-        self.assertEqual(pdf_2, PDF_2)
+        cdf_2 = round(raw_cdf_2, 4)
+        self.assertEqual(CDF_2, cdf_2)
 
     def test_call_price(self):
         """
@@ -78,7 +81,44 @@ class BlackScholes(unittest.TestCase):
             is_future=False,
         )
         call = round(raw_call, 4)
-        self.assertEqual(call, CALL)
+        self.assertEqual(CALL, call)
+
+    def test_option_price_symmetry(self):
+        """
+        Whether we calculate puts option prices correctly
+
+        A call and a put with opposite stock prices, strikes,
+        and vol will be equal to one another:
+            C(S, X, Sigma) = P(-S, -X, -Sigma)
+
+        Consequently, to calculate an put option price, one can
+        use the call option formula with a few negative parameters
+        """
+        raw_call = options_utils.BlackScholes().calculate_option_price(
+            stock=60,
+            strike=65,
+            carry_cost=0,
+            risk_free_rate=.08,
+            volatility=.3,
+            time=.25,
+            is_call=True,
+            is_future=False,
+        )
+        call = round(raw_call, 4)
+        self.assertEqual(CALL, call)
+
+        raw_put = options_utils.BlackScholes().calculate_option_price(
+            stock=-60,
+            strike=-65,
+            carry_cost=0,
+            risk_free_rate=.08,
+            volatility=-.3,
+            time=.25,
+            is_call=False,
+            is_future=False,
+        )
+        put = round(raw_put, 4)
+        self.assertEqual(call, put)
 
     def test_delta(self):
         """
@@ -221,6 +261,39 @@ class BlackScholes(unittest.TestCase):
         ).rho
         rho = round(raw_rho, 4)
         self.assertEqual(RHO, rho)
+
+    def test_implied_volatility(self):
+        raw_volatility = options_utils.BlackScholes(
+            current_option_price=.68,
+            stock=48.51,
+            strike=48.5,
+            risk_free_rate=0.01,
+            days_to_maturity=9,
+        )._implied_volatility()
+        volatility = round(raw_volatility, 4)
+        self.assertEqual(VOLATILITY, volatility)
+
+    def test_implied_volatility_2(self):
+        raw_volatility = options_utils.BlackScholes(
+            current_option_price=.45,
+            stock=48.51,
+            strike=49,
+            risk_free_rate=0.01,
+            days_to_maturity=9,
+        )._implied_volatility()
+        volatility = round(raw_volatility, 3)
+        self.assertEqual(VOLATILITY_2, volatility)
+
+    def test_implied_volatility_3(self):
+        raw_volatility = options_utils.BlackScholes(
+            current_option_price=.61,
+            stock=48.51,
+            strike=52.5,
+            risk_free_rate=0.03,
+            days_to_maturity=88 * 5/7,
+        )._implied_volatility()
+        volatility = round(raw_volatility, 3)
+        self.assertEqual(VOLATILITY_3, volatility)
 
 
 if __name__ == '__main__':

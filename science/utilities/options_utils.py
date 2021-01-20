@@ -82,7 +82,10 @@ class BlackScholes:
             is_call,
             is_future,
     ):
-        """Calculate an options price"""
+        """
+        Calculate option price
+        Note, futures options will not calculate properly in all scenarios
+        """
         d1 = self.calculate_d1(
             stock=stock,
             strike=strike,
@@ -97,6 +100,10 @@ class BlackScholes:
             volatility=volatility,
             time=time,
         )
+
+        if not is_call:
+            d1 = -d1
+            d2 = -d2
 
         d1_p = self._cumulative_density_function(d1)
         d2_p = self._cumulative_density_function(d2)
@@ -122,8 +129,8 @@ class BlackScholes:
         )
         return option_price
 
-    def _implied_volatility(self, volatility_guess):
-        _option_price = self.calculate_option_price(
+    def calculate_implied_volatility(self, volatility_guess):
+        option_price = self.calculate_option_price(
             stock=self.stock,
             strike=self.strike,
             time=self.time,
@@ -133,14 +140,17 @@ class BlackScholes:
             is_call=self.is_call,
             is_future=self.is_future,
         )
-        diff = _option_price - self.current_option_price
+        diff = option_price - self.current_option_price
         return diff
 
     @property
     def implied_volatility(self, lower_bound=-15, upper_bound=15):
+        """
+        Brentq root finding for implied volatility
+        """
         try:
             implied_volatility = opt.brentq(
-                self._implied_volatility,
+                self.calculate_implied_volatility,
                 lower_bound,
                 upper_bound,
                 xtol=1e-15,
@@ -152,6 +162,56 @@ class BlackScholes:
             print(f'Filling null to workaround {e}')
             implied_volatility = None
         return implied_volatility
+
+    @staticmethod
+    def _implied_volatility_seed(stock, strike, risk_free_rate, time):
+        """
+        Manaster-Koehler implied volatility seed
+            sqrt(abs(ln(S/X) + rT) * 2/T)
+        """
+        vol = np.sqrt(abs(np.log(stock/strike) + risk_free_rate * time) * 2 / time)
+        return vol
+
+    @property
+    def _implied_volatility(
+            self,
+            error=.00001,
+            max_iterations=100,
+            estimated_option_price=0,
+    ) -> float:
+        """Alternative implied volatility calculation, drawn from Haug"""
+        volatility_guess = self._implied_volatility_seed(
+            stock=self.stock,
+            strike=self.strike,
+            risk_free_rate=self.risk_free_rate,
+            time=self.time,
+        )
+        n = 0
+        while abs(self.current_option_price - estimated_option_price) > error and n < max_iterations:
+            estimated_option_price = self.calculate_option_price(
+                stock=self.stock,
+                strike=self.strike,
+                time=self.time,
+                volatility=volatility_guess,
+                risk_free_rate=self.risk_free_rate,
+                carry_cost=self.carry_cost,
+                is_call=self.is_call,
+                is_future=self.is_future,
+             )
+            vega = self.calculate_vega(
+                stock=self.stock,
+                strike=self.strike,
+                time=self.time,
+                volatility=volatility_guess,
+                risk_free_rate=self.risk_free_rate,
+                carry_cost=self.carry_cost,
+                is_future=self.is_future,
+            )
+            volatility_guess = volatility_guess - (
+                    (estimated_option_price - self.current_option_price)/vega
+            )
+            n += 1
+        return volatility_guess
 
     """
     Greeks
@@ -209,12 +269,42 @@ class BlackScholes:
         theta = left + middle + right
         return theta
 
+    def calculate_vega(
+            self,
+            stock,
+            strike,
+            time,
+            volatility,
+            risk_free_rate,
+            carry_cost,
+            is_future,
+    ):
+        d1 = self.calculate_d1(
+            stock=stock,
+            strike=strike,
+            time=time,
+            volatility=volatility,
+            risk_free_rate=risk_free_rate,
+            carry_cost=carry_cost,
+            is_future=is_future,
+        )
+        vega = (
+                stock * np.exp((carry_cost - risk_free_rate) * time)
+                * self._probability_density_function(d1) * np.sqrt(time)
+        )
+        return vega
+
     @property
     def vega(self):
         """The rate of change in an options value as volatility changes"""
-        vega = (
-                self.stock * np.exp((self.carry_cost - self.risk_free_rate) * self.time)
-                * self._probability_density_function(self.d1) * np.sqrt(self.time)
+        vega = self.calculate_vega(
+            stock=self.stock,
+            strike=self.strike,
+            time=self.time,
+            volatility=self.volatility,
+            risk_free_rate=self.risk_free_rate,
+            carry_cost=self.carry_cost,
+            is_future=self.is_future,
         )
         return vega
 
