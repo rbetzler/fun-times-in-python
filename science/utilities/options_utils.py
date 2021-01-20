@@ -9,54 +9,55 @@ class BlackScholes:
     def __init__(
             self,
             current_option_price=0,
-            stock_price=0,
+            stock=0,
             strike=0,
-            risk_free_rate=0,
             days_to_maturity=0,
             volatility=0,
+            risk_free_rate=0,
+            carry_cost=0,
             is_call=True,
+            is_future=False,
     ):
         self.current_option_price = current_option_price
-        self.stock = stock_price
+        self.stock = stock
         self.strike = strike
-        self.risk_free_rate = risk_free_rate
         self.time = days_to_maturity / 365
         self.volatility = volatility
+        self.risk_free_rate = risk_free_rate
+        self.carry_cost = carry_cost
         self.is_call = is_call
+        self.is_future = is_future
 
     @staticmethod
-    def _d1(stock, strike, risk_free_rate, volatility, time, is_call):
-        d1 = (np.log(stock / strike) + (risk_free_rate + (volatility ** 2) / 2) * time) / (volatility * np.sqrt(time))
-        if not is_call:
-            d1 = -d1
-        return d1
-
-    @property
-    def d1(self):
-        d1 = self._d1(
-            stock=self.stock,
-            strike=self.strike,
-            risk_free_rate=self.risk_free_rate,
-            volatility=self.volatility,
-            time=self.time,
-            is_call=self.is_call,
-        )
+    def calculate_d1(stock, strike, carry_cost, risk_free_rate, volatility, time, is_future):
+        b = carry_cost if is_future else risk_free_rate
+        d1 = (np.log(stock / strike) + (b + (volatility ** 2) / 2) * time) / (volatility * np.sqrt(time))
         return d1
 
     @staticmethod
-    def _d2(d1, volatility, time, is_call):
+    def calculate_d2(d1, volatility, time):
         d2 = d1 - volatility * np.sqrt(time)
-        if not is_call:
-            d2 = -d2
         return d2
 
     @property
+    def d1(self):
+        d1 = self.calculate_d1(
+            stock=self.stock,
+            strike=self.strike,
+            time=self.time,
+            volatility=self.volatility,
+            risk_free_rate=self.risk_free_rate,
+            carry_cost=self.carry_cost,
+            is_future=self.is_future,
+        )
+        return d1
+
+    @property
     def d2(self):
-        d2 = self._d2(
+        d2 = self.calculate_d2(
             d1=self.d1,
             volatility=self.volatility,
             time=self.time,
-            is_call=self.is_call,
         )
         return d2
 
@@ -70,28 +71,31 @@ class BlackScholes:
         cndf = stats.norm.cdf(d, mean, standard_deviation)
         return cndf
 
-    def _calculate_option_price(
+    def calculate_option_price(
             self,
             stock,
             strike,
+            carry_cost,
             risk_free_rate,
             time,
             volatility,
             is_call,
+            is_future,
     ):
-        d1 = self._d1(
+        """Calculate an options price"""
+        d1 = self.calculate_d1(
             stock=stock,
             strike=strike,
-            risk_free_rate=risk_free_rate,
-            volatility=volatility,
             time=time,
-            is_call=is_call
+            volatility=volatility,
+            risk_free_rate=risk_free_rate,
+            carry_cost=carry_cost,
+            is_future=is_future,
         )
-        d2 = self._d2(
+        d2 = self.calculate_d2(
             d1=d1,
             volatility=volatility,
             time=time,
-            is_call=is_call
         )
 
         d1_p = self._cumulative_density_function(d1)
@@ -105,24 +109,29 @@ class BlackScholes:
 
     @property
     def option_price(self):
-        option_price = self._calculate_option_price(
+        """Given initialized parameters, calculate an options price"""
+        option_price = self.calculate_option_price(
             stock=self.stock,
             strike=self.strike,
-            risk_free_rate=self.risk_free_rate,
             time=self.time,
             volatility=self.volatility,
+            risk_free_rate=self.risk_free_rate,
+            carry_cost=self.carry_cost,
             is_call=self.is_call,
+            is_future=self.is_future,
         )
         return option_price
 
     def _implied_volatility(self, volatility_guess):
-        _option_price = self._calculate_option_price(
+        _option_price = self.calculate_option_price(
             stock=self.stock,
             strike=self.strike,
-            risk_free_rate=self.risk_free_rate,
             time=self.time,
             volatility=volatility_guess,
+            risk_free_rate=self.risk_free_rate,
+            carry_cost=self.carry_cost,
             is_call=self.is_call,
+            is_future=self.is_future,
         )
         diff = _option_price - self.current_option_price
         return diff
@@ -150,22 +159,24 @@ class BlackScholes:
 
     @property
     def delta(self):
-        """the rate of change in an options value as the underlying changes"""
-        delta = np.exp(-self.risk_free_rate * self.time) * self._cumulative_density_function(self.d1)
+        """The rate of change in an options value as the underlying changes"""
+        n = 0 if self.is_call else 1
+        delta = np.exp(-self.risk_free_rate * self.time) * (self._cumulative_density_function(self.d1) - n)
         return delta
 
     @property
     def gamma(self):
-        """the rate of change in an options value as the delta changes"""
+        """The rate of change in an options value as the delta changes"""
+        n = self._probability_density_function(self.d1)
         gamma = (
-                (self._probability_density_function(self.d1) * np.exp(-self.risk_free_rate * self.time))
+                (n * np.exp((self.carry_cost - self.risk_free_rate) * self.time))
                 / (self.stock * self.volatility * np.sqrt(self.time))
         )
         return gamma
 
     @property
     def rho(self):
-        """the rate of change in an options value as the risk free rate changes"""
+        """The rate of change in an options value as the risk free rate changes"""
         if self.is_call:
             rho = (
                     self.time * self.strike * np.exp(-self.risk_free_rate * self.time)
@@ -176,37 +187,35 @@ class BlackScholes:
                     -self.time * self.strike * np.exp(-self.risk_free_rate * self.time)
                     * self._cumulative_density_function(-self.d2)
             )
-        rho = rho / 100
         return rho
 
     @property
     def theta(self):
-        """the rate of change in an options value as the time to maturity changes"""
+        """The rate of change in an options value as the time to maturity changes"""
         left = -(
-                (self.stock * np.exp(-self.risk_free_rate * self.time)
+                (self.stock * np.exp((self.carry_cost - self.risk_free_rate) * self.time)
                  * self._probability_density_function(self.d1) * self.volatility)
                 / (2 * np.sqrt(self.time))
         )
         middle = (
-                -self.risk_free_rate * self.stock * np.exp(-self.risk_free_rate * self.time)
-                * self._cumulative_density_function(self.d1)
+                (self.carry_cost - self.risk_free_rate)
+                * self.stock * np.exp((self.carry_cost - self.risk_free_rate) * self.time)
+                * self._cumulative_density_function(-self.d1)
         )
-        center = (
+        right = (
                 self.risk_free_rate * self.strike * np.exp(-self.risk_free_rate * self.time)
-                * self._cumulative_density_function(self.d2)
+                * self._cumulative_density_function(-self.d2)
         )
-        theta = left - middle - center
-        theta = theta / 100
+        theta = left + middle + right
         return theta
 
     @property
     def vega(self):
-        """the rate of change in an options value as volatility changes"""
+        """The rate of change in an options value as volatility changes"""
         vega = (
-                self.stock * np.exp(-self.risk_free_rate * self.time)
+                self.stock * np.exp((self.carry_cost - self.risk_free_rate) * self.time)
                 * self._probability_density_function(self.d1) * np.sqrt(self.time)
         )
-        vega = vega / 100
         return vega
 
 

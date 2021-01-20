@@ -135,7 +135,7 @@ class BlackScholes(reporter.Reporter):
     ) -> tuple:
         bs = options_utils.BlackScholes(
             current_option_price=ask,
-            stock_price=close,
+            stock=close,
             strike=strike,
             risk_free_rate=risk_free_rate,
             days_to_maturity=days_to_maturity,
