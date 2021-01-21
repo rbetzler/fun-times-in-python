@@ -3,5 +3,5 @@
   table='options',
   key='symbol',
   datetime='file_datetime',
-  n_expected_records=1000
+  n_expected_records=1850
 ) }}

@@ -3,5 +3,5 @@
   table='fundamentals',
   key='symbol',
   datetime='market_datetime',
-  n_expected_records=1000
+  n_expected_records=1850
 ) }}
