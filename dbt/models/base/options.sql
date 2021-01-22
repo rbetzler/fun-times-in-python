@@ -15,7 +15,8 @@ raw as (
     , o.volatility
     , o.n_contracts
     , o.interest_rate
-    , o.put_call
+    , o.put_call = 'CALL' as is_call
+    , (o.bid + o.ask) / 2 as price
     , o.bid
     , o.ask
     , o.last
@@ -69,47 +70,54 @@ raw as (
 )
 , ranked as (
   select *
-    , row_number() over(partition by file_date, symbol, put_call, strike, days_to_expiration order by ingest_datetime desc) as rn
+    , row_number() over(partition by file_date, symbol, is_call, strike, days_to_expiration order by ingest_datetime desc) as rn
   from dated
   where file_date is not null
 )
-select
-    symbol
-  , volatility
-  , n_contracts
-  , interest_rate
-  , put_call
-  , bid
-  , ask
-  , last
-  , mark
-  , bid_size
-  , ask_size
-  , bid_ask_size
-  , last_size
-  , high_price
-  , low_price
-  , open_price
-  , close_price
-  , total_volume
-  , trade_date
-  , delta
-  , gamma
-  , theta
-  , vega
-  , rho
-  , open_interest
-  , time_value
-  , theoretical_option_value
-  , theoretical_volatility
-  , strike_price
-  , expiration_date
-  , days_to_expiration
-  , expiration_date_from_epoch
-  , strike
-  , strike_date
-  , days_to_expiration_date
-  , file_date as file_datetime
-  , ingest_datetime
-from ranked
-where rn = 1
+, final as (
+  select
+      symbol
+    , volatility
+    , n_contracts
+    , interest_rate
+    , is_call
+    , price
+    , bid
+    , ask
+    , last
+    , mark
+    , bid_size
+    , ask_size
+    , bid_ask_size
+    , last_size
+    , high_price
+    , low_price
+    , open_price
+    , close_price
+    , total_volume
+    , trade_date
+    , delta
+    , gamma
+    , theta
+    , vega
+    , rho
+    , open_interest
+    , time_value
+    , theoretical_option_value
+    , theoretical_volatility
+    , strike_price
+    , expiration_date
+    , days_to_expiration
+    , expiration_date_from_epoch
+    , strike
+    , strike_date
+    , days_to_expiration_date
+    , greatest(.01, least(.99, (lead(price) over (w) - price) / (lead(strike) over (w) - strike))) as first_order_difference
+    , file_date as file_datetime
+    , ingest_datetime
+  from ranked
+  where rn = 1
+  window w as (partition by symbol, file_date, days_to_expiration, is_call order by strike)
+)
+select *
+from final

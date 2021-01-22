@@ -25,17 +25,18 @@ class Options(reporter.Reporter):
             , options as (
               select
                   symbol
-                , put_call
+                , is_call
                 , strike
                 , days_to_expiration
                 , bid
                 , ask
+                , price
                 , last
                 , open_interest
                 , file_datetime
               from dbt.options
               where file_datetime >= (select max(file_datetime)::date from dbt.options)
-                and put_call = 'PUT'
+                and not is_call
                 and open_interest > 1
                 and days_to_expiration < 60
               )
@@ -48,12 +49,12 @@ class Options(reporter.Reporter):
                 , s.low as equity_low
                 , s.close as equity_close
                 , s.volume as equity_volume
-                , o.put_call as option_type
+                , o.is_call as option_type
                 , o.days_to_expiration as option_days_to_expiration
                 , o.strike as option_strike
                 , o.bid as option_bid
                 , o.ask as option_ask
-                , (o.bid + o.ask) / 2 as option_bid_ask
+                , o.price as option_bid_ask
                 , o.last as option_last
                 , o.open_interest as option_open_interest
               from stocks as s

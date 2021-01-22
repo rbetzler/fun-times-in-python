@@ -61,12 +61,12 @@ class Decisions(reporter.Reporter):
         left join dbt.technicals as t
           on  d.symbol = t.symbol
           and d.market_datetime = t.market_datetime
-        left join td.black_scholes as b
+        left join dbt.black_scholes as b
           on  d.symbol = b.symbol
           and d.market_datetime = b.market_datetime
           and d.strike = b.strike
           and d.days_to_expiration = b.days_to_maturity
-          and b.put_call = 'False'
+          and not b.is_call
         where d.dr = 1
         order by d.symbol, d.days_to_expiration, d.strike
         '''

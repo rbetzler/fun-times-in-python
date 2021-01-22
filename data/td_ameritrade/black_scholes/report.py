@@ -87,7 +87,7 @@ class BlackScholes(reporter.Reporter):
               select
                   symbol
                 , file_datetime
-                , put_call = 'CALL' as is_call
+                , is_call
                 , strike
                 , days_to_expiration
                 , last

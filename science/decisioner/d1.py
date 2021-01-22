@@ -36,26 +36,20 @@ class D1(base.Decisioner, abc.ABC):
           from dbt.stocks
           where market_datetime between '{self.start_date}'::date - 5 and '{self.start_date}'
         )
-        , raw_options as (
+        , options as (
           select
               symbol
-            , put_call
+            , is_call
             , days_to_expiration
             , strike
-            , (bid + ask)/2 as price
+            , price
+            , first_order_difference
             , dense_rank() over (w) as dr
           from dbt.options
           where file_datetime between '{self.start_date}'::date - 5 and '{self.start_date}'
             and days_to_expiration between 10 and 60
-            and put_call = 'PUT'
+            and not is_call
           window w as (partition by symbol order by file_datetime desc)
-        )
-        , options as (
-            select *
-                , (lead(price) over (w) - price) / (lead(strike) over (w) - strike) as first_order_difference
-            from raw_options
-            where dr = 1
-            window w as (partition by symbol, days_to_expiration order by strike)
         )
         , base as (
           select
@@ -65,7 +59,7 @@ class D1(base.Decisioner, abc.ABC):
             , p.symbol
             , p.denormalized_prediction as thirty_day_low_prediction
             , s.close
-            , o.put_call
+            , o.is_call
             , o.days_to_expiration
             , o.strike
             , o.price

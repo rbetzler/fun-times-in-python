@@ -118,6 +118,12 @@ load_black_scholes = DockerOperator(
     **kwargs,
 )
 
+dbt_black_scholes = DockerOperator(
+    task_id='update_dbt_black_scholes_table',
+    command='dbt run -m black_scholes --profiles-dir .',
+    **dbt_kwargs,
+)
+
 dbt_tests = DockerOperator(
     task_id='test_dbt_tables',
     command='dbt test --profiles-dir .',
@@ -142,6 +148,7 @@ dbt_stocks.set_upstream(dbt_quotes)
 report_black_scholes.set_upstream(dbt_options)
 report_black_scholes.set_upstream(dbt_stocks)
 load_black_scholes.set_upstream(report_black_scholes)
+dbt_black_scholes.set_upstream(load_black_scholes)
 
 report_options.set_upstream(dbt_options)
 report_options.set_upstream(dbt_stocks)
@@ -150,6 +157,7 @@ scrape_fundamentals.set_upstream(scrape_quotes)
 load_fundamentals.set_upstream(scrape_fundamentals)
 dbt_fundamentals.set_upstream(load_fundamentals)
 
+dbt_tests.set_upstream(dbt_black_scholes)
 dbt_tests.set_upstream(report_options)
 dbt_tests.set_upstream(load_black_scholes)
 dbt_tests.set_upstream(dbt_fundamentals)
