@@ -34,13 +34,14 @@ def get_report_days() -> list:
           from td.black_scholes
         )
         , o as (
-          select max(file_datetime)::date as option_latest
-          from td.options_raw
-          where file_datetime > current_date - 5
+          select
+              min(file_datetime)::date as option_earliest
+            , max(file_datetime)::date as option_latest
+          from dbt.options
         )
         select
             o.option_latest
-          , b.bs_latest + 1 as bs_latest
+          , coalesce(b.bs_latest + 1, o.option_earliest) as bs_latest
         from b, o;
         '''
     df = utils.query_db(query=query)
@@ -108,7 +109,6 @@ class BlackScholes(reporter.Reporter):
                 , o.days_to_expiration as days_to_maturity
                 , o.last
                 , o.ask
-                , o.volatility
                 , o.expiration_date_from_epoch
               from stocks as s
               inner join options as o
@@ -155,9 +155,13 @@ class BlackScholes(reporter.Reporter):
         kwargs['volatility'] = implied_volatility
         thetas = []
         for x in [1, 2, 4, 10]:
-            kwargs['days_to_maturity'] = days_to_maturity / x
-            theta = options_utils.BlackScholes(**kwargs).theta
-            thetas.append(theta)
+            if implied_volatility:
+                kwargs['days_to_maturity'] = days_to_maturity / x
+                theta = options_utils.BlackScholes(**kwargs).theta
+                thetas.append(theta)
+            else:
+                thetas.append(None)
+
         greeks = Greeks(
             symbol=symbol,
             strike=strike,
@@ -196,7 +200,6 @@ class BlackScholes(reporter.Reporter):
 
         print(f'Finished implied vol calcs {datetime.datetime.utcnow()}')
         vols = pd.DataFrame(results)
-        vols = vols.dropna()
 
         return vols
 
