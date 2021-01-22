@@ -33,7 +33,7 @@ class TDQuotesAPI(scraper.Caller):
 
     @property
     def n_workers(self) -> int:
-        return 8
+        return 15
 
     @property
     def len_of_pause(self) -> int:
