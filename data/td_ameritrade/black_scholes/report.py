@@ -16,8 +16,12 @@ class Greeks(NamedTuple):
     symbol: str
     strike: float
     days_to_maturity: int
-    put_call: bool
+    is_call: bool
     implied_volatility: float
+    theta: float
+    theta_half: float
+    theta_quarter: float
+    theta_tenth: float
     market_datetime: datetime.datetime
 
 
@@ -83,7 +87,7 @@ class BlackScholes(reporter.Reporter):
               select
                   symbol
                 , file_datetime
-                , put_call
+                , put_call = 'CALL' as is_call
                 , strike
                 , days_to_expiration
                 , last
@@ -99,7 +103,7 @@ class BlackScholes(reporter.Reporter):
                   s.market_datetime
                 , s.symbol
                 , s.close
-                , o.put_call
+                , o.is_call
                 , o.strike
                 , o.days_to_expiration as days_to_maturity
                 , o.last
@@ -113,7 +117,7 @@ class BlackScholes(reporter.Reporter):
               order by
                   s.market_datetime
                 , s.symbol
-                , o.put_call
+                , o.is_call
                 , o.strike
                 , o.days_to_expiration
               )
@@ -130,31 +134,47 @@ class BlackScholes(reporter.Reporter):
             strike: float,
             risk_free_rate: float,
             days_to_maturity: int,
-            put_call: bool,
+            is_call: bool,
             market_datetime: datetime.datetime,
     ) -> tuple:
-        bs = options_utils.BlackScholes(
-            current_option_price=ask,
-            stock=close,
-            strike=strike,
-            risk_free_rate=risk_free_rate,
-            days_to_maturity=days_to_maturity,
-            is_call=put_call,
-        )
-        greek = Greeks(
+        """
+        1. Calculate implied volatility
+        2. Calculate theta, as well as a few forward thetas
+        3. Return greek namedtuple
+        """
+        kwargs = {
+            'current_option_price': ask,
+            'stock': close,
+            'strike': strike,
+            'risk_free_rate': risk_free_rate,
+            'days_to_maturity': days_to_maturity,
+            'is_call': is_call,
+        }
+        bs = options_utils.BlackScholes(**kwargs)
+        implied_volatility = bs.implied_volatility
+        kwargs['volatility'] = implied_volatility
+        thetas = []
+        for x in [1, 2, 4, 10]:
+            kwargs['days_to_maturity'] = days_to_maturity / x
+            theta = options_utils.BlackScholes(**kwargs).theta
+            thetas.append(theta)
+        greeks = Greeks(
             symbol=symbol,
             strike=strike,
             days_to_maturity=days_to_maturity,
-            put_call=put_call,
-            implied_volatility=bs.implied_volatility,
+            is_call=is_call,
+            implied_volatility=implied_volatility,
+            theta=thetas[0],
+            theta_half=thetas[1],
+            theta_quarter=thetas[2],
+            theta_tenth=thetas[3],
             market_datetime=market_datetime,
         )
-        return greek
+        return greeks
 
     def process_df(self, df: pd.DataFrame) -> pd.DataFrame:
         print(f'Starting implied vol calcs {datetime.datetime.utcnow()}')
 
-        # TODO: Pass thru market_datetime to csv
         executor = futures.ProcessPoolExecutor(max_workers=N_WORKERS)
         future_submission = {
             executor.submit(
@@ -165,7 +185,7 @@ class BlackScholes(reporter.Reporter):
                 row.strike,
                 RISK_FREE_RATE,
                 row.days_to_maturity,
-                row.put_call == 'CALL',
+                row.is_call,
                 row.market_datetime,
             ): row for row in df.itertuples()
         }
