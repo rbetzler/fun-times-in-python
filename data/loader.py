@@ -156,11 +156,20 @@ class FileIngestion(abc.ABC):
         df = utils.query_db(query=query)
         if not df.empty:
             query = f'''
-                select coalesce(max(ingest_datetime), '1900-01-01') as ingest_datetime
-                from audit.ingest_datetimes
-                where   schema_name = '{self.schema}'
+                with
+                base as (
+                  select
+                      id
+                    , max(id) over () as max_id
+                    , ingest_datetime
+                  from audit.ingest_datetimes
+                  where schema_name = '{self.schema}'
                     and table_name = '{self.table}'
                     and job_name = '{self.job_name}'
+                )
+                select coalesce(max(ingest_datetime), '1900-01-01') as ingest_datetime
+                from base
+                where id = max_id
                 '''
             df = utils.query_db(query=query)
             ingest_datetime = df['ingest_datetime'].values[0]
