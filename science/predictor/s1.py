@@ -76,6 +76,8 @@ class Predictor(base.Predictor, abc.ABC):
             where market_datetime between '{self.start_date}' and '{self.end_date}'
               {'and target is not null' if self.is_training_run else ''}
             order by market_datetime, symbol
+            { 'limit ' + str(self.limit) if self.is_training_run else '' }
+            { 'offset ' + str(self.limit * self.n_subrun) if self.is_training_run else '' }
             '''
         return query
 

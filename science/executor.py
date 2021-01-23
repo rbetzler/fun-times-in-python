@@ -32,6 +32,7 @@ def get_class_kwargs(cls: classmethod) -> set:
 
 
 def configure_backtest(run_kwargs: dict) -> list:
+    """For every business day between two dates, construct a kwargs"""
     start_date = run_kwargs['start_date']
     end_date = start_date + timedelta(days=int(run_kwargs['n_days']))
     run_kwargs.update({'n_days': 0})
@@ -52,8 +53,16 @@ def configure_backtest(run_kwargs: dict) -> list:
 def parse(
         args,
         cls_kwargs: set,
+        n_subruns: int,
 ) -> list:
-    """Parse cli arguments into a list of kwargs dicts"""
+    """
+    Parse cli arguments into a list of kwargs dicts
+    1. For all args, check if they exist in the class
+    2. If start date, convert from str to datetime
+    3. Check for day of week
+    4. If backset, configure
+    5. If training run, iterate over subruns
+    """
     run_kwargs = {}
     for key, arg in args.__dict__.items():
         if arg is not None and key != 'job' and key in cls_kwargs:
@@ -65,6 +74,11 @@ def parse(
 
     if args.is_backtest:
         kwargs = configure_backtest(run_kwargs)
+    elif args.is_training_run:
+        kwargs = []
+        for n in range(0, n_subruns + 1):
+            run_kwargs.update({'n_subrun': n})
+            kwargs.append(run_kwargs.copy())
     else:
         kwargs = [run_kwargs]
     return kwargs
@@ -127,7 +141,7 @@ def main():
     job_id = args.job
     cls = get_class(job_id=job_id)
     cls_kwargs = get_class_kwargs(cls)
-    kwargs = parse(args=args, cls_kwargs=cls_kwargs)
+    kwargs = parse(args=args, cls_kwargs=cls_kwargs, n_subruns=cls().n_subruns)
     for k in kwargs:
         cls(run_datetime=datetime.utcnow(), **k).execute()
 

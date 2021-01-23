@@ -14,17 +14,29 @@ class Predictor(core.Science, abc.ABC):
             self,
             n_days: int = 1000,
             is_training_run: bool = False,
+            n_subrun: int = None,
             *args,
             **kwargs,
     ):
         super().__init__(*args, **kwargs)
         self.end_date = self.start_date + datetime.timedelta(days=int(n_days))
         self._is_training_run = is_training_run
+        self.n_subrun = n_subrun
 
     @property
     def is_training_run(self) -> bool:
         """Whether the model will be trained or not"""
         return self._is_training_run
+
+    @property
+    def n_subruns(self) -> int:
+        """When backtesting, the number of iterations for a given date range"""
+        return 5
+
+    @property
+    def limit(self) -> int:
+        """When backtesting, the size of the dataset"""
+        return 30000
 
     @property
     def trained_model_filepath(self) -> str:
@@ -71,6 +83,7 @@ class Predictor(core.Science, abc.ABC):
         Archive: {self.archive_files}
         Start Date: {self.start_date}
         End Date: {self.end_date}
+        Subrun: {self.n_subrun}
         ''')
 
         print(f'Getting raw data {datetime.datetime.utcnow()}')
