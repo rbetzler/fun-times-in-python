@@ -4,6 +4,7 @@
     post_hook='''
       create index if not exists {{ this.name }}_symbol_idx on {{ this }} (symbol);
       create index if not exists {{ this.name }}_file_datetime_idx on {{ this }} (file_datetime);
+      create index if not exists {{ this.name }}_market_datetime_idx on {{ this }} (market_datetime);
       '''
   )
 }}
@@ -114,6 +115,7 @@ raw as (
     , days_to_expiration_date
     , greatest(.01, least(.99, (lead(price) over (w) - price) / (lead(strike) over (w) - strike))) as first_order_difference
     , file_date as file_datetime
+    , file_date as market_datetime
     , ingest_datetime
   from ranked
   where rn = 1
