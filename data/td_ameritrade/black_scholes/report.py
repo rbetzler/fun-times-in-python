@@ -31,18 +31,18 @@ def get_report_days() -> list:
     query = '''
         with
         b as (
-          select max(file_datetime)::date as bs_latest
+          select max(market_datetime)::date as bs_latest
           from td.black_scholes
         )
         , o as (
           select
-              min(file_datetime)::date as option_earliest
-            , max(file_datetime)::date as option_latest
+              min(market_datetime)::date as option_earliest
+            , max(market_datetime)::date as option_latest
           from dbt.options
         )
         select
             o.option_latest
-          , coalesce(b.bs_latest + 1, o.option_earliest) as bs_latest
+          , coalesce(b.bs_latest, o.option_earliest) as bs_latest
         from b, o;
         '''
     df = utils.query_db(query=query)
