@@ -308,6 +308,18 @@ class BlackScholes:
         )
         return vega
 
+    @property
+    def risk_neutral_probability(self):
+        """
+        The risk neutral probability of the option, which is the
+        probablility that the option finishes in the money
+            - For calls, N(D2)
+            - For puts, N(-D2)
+        """
+        x = self.d2 if self.is_call else -self.d2
+        rnp = self._cumulative_density_function(x)
+        return rnp
+
 
 def smooth_first_order_difference(
         df: pd.DataFrame,

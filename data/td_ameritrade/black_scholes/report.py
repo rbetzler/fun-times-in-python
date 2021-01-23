@@ -22,6 +22,7 @@ class Greeks(NamedTuple):
     theta_half: float
     theta_quarter: float
     theta_tenth: float
+    risk_neutral_probability: float
     market_datetime: datetime.datetime
 
 
@@ -152,15 +153,20 @@ class BlackScholes(reporter.Reporter):
         }
         bs = options_utils.BlackScholes(**kwargs)
         implied_volatility = bs.implied_volatility
-        kwargs['volatility'] = implied_volatility
-        thetas = []
-        for x in [1, 2, 4, 10]:
-            if implied_volatility:
+
+        if implied_volatility:
+            kwargs['volatility'] = implied_volatility
+            rnp = options_utils.BlackScholes(**kwargs).risk_neutral_probability
+
+            thetas = []
+            for x in [1, 2, 4, 10]:
                 kwargs['days_to_maturity'] = days_to_maturity / x
                 theta = options_utils.BlackScholes(**kwargs).theta
                 thetas.append(theta)
-            else:
-                thetas.append(None)
+
+        else:
+            rnp = None
+            thetas = [None, None, None, None]
 
         greeks = Greeks(
             symbol=symbol,
@@ -172,6 +178,7 @@ class BlackScholes(reporter.Reporter):
             theta_half=thetas[1],
             theta_quarter=thetas[2],
             theta_tenth=thetas[3],
+            risk_neutral_probability=rnp,
             market_datetime=market_datetime,
         )
         return greeks

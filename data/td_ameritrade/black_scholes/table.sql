@@ -6,6 +6,7 @@ create table td.black_scholes (
     theta_half numeric(20,6),
     theta_quarter numeric(20,6),
     theta_tenth numeric(20,6),
+    risk_neutral_probability numeric(20,6),
     strike numeric(20,6),
     days_to_maturity numeric(20,6),
     is_call boolean,
