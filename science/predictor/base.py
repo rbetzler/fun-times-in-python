@@ -1,5 +1,6 @@
 import abc
 import datetime
+import os
 import pandas as pd
 import torch
 
@@ -88,17 +89,17 @@ class Predictor(core.Science, abc.ABC):
                 **self.model_kwargs,
             )
 
+            if os.path.isfile(self.trained_model_filepath):
+                print(f'Loading pre-trained model {datetime.datetime.utcnow()}')
+                trained_model_params = torch.load(self.trained_model_filepath)
+                model.load_state_dict(trained_model_params)
+
             if self.is_training_run:
                 print(f'Fitting model {datetime.datetime.utcnow()}')
                 model.fit()
 
                 print(f'Saving model to {self.trained_model_filepath}: {datetime.datetime.utcnow()}')
                 torch.save(model.state_dict(), self.trained_model_filepath)
-
-            else:
-                print(f'Loading pre-trained model {datetime.datetime.utcnow()}')
-                trained_model_params = torch.load(self.trained_model_filepath)
-                model.load_state_dict(trained_model_params)
 
             print(f'Generating prediction {datetime.datetime.utcnow()}')
             output = model.prediction_df
