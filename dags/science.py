@@ -43,8 +43,7 @@ start_time = BashOperator(
     dag=dag,
 )
 
-# derived stocks table
-update_training_data = DockerOperator(
+dbt_training_technicals = DockerOperator(
     task_id='update_dbt_training_table',
     command='dbt run -m training technicals --profiles-dir .',
     **dbt_kwargs,
@@ -62,16 +61,10 @@ load_stock_predictions = DockerOperator(
     **kwargs,
 )
 
-decision_stocks = DockerOperator(
-    task_id='stock_decision',
-    command='python science/executor.py -j=d1 --archive_files',
-    **kwargs,
-)
-
-load_stock_decisions = DockerOperator(
-    task_id='stock_decision_loader',
-    command='python data/science/decisions/loader.py',
-    **kwargs,
+dbt_decisions = DockerOperator(
+    task_id='update_dbt_decisions_table',
+    command='dbt run -m decisions --profiles-dir .',
+    **dbt_kwargs,
 )
 
 report_stock_decisions = DockerOperator(
@@ -92,11 +85,10 @@ end_time = BashOperator(
     dag=dag,
 )
 
-update_training_data.set_upstream(start_time)
-predict_stocks.set_upstream(update_training_data)
+dbt_training_technicals.set_upstream(start_time)
+predict_stocks.set_upstream(dbt_training_technicals)
 load_stock_predictions.set_upstream(predict_stocks)
-decision_stocks.set_upstream(load_stock_predictions)
-load_stock_decisions.set_upstream(decision_stocks)
-report_stock_decisions.set_upstream(load_stock_decisions)
+dbt_decisions.set_upstream(load_stock_predictions)
+report_stock_decisions.set_upstream(dbt_decisions)
 execute_trades.set_upstream(report_stock_decisions)
 end_time.set_upstream(execute_trades)
