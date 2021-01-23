@@ -10,10 +10,9 @@
 
 with
 tickers as (
-    select symbol
+    select distinct symbol
     from {{ ref('tickers') }}
     order by symbol
-    limit 75
     )
 , lagged as (
     select
@@ -51,13 +50,14 @@ tickers as (
         , lag(s.open, 28) over w as open_28
         , lag(s.open, 29) over w as open_29
         , lag(s.open, 30) over w as open_30
-        , abs(s.open - avg(s.open) over (w rows between 11 preceding and 1 preceding)) / avg(s.open) over (w rows between 11 preceding and 1 preceding) as abs_deviation_10
-        , abs(s.open - avg(s.open) over (w rows between 31 preceding and 1 preceding)) / avg(s.open) over (w rows between 31 preceding and 1 preceding) as abs_deviation_30
-        , abs(s.open - avg(s.open) over (w rows between 61 preceding and 1 preceding)) / avg(s.open) over (w rows between 61 preceding and 1 preceding) as abs_deviation_60
-        , abs(s.open - avg(s.open) over (w rows between 91 preceding and 1 preceding)) / avg(s.open) over (w rows between 91 preceding and 1 preceding) as abs_deviation_90
+        , abs(s.open - avg(s.open) over (w rows between 11 preceding and 1 preceding)) / nullif(avg(s.open) over (w rows between 11 preceding and 1 preceding), 0) as abs_deviation_10
+        , abs(s.open - avg(s.open) over (w rows between 31 preceding and 1 preceding)) / nullif(avg(s.open) over (w rows between 31 preceding and 1 preceding), 0) as abs_deviation_30
+        , abs(s.open - avg(s.open) over (w rows between 61 preceding and 1 preceding)) / nullif(avg(s.open) over (w rows between 61 preceding and 1 preceding), 0) as abs_deviation_60
+        , abs(s.open - avg(s.open) over (w rows between 91 preceding and 1 preceding)) / nullif(avg(s.open) over (w rows between 91 preceding and 1 preceding), 0) as abs_deviation_90
     from {{ ref('stocks') }} as s
     inner join tickers as t
         on t.symbol = s.symbol
+    where s.market_datetime > '2015-01-01'
     window w as (partition by s.symbol order by s.market_datetime)
     )
 , summarized as (
@@ -174,12 +174,12 @@ select
     , (open_28 - normalization_min) / (normalization_max - normalization_min) as open_28
     , (open_29 - normalization_min) / (normalization_max - normalization_min) as open_29
     , (open_30 - normalization_min) / (normalization_max - normalization_min) as open_30
-    , (mean_deviation_10 - mean_deviation_30) / mean_deviation_30 as mean_deviation_10_over_30
-    , (mean_deviation_10 - mean_deviation_60) / mean_deviation_60 as mean_deviation_10_over_60
-    , (mean_deviation_10 - mean_deviation_90) / mean_deviation_90 as mean_deviation_10_over_90
-    , (max_deviation_10 - max_deviation_30) / max_deviation_30 as max_deviation_10_over_30
-    , (max_deviation_10 - max_deviation_60) / max_deviation_60 as max_deviation_10_over_60
-    , (max_deviation_10 - max_deviation_90) / max_deviation_90 as max_deviation_10_over_90
+    , (mean_deviation_10 - mean_deviation_30) / nullif(mean_deviation_30, 0) as mean_deviation_10_over_30
+    , (mean_deviation_10 - mean_deviation_60) / nullif(mean_deviation_60, 0) as mean_deviation_10_over_60
+    , (mean_deviation_10 - mean_deviation_90) / nullif(mean_deviation_90, 0) as mean_deviation_10_over_90
+    , (max_deviation_10 - max_deviation_30) / nullif(max_deviation_30, 0) as max_deviation_10_over_30
+    , (max_deviation_10 - max_deviation_60) / nullif(max_deviation_60, 0) as max_deviation_10_over_60
+    , (max_deviation_10 - max_deviation_90) / nullif(max_deviation_90, 0) as max_deviation_10_over_90
 from summarized
 where open_30 is not null
   and normalization_max <> normalization_min
