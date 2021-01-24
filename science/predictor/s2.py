@@ -1,5 +1,5 @@
 """
-python science/executor.py --job=s2 --start_date='2015-01-15' --n_days=500 --is_training_run
+python science/executor.py --job=s2 --start_date='2015-01-15' --n_days=200 --is_training_run
 python science/executor.py --job=s2 --start_date='2018-01-19' --n_days=100 -b -a
 """
 from science.predictor import s1
