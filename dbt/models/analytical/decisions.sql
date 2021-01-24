@@ -73,20 +73,20 @@ predictions as (
     and p.market_datetime = t.market_datetime
   where p.dr = 1
     and o.days_to_expiration > 0
+    and o.price > 0
+    and o.strike > 0
+    and s.close > 0
 )
 , bools as (
   select *
     , thirty_day_low_prediction > strike as has_strike_below_30_day_predicted_low
-    , days_to_expiration between 20 and 60 as has_sufficient_days_to_expiration
-    , potential_annual_return > .2 as has_sufficient_potential_return
-    , oom_percent > .15 as is_sufficiently_oom
-    , risk_neutral_probability between .1 and .5 as has_sufficient_probability
-    , pe_ratio between 10 and 40 as has_sufficient_pe
+    , days_to_expiration between 30 and 70 as has_sufficient_days_to_expiration
+    , potential_annual_return > .15 as has_sufficient_potential_return
+    , oom_percent > .10 as is_sufficiently_oom
+    , risk_neutral_probability <= .3 as has_sufficient_probability
+    , pe_ratio between 0 and 30 as has_sufficient_pe
     , market_capitalization > 10 as has_sufficient_market_cap
     , theta - theta_half < theta_half - theta_quarter as has_early_theta_decay
-    , avg_open_20 between avg_open_10 and avg_open_30 as has_30_day_trend
-    , avg_open_60 between avg_open_10 and avg_open_90 as has_90_day_trend
-    , avg_open_120 between avg_open_10 and avg_open_240 as has_240_day_trend
   from base
 )
 , tradables as (
@@ -98,10 +98,7 @@ predictions as (
       and has_sufficient_probability
       and has_sufficient_pe
       and has_sufficient_market_cap
-      and has_early_theta_decay
-      and has_30_day_trend
-      and has_90_day_trend
-      and has_240_day_trend, false) as is_tradable
+      and has_early_theta_decay, false) as is_tradable
   from bools
 )
 , row_numbers as (
@@ -157,9 +154,6 @@ predictions as (
     , has_sufficient_pe
     , has_sufficient_market_cap
     , has_early_theta_decay
-    , has_30_day_trend
-    , has_90_day_trend
-    , has_240_day_trend
     , is_tradable and 1 = row_number() over (partition by symbol, market_datetime, days_to_expiration, is_tradable order by rn_probability + rn_return + rn_oom + rn_theta) as should_place_trade
   from row_numbers
 )

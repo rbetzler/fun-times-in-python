@@ -23,8 +23,8 @@ p as (
     , i.industry
     , t.denormalized_target as target
     , p.denormalized_prediction as prediction
-    , (p.denormalized_prediction - t.denormalized_target) / t.denormalized_target as error
-    , abs(p.denormalized_prediction - t.denormalized_target) / t.denormalized_target as abs_error
+    , (p.denormalized_prediction - t.denormalized_target) / nullif(t.denormalized_target, 0) as error
+    , abs(p.denormalized_prediction - t.denormalized_target) / nullif(t.denormalized_target, 0) as abs_error
     , p.denormalized_prediction > t.denormalized_target as is_loss
   from {{ ref('training') }} as t
   inner join p
