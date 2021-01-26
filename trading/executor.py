@@ -63,7 +63,7 @@ class TDOrderExecutor:
             if new_order.symbol not in symbols_to_ignore:
                 orders_to_place.append(new_order)
 
-        print(f'Placing net new orders: {datetime.utcnow()}')
+        # print(f'Placing net new orders: {datetime.utcnow()}')
         # for order in orders_to_place:
         #     trading_utils.place_order(order=order)
 
