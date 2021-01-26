@@ -26,6 +26,7 @@ predictions as (
     , o.days_to_expiration
     , o.strike
     , o.price as option_price
+    , o.open_interest
     , (o.price / o.strike) * (360 / o.days_to_expiration) as potential_annual_return
     , (s.close - o.strike) / s.close as oom_percent
     , b.delta
@@ -92,24 +93,24 @@ predictions as (
   select *
     , thirty_day_low_prediction > strike as has_strike_below_30_day_predicted_low
     , days_to_expiration between 30 and 70 as has_sufficient_days_to_expiration
+    , open_interest > 0 as has_open_interest
     , potential_annual_return > .15 as has_sufficient_potential_return
     , oom_percent > .10 as is_sufficiently_oom
     , risk_neutral_probability <= .3 as has_sufficient_probability
     , pe_ratio between 0 and 30 as has_sufficient_pe
     , market_capitalization > 10 as has_sufficient_market_cap
-    , theta - theta_half < theta_half - theta_quarter as has_early_theta_decay
+    , theta_half between theta and theta_quarter as has_early_theta_decay
   from base
 )
 , tradables as (
   select *
-    , coalesce(has_strike_below_30_day_predicted_low
-      and has_sufficient_days_to_expiration
+    , coalesce(has_sufficient_days_to_expiration
+      and has_open_interest
       and has_sufficient_potential_return
       and is_sufficiently_oom
       and has_sufficient_probability
       and has_sufficient_pe
-      and has_sufficient_market_cap
-      and has_early_theta_decay, false) as is_tradable
+      and has_sufficient_market_cap, false) as is_tradable
   from bools
 )
 , row_numbers as (
@@ -118,6 +119,8 @@ predictions as (
     , row_number() over (w order by potential_annual_return desc) as rn_return
     , row_number() over (w order by oom_percent desc) as rn_oom
     , row_number() over (w order by theta) as rn_theta
+    , row_number() over (w order by theta_gamma_offset) as rn_theta_gamma_offset
+    , row_number() over (w order by theta_vega_offset) as rn_theta_vega_offset
   from tradables
   window w as (partition by symbol, market_datetime, days_to_expiration, is_tradable)
 )
@@ -132,6 +135,7 @@ predictions as (
     , days_to_expiration
     , strike
     , option_price
+    , open_interest
     , potential_annual_return
     , oom_percent
     , delta
@@ -170,13 +174,18 @@ predictions as (
     , max_240
     , has_strike_below_30_day_predicted_low
     , has_sufficient_days_to_expiration
+    , has_open_interest
     , has_sufficient_potential_return
     , is_sufficiently_oom
     , has_sufficient_probability
     , has_sufficient_pe
     , has_sufficient_market_cap
     , has_early_theta_decay
-    , is_tradable and 1 = row_number() over (partition by symbol, market_datetime, days_to_expiration, is_tradable order by rn_probability + rn_return + rn_oom + rn_theta) as should_place_trade
+    , is_tradable
+    , is_tradable and 1 = row_number() over (
+        partition by symbol, market_datetime, days_to_expiration, is_tradable
+        order by rn_probability + rn_return + rn_oom + rn_theta + rn_theta_gamma_offset + rn_theta_vega_offset
+      ) as should_place_trade
   from row_numbers
 )
 select *
