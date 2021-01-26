@@ -34,6 +34,9 @@ kwargs = {
 dbt_kwargs = kwargs.copy()
 dbt_kwargs['volumes'] = ['/media/nautilus/fun-times-in-python/dbt:/usr/src/app']
 
+prediction_kwargs = kwargs.copy()
+prediction_kwargs['image'] = 'pytorch'
+
 start_time = BashOperator(
     task_id='start_pipeline',
     bash_command='date',
@@ -130,6 +133,42 @@ dbt_tests = DockerOperator(
     **dbt_kwargs,
 )
 
+dbt_training_technicals = DockerOperator(
+    task_id='update_dbt_training_table',
+    command='dbt run -m training technicals --profiles-dir .',
+    **dbt_kwargs,
+)
+
+predict_stocks = DockerOperator(
+    task_id='stock_predictor',
+    command='python science/executor.py --job=s1 --archive_files',
+    **prediction_kwargs,
+)
+
+load_stock_predictions = DockerOperator(
+    task_id='stock_prediction_loader',
+    command='python data/science/predictions/loader.py',
+    **kwargs,
+)
+
+dbt_decisions = DockerOperator(
+    task_id='update_dbt_decisions_table',
+    command='dbt run -m decisions --profiles-dir .',
+    **dbt_kwargs,
+)
+
+report_stock_decisions = DockerOperator(
+    task_id='stock_decision_report',
+    command='python data/science/decisions/report.py',
+    **kwargs,
+)
+
+execute_trades = DockerOperator(
+    task_id='execute_trades',
+    command='python trading/executor.py',
+    **kwargs,
+)
+
 end_time = BashOperator(
     task_id='end_pipeline',
     bash_command='date',
@@ -162,4 +201,11 @@ dbt_tests.set_upstream(report_options)
 dbt_tests.set_upstream(load_black_scholes)
 dbt_tests.set_upstream(dbt_fundamentals)
 
-end_time.set_upstream(dbt_tests)
+dbt_training_technicals.set_upstream(dbt_tests)
+predict_stocks.set_upstream(dbt_training_technicals)
+load_stock_predictions.set_upstream(predict_stocks)
+dbt_decisions.set_upstream(load_stock_predictions)
+report_stock_decisions.set_upstream(dbt_decisions)
+execute_trades.set_upstream(report_stock_decisions)
+
+end_time.set_upstream(execute_trades)
