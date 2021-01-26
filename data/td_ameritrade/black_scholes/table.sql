@@ -2,6 +2,9 @@
 create table td.black_scholes (
     symbol text,
     implied_volatility numeric(20,6),
+    delta numeric(20,6),
+    gamma numeric(20,6),
+    vega numeric(20,6),
     theta numeric(20,6),
     theta_half numeric(20,6),
     theta_quarter numeric(20,6),

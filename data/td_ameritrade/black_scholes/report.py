@@ -18,6 +18,9 @@ class Greeks(NamedTuple):
     days_to_maturity: int
     is_call: bool
     implied_volatility: float
+    delta: float
+    gamma: float
+    vega: float
     theta: float
     theta_half: float
     theta_quarter: float
@@ -156,7 +159,11 @@ class BlackScholes(reporter.Reporter):
 
         if implied_volatility:
             kwargs['volatility'] = implied_volatility
-            rnp = options_utils.BlackScholes(**kwargs).risk_neutral_probability
+            bs = options_utils.BlackScholes(**kwargs)
+            delta = bs.delta
+            gamma = bs.gamma
+            vega = bs.vega
+            rnp = bs.risk_neutral_probability
 
             thetas = []
             for x in [1, 2, 4, 10]:
@@ -165,6 +172,9 @@ class BlackScholes(reporter.Reporter):
                 thetas.append(theta)
 
         else:
+            delta = None
+            gamma = None
+            vega = None
             rnp = None
             thetas = [None, None, None, None]
 
@@ -174,6 +184,9 @@ class BlackScholes(reporter.Reporter):
             days_to_maturity=days_to_maturity,
             is_call=is_call,
             implied_volatility=implied_volatility,
+            delta=delta,
+            gamma=gamma,
+            vega=vega,
             theta=thetas[0],
             theta_half=thetas[1],
             theta_quarter=thetas[2],

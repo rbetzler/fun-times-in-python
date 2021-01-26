@@ -28,10 +28,15 @@ predictions as (
     , o.price as option_price
     , (o.price / o.strike) * (360 / o.days_to_expiration) as potential_annual_return
     , (s.close - o.strike) / s.close as oom_percent
+    , b.delta
+    , b.gamma
+    , b.vega
     , b.theta
     , b.theta_half
     , b.theta_quarter
     , b.theta_tenth
+    , b.theta / b.gamma as theta_gamma_offset
+    , b.theta / b.vega as theta_vega_offset
     , b.implied_volatility
     , b.risk_neutral_probability
     , b.risk_neutral_probability - ((1 - b.risk_neutral_probability) / o.price / o.strike) as kelly_criterion
@@ -123,10 +128,15 @@ predictions as (
     , option_price
     , potential_annual_return
     , oom_percent
+    , delta
+    , gamma
+    , vega
     , theta
     , theta_half
     , theta_quarter
     , theta_tenth
+    , theta_gamma_offset
+    , theta_vega_offset
     , implied_volatility
     , risk_neutral_probability
     , kelly_criterion
