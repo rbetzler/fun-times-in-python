@@ -56,6 +56,12 @@ predictions as (
     , t.avg_open_120
     , t.avg_open_180
     , t.avg_open_240
+    , t.min_30
+    , t.min_90
+    , t.min_240
+    , t.max_30
+    , t.max_90
+    , t.max_240
   from predictions as p
   left join {{ ref('stocks') }} as s
     on  p.symbol = s.symbol
@@ -156,6 +162,12 @@ predictions as (
     , avg_open_120
     , avg_open_180
     , avg_open_240
+    , min_30
+    , min_90
+    , min_240
+    , max_30
+    , max_90
+    , max_240
     , has_strike_below_30_day_predicted_low
     , has_sufficient_days_to_expiration
     , has_sufficient_potential_return

@@ -21,14 +21,20 @@ base as (
     , avg(open) over (w rows between 119 preceding and current row) as avg_open_120
     , avg(open) over (w rows between 179 preceding and current row) as avg_open_180
     , avg(open) over (w rows between 239 preceding and current row) as avg_open_240
+    , min(low) over (w rows between 29 preceding and current row) as min_30
+    , min(low) over (w rows between 89 preceding and current row) as min_90
+    , min(low) over (w rows between 239 preceding and current row) as min_240
+    , max(high) over (w rows between 29 preceding and current row) as max_30
+    , max(high) over (w rows between 89 preceding and current row) as max_90
+    , max(high) over (w rows between 239 preceding and current row) as max_240
   from {{ ref('stocks') }}
-  where market_datetime > '2008-01-01'
+  where market_datetime > '2014-01-01'
   window w as (partition by symbol order by market_datetime)
 )
 , final as (
   select *
   from base
-  where market_datetime >= '2010-01-01'
+  where market_datetime >= '2015-01-01'
 )
 select *
 from final
