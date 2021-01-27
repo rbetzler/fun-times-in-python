@@ -5,8 +5,16 @@ import pandas as pd
 import torch
 
 from science import core
+from science.utilities import modeling_utils, lstm_utils, science_utils
 from utilities import utils
-from science.utilities import modeling_utils, lstm_utils
+
+SYMBOL = 'symbol'
+TARGET = 'target'
+DENORMALIZED_TARGET = 'denormalized_target'
+PREDICTION = 'prediction'
+DENORMALIZED_PREDICTION = 'denormalized_prediction'
+NORMALIZATION_MIN = 'normalization_min'
+NORMALIZATION_MAX = 'normalization_max'
 
 
 class Predictor(core.Science, abc.ABC):
@@ -31,12 +39,12 @@ class Predictor(core.Science, abc.ABC):
     @property
     def n_subruns(self) -> int:
         """When backtesting, the number of iterations for a given date range"""
-        return 5
+        return 4
 
     @property
     def limit(self) -> int:
         """When backtesting, the size of the dataset"""
-        return 30000
+        return 62000
 
     @property
     def trained_model_filepath(self) -> str:
@@ -44,20 +52,40 @@ class Predictor(core.Science, abc.ABC):
         return f'/usr/src/app/audit/science/{self.location}/models/{self.model_id}'
 
     @property
-    @abc.abstractmethod
     def target_column(self) -> str:
-        """Column to target when training and predicting"""
-        pass
+        return TARGET
 
     @property
-    @abc.abstractmethod
     def columns_to_ignore(self) -> list:
-        """Columns to ignore when running the model"""
-        pass
+        cols = [
+            'market_datetime',
+            SYMBOL,
+            DENORMALIZED_TARGET,
+            NORMALIZATION_MIN,
+            NORMALIZATION_MAX,
+        ] + [self.target_column]
+        return cols
+
+    @property
+    def get_symbols(self) -> pd.DataFrame:
+        """Generate sql for one hot encoding columns in query"""
+        query = '''
+            select symbol
+            from dbt.tickers
+            order by 1
+            '''
+        df = utils.query_db(query=query)
+        return df
 
     def preprocess_data(self, df: pd.DataFrame) -> pd.DataFrame:
         """Process data pre-model run"""
-        return df
+        symbols = self.get_symbols
+        final = science_utils.encode_one_hot(
+            df=df,
+            column='symbol',
+            keys=symbols['symbol'].to_list(),
+        )
+        return final
 
     @property
     @abc.abstractmethod
@@ -65,14 +93,15 @@ class Predictor(core.Science, abc.ABC):
         """LSTM model keyword arguments"""
         pass
 
-    @abc.abstractmethod
     def postprocess_data(
             self,
             input: pd.DataFrame,
             output: pd.DataFrame,
     ) -> pd.DataFrame:
-        """Process data post-model run"""
-        return output
+        output['model_id'] = self.model_id
+        df = input[self.columns_to_ignore].join(output)
+        df[DENORMALIZED_PREDICTION] = df[PREDICTION] * (df[NORMALIZATION_MAX] - df[NORMALIZATION_MIN]) + df[NORMALIZATION_MIN]
+        return df
 
     def execute(self):
         print(f'''

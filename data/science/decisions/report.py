@@ -15,7 +15,7 @@ class Decisions(reporter.Reporter):
           select *
             , dense_rank() over (partition by model_id order by market_datetime desc) as dr
           from dbt.decisions
-          where model_id = 's1'
+          where model_id = 's2'
             and has_sufficient_days_to_expiration
             and has_sufficient_pe
             and has_sufficient_market_cap

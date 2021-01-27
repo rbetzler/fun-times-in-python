@@ -1,11 +1,11 @@
 """
 python science/executor.py --job=s4 --start_date='2015-01-15' --n_days=200 --is_training_run
-python science/executor.py --job=s4 --start_date='2018-01-19' --n_days=30 -ab
+python science/executor.py --job=s4 --start_date='2019-02-01' --n_days=30 -ab
 """
 from science.predictor import s1
 
 
-class S4(s1.Predictor):
+class S4(s1.ThirtyDayLowPredictor):
     @property
     def model_id(self) -> str:
         return 's4'
@@ -14,13 +14,13 @@ class S4(s1.Predictor):
     def model_kwargs(self) -> dict:
         kwargs = {
             'n_layers': 2,
-            'n_epochs': 500,
+            'n_epochs': 200,
             'hidden_shape': 750,
             'dropout': 0.15,
             'learning_rate': .0001,
             'seed': 42,
-            'sequence_length': 20,
-            'batch_size': 10000,
+            'sequence_length': 2,
+            'batch_size': 31000,
         }
         return kwargs
 

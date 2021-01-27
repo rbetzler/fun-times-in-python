@@ -1,36 +1,15 @@
 """
 python science/executor.py --job=s1 --start_date='2015-01-15' --n_days=200 --is_training_run
-python science/executor.py --job=s1 --start_date='2020-12-26' --n_days=30 -ab
+python science/executor.py --job=s1 --start_date='2019-02-01' --n_days=30 -ab
 """
 import abc
 import pandas as pd
 
 from science.predictor import base
-from science.utilities import science_utils
-from utilities import utils
-
-SYMBOL = 'symbol'
-TARGET = 'target'
-DENORMALIZED_TARGET = 'denormalized_target'
-PREDICTION = 'prediction'
-DENORMALIZED_PREDICTION = 'denormalized_prediction'
-NORMALIZATION_MIN = 'normalization_min'
-NORMALIZATION_MAX = 'normalization_max'
 
 
-class Predictor(base.Predictor, abc.ABC):
-    """Predict the high stocks prices over the next 30 days"""
-
-    @property
-    def get_symbols(self) -> pd.DataFrame:
-        """Generate sql for one hot encoding columns in query"""
-        query = '''
-            select symbol
-            from dbt.tickers
-            order by 1
-            '''
-        df = utils.query_db(query=query)
-        return df
+class ThirtyDayLowPredictor(base.Predictor, abc.ABC):
+    """Predict the lowest stock prices over the next 30 days"""
 
     @property
     def query(self) -> str:
@@ -81,43 +60,8 @@ class Predictor(base.Predictor, abc.ABC):
             '''
         return query
 
-    @property
-    def target_column(self) -> str:
-        return TARGET
 
-    @property
-    def columns_to_ignore(self) -> list:
-        cols = [
-            'market_datetime',
-            SYMBOL,
-            DENORMALIZED_TARGET,
-            NORMALIZATION_MIN,
-            NORMALIZATION_MAX,
-        ] + [self.target_column]
-        return cols
-
-    def preprocess_data(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Process data pre-model run"""
-        symbols = self.get_symbols
-        final = science_utils.encode_one_hot(
-            df=df,
-            column='symbol',
-            keys=symbols['symbol'].to_list(),
-        )
-        return final
-
-    def postprocess_data(
-            self,
-            input: pd.DataFrame,
-            output: pd.DataFrame,
-    ) -> pd.DataFrame:
-        output['model_id'] = self.model_id
-        df = input[self.columns_to_ignore].join(output)
-        df[DENORMALIZED_PREDICTION] = df[PREDICTION] * (df[NORMALIZATION_MAX] - df[NORMALIZATION_MIN]) + df[NORMALIZATION_MIN]
-        return df
-
-
-class S1(Predictor):
+class S1(ThirtyDayLowPredictor):
     @property
     def model_id(self) -> str:
         return 's1'
@@ -126,12 +70,12 @@ class S1(Predictor):
     def model_kwargs(self) -> dict:
         kwargs = {
             'n_layers': 2,
-            'n_epochs': 500,
+            'n_epochs': 200,
             'hidden_shape': 1000,
             'dropout': 0.1,
             'learning_rate': .0001,
             'seed': 44,
-            'sequence_length': 20,
-            'batch_size': 13000,
+            'sequence_length': 2,
+            'batch_size': 31000,
         }
         return kwargs

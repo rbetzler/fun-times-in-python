@@ -13,7 +13,7 @@ predictions as (
   select *
     , dense_rank() over (partition by model_id order by file_datetime desc, market_datetime desc) as dr
   from {{ source('dev', 'predictions') }}
-  where model_id = 's1'
+  where model_id = 's2'
 )
 , base as (
   select

@@ -51,7 +51,7 @@ dbt_training_technicals = DockerOperator(
 
 predict_stocks = DockerOperator(
     task_id='stock_predictor',
-    command='python science/executor.py --job=s1 --archive_files',
+    command='python science/executor.py --job=s2 --archive_files',
     **prediction_kwargs,
 )
 

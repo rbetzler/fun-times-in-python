@@ -76,7 +76,7 @@ def parse(
         kwargs = configure_backtest(run_kwargs)
     elif args.is_training_run:
         kwargs = []
-        for n in range(0, n_subruns + 1):
+        for n in range(0, n_subruns):
             run_kwargs.update({'n_subrun': n})
             kwargs.append(run_kwargs.copy())
     else:
