@@ -98,7 +98,7 @@ predictions as (
     , oom_percent > .10 as is_sufficiently_oom
     , risk_neutral_probability <= .3 as has_sufficient_probability
     , pe_ratio between 0 and 30 as has_sufficient_pe
-    , market_capitalization > 10 as has_sufficient_market_cap
+    , market_capitalization > 10000 as has_sufficient_market_cap
     , theta_half between theta and theta_quarter as has_early_theta_decay
   from base
 )
