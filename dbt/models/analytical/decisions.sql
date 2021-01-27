@@ -36,11 +36,11 @@ predictions as (
     , b.theta_half
     , b.theta_quarter
     , b.theta_tenth
-    , b.theta / b.gamma as theta_gamma_offset
-    , b.theta / b.vega as theta_vega_offset
+    , b.theta / nullif(b.gamma, 0) as theta_gamma_offset
+    , b.theta / nullif(b.vega, 0) as theta_vega_offset
     , b.implied_volatility
     , b.risk_neutral_probability
-    , b.risk_neutral_probability - ((1 - b.risk_neutral_probability) / o.price / o.strike) as kelly_criterion
+    , b.risk_neutral_probability - nullif((1 - b.risk_neutral_probability) / o.price / o.strike, 0) as kelly_criterion
     , f.pe_ratio
     , f.dividend_amount
     , f.dividend_date
