@@ -64,10 +64,10 @@ predictions as (
     , t.max_90
     , t.max_240
   from predictions as p
-  left join {{ ref('stocks') }} as s
+  inner join {{ ref('stocks') }} as s
     on  p.symbol = s.symbol
     and p.market_datetime = s.market_datetime
-  left join {{ ref('options') }} as o
+  inner join {{ ref('options') }} as o
     on  p.symbol = o.symbol
     and p.market_datetime = o.market_datetime
     and not o.is_call
