@@ -78,7 +78,7 @@ class TorchLSTM(nn.Module):
             dropout=dropout,
         ).to(self.device)
 
-        self.relu = nn.ReLU()
+        self.relu = nn.ReLU6()
         self.linear = nn.Linear(self.hidden_shape, self.output_shape).to(self.device)
 
         # Parallelization
@@ -142,8 +142,8 @@ class TorchLSTM(nn.Module):
 
         self.lstm.module.flatten_parameters()
         output, _ = self.lstm(data, None)
-        output = self.relu(output)
         output = self.linear(output)
+        output = self.relu(output)
         return output
 
     def fit(self):

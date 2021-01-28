@@ -15,11 +15,11 @@ class S3(s1.ThirtyDayLowPredictor):
         kwargs = {
             'n_layers': 2,
             'n_epochs': 300,
-            'hidden_shape': 750,
+            'hidden_shape': 250,
             'dropout': 0.15,
-            'learning_rate': .0001,
-            'seed': 42,
-            'sequence_length': 4,
+            'learning_rate': .001,
+            'seed': 33,
+            'sequence_length': 10,
             'batch_size': 31000,
         }
         return kwargs

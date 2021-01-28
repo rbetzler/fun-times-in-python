@@ -39,7 +39,7 @@ class Predictor(core.Science, abc.ABC):
     @property
     def n_subruns(self) -> int:
         """When backtesting, the number of iterations for a given date range"""
-        return 4
+        return 2
 
     @property
     def limit(self) -> int:

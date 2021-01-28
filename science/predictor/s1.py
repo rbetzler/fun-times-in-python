@@ -51,6 +51,12 @@ class ThirtyDayLowPredictor(base.Predictor, abc.ABC):
               , open_28
               , open_29
               , open_30
+              , mean_deviation_10_over_30
+              , mean_deviation_10_over_60
+              , mean_deviation_10_over_90
+              , max_deviation_10_over_30
+              , max_deviation_10_over_60
+              , max_deviation_10_over_90
             from dbt.training
             where market_datetime between '{self.start_date}' and '{self.end_date}'
               {'and target is not null' if self.is_training_run else ''}
@@ -74,7 +80,7 @@ class S1(ThirtyDayLowPredictor):
             'hidden_shape': 1000,
             'dropout': 0.1,
             'learning_rate': .0001,
-            'seed': 44,
+            'seed': 55,
             'sequence_length': 2,
             'batch_size': 31000,
         }
