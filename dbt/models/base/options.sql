@@ -17,6 +17,7 @@ raw as (
     , o.n_contracts
     , o.interest_rate
     , o.put_call = 'CALL' as is_call
+    , o.ask - o.bid as bid_ask_spread
     , (o.bid + o.ask) / 2 as price
     , o.bid
     , o.ask
@@ -83,6 +84,7 @@ raw as (
     , interest_rate
     , is_call
     , price
+    , bid_ask_spread
     , bid
     , ask
     , last

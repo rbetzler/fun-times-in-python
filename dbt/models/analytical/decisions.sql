@@ -26,6 +26,9 @@ predictions as (
     , o.days_to_expiration
     , o.strike
     , o.price as option_price
+    , o.bid
+    , o.ask
+    , o.bid_ask_spread
     , o.open_interest
     , (o.price / o.strike) * (360 / o.days_to_expiration) as potential_annual_return
     , (s.close - o.strike) / s.close as oom_percent
@@ -93,6 +96,7 @@ predictions as (
   select *
     , thirty_day_low_prediction > strike as has_strike_below_30_day_predicted_low
     , days_to_expiration between 30 and 70 as has_sufficient_days_to_expiration
+    , bid_ask_spread / nullif(bid, 0) < .5 as has_narrow_bid_ask_spread
     , open_interest > 0 as has_open_interest
     , potential_annual_return > .15 as has_sufficient_potential_return
     , oom_percent > .10 as is_sufficiently_oom
@@ -105,6 +109,7 @@ predictions as (
 , tradables as (
   select *
     , coalesce(has_sufficient_days_to_expiration
+      and has_narrow_bid_ask_spread
       and has_open_interest
       and has_sufficient_potential_return
       and is_sufficiently_oom
@@ -135,6 +140,9 @@ predictions as (
     , days_to_expiration
     , strike
     , option_price
+    , bid
+    , ask
+    , bid_ask_spread
     , open_interest
     , potential_annual_return
     , oom_percent
