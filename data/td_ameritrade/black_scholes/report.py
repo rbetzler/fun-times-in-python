@@ -102,6 +102,7 @@ class BlackScholes(reporter.Reporter):
               from dbt.options
               where file_datetime = '{self._report_day}'
                 and days_to_expiration > 0
+                and strike > 0
               )
             , final as (
               select distinct
