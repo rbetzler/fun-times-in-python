@@ -92,7 +92,7 @@ def main():
     parser.add_argument(
         '-j',
         '--job',
-        help='Which job to run: stock, decisioner.',
+        help='Which job to run: s1, s2, etc.',
     )
 
     parser.add_argument(
