@@ -14,9 +14,9 @@ class S4(tdl.ThirtyDayLowPredictor):
     def model_kwargs(self) -> dict:
         kwargs = {
             'n_layers': 2,
-            'n_epochs': 200,
-            'hidden_shape': 750,
-            'dropout': 0.15,
+            'n_epochs': 1000,
+            'hidden_shape': 250,
+            'dropout': 0.1,
             'learning_rate': .001,
             'seed': 42,
             'sequence_length': 2,
