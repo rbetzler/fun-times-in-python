@@ -5,7 +5,7 @@ import inspect
 import pandas as pd
 from datetime import datetime, timedelta
 from science import core
-from science.utilities import modeling_utils
+from utilities import modeling_utils
 
 
 def get_class(job_id: str) -> classmethod:

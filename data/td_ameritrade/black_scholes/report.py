@@ -4,9 +4,8 @@ import pandas as pd
 from concurrent import futures
 from typing import NamedTuple
 
-from utilities import utils
+from utilities import utils, options_utils
 from data import reporter
-from science.utilities import options_utils
 
 N_WORKERS = 15
 RISK_FREE_RATE = .001

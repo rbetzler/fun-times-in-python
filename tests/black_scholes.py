@@ -1,5 +1,5 @@
 import unittest
-from science.utilities import options_utils
+from utilities import options_utils
 
 D1 = -0.3253
 D2 = -0.4753

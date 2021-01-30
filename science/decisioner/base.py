@@ -4,9 +4,7 @@ import pandas as pd
 
 from science import core
 from trading import utils as trading_utils
-from utilities import utils
-
-from science.utilities import modeling_utils
+from utilities import utils, modeling_utils
 
 
 class Decisioner(core.Science, abc.ABC):

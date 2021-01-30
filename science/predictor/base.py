@@ -5,8 +5,7 @@ import pandas as pd
 import torch
 
 from science import core
-from science.utilities import modeling_utils, lstm_utils, science_utils
-from utilities import utils
+from utilities import utils, lstm_utils, modeling_utils, science_utils
 
 SYMBOL = 'symbol'
 TARGET = 'target'

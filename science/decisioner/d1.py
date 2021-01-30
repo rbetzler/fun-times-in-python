@@ -2,7 +2,7 @@ import abc
 import numpy as np
 import pandas as pd
 from science.decisioner import base
-from science.utilities import options_utils, science_utils
+from utilities import options_utils, science_utils
 
 ASSET = 'OPTION'
 DIRECTION = 'SELL'
