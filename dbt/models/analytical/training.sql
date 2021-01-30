@@ -10,13 +10,15 @@
 
 with
 tickers as (
-    select distinct symbol
+    select distinct symbol, sector, industry
     from {{ ref('tickers') }}
     order by symbol
     )
 , lagged as (
     select
-          s.symbol
+          t.symbol
+        , t.sector
+        , t.industry
         , s.market_datetime
         , min(s.open) over (partition by s.symbol order by s.market_datetime rows between 1 following and 31 following) as scaled_target
         , s.open
@@ -67,6 +69,8 @@ tickers as (
     )
 select
       symbol
+    , sector
+    , industry
     , market_datetime
     , scaled_target
     , 1 - (scaled_target / nullif(open, 0)) as target

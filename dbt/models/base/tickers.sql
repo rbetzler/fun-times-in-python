@@ -6,8 +6,8 @@
 
 select distinct
     ticker as symbol
-  , sector
-  , industry
+  , lower(regexp_replace(sector, '\W+', '_', 'g')) as sector
+  , lower(regexp_replace(industry, '\W+', '_', 'g')) as industry
 from {{ source('nasdaq', 'listed_stocks') }}
 where ticker !~ '[\^.~]'
   and character_length(ticker) between 1 and 4

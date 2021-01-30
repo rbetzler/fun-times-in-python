@@ -12,7 +12,7 @@ def encode_one_hot(
 ) -> pd.DataFrame:
     """Add one hot encoding columns to pandas dataframe"""
     df_keys = pd.DataFrame(0, index=np.arange(len(df)), columns=keys)
-    data = df.join(df_keys)
+    data = df.join(df_keys, rsuffix=f'_{column}')
     for key in keys:
         data.loc[data[column] == key, key] = 1
     return data

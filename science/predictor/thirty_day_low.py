@@ -4,11 +4,13 @@ import pandas as pd
 from science.predictor import base
 from utilities import science_utils, utils
 
+INDUSTRY = 'industry'
 MARKET_DATETIME = 'market_datetime'
 OPEN = 'open'
 PREDICTION = 'prediction'
 SCALED_PREDICTION = 'scaled_prediction'
 SCALED_TARGET = 'scaled_target'
+SECTOR = 'sector'
 SYMBOL = 'symbol'
 
 
@@ -19,6 +21,8 @@ class ThirtyDayLowPredictor(base.Predictor, abc.ABC):
     def columns_to_ignore(self) -> list:
         cols = [
             SYMBOL,
+            SECTOR,
+            INDUSTRY,
             MARKET_DATETIME,
             SCALED_TARGET,
             OPEN,
@@ -29,8 +33,10 @@ class ThirtyDayLowPredictor(base.Predictor, abc.ABC):
     def query(self) -> str:
         query = f'''
             select
-                symbol
-              , market_datetime
+                market_datetime
+              , symbol
+              , sector
+              , industry
               , scaled_target
               , target
               , open
@@ -83,7 +89,7 @@ class ThirtyDayLowPredictor(base.Predictor, abc.ABC):
     def get_symbols(self) -> pd.DataFrame:
         """Generate sql for one hot encoding columns in query"""
         query = '''
-            select symbol
+            select symbol, sector, industry
             from dbt.tickers
             order by 1
             '''
@@ -92,12 +98,18 @@ class ThirtyDayLowPredictor(base.Predictor, abc.ABC):
 
     def preprocess_data(self, df: pd.DataFrame) -> pd.DataFrame:
         symbols = self.get_symbols
-        final = science_utils.encode_one_hot(
-            df=df,
-            column='symbol',
-            keys=symbols['symbol'].to_list(),
-        )
-        return final
+        for col in [
+            SYMBOL,
+            SECTOR,
+            # INDUSTRY,
+        ]:
+            keys = [x for x in symbols[col].unique().tolist() if x is not None]
+            df = science_utils.encode_one_hot(
+                df=df,
+                column=col,
+                keys=keys,
+            )
+        return df
 
     def postprocess_data(
             self,
