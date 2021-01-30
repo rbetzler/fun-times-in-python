@@ -4,6 +4,7 @@
     post_hook='''
       create index if not exists {{ this.name }}_symbol_idx on {{ this }} (symbol);
       create index if not exists {{ this.name }}_market_datetime_idx on {{ this }} (market_datetime);
+      create index if not exists {{ this.name }}_open_idx on {{ this }} (open);
       '''
   )
 }}
