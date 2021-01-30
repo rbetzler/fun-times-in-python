@@ -63,6 +63,13 @@ class ThirtyDayLowPredictor(base.Predictor, abc.ABC):
               , open_27
               , open_28
               , open_29
+              , avg_open_30_over_60
+              , avg_open_60_over_90
+              , min_over_max_30
+              , min_over_max_60
+              , min_over_max_90
+              , min_open_60_over_30
+              , min_open_90_over_60
             from dbt.training
             where market_datetime between '{self.start_date}' and '{self.end_date}'
               {'and target is not null' if self.is_training_run else ''}

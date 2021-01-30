@@ -50,6 +50,15 @@ tickers as (
         , lag(s.open, 28) over w as open_28
         , lag(s.open, 29) over w as open_29
         , lag(s.open, 30) over w as open_30
+        , avg(s.open) over (w rows between 30 preceding and 1 preceding) as avg_open_30
+        , avg(s.open) over (w rows between 60 preceding and 1 preceding) as avg_open_60
+        , avg(s.open) over (w rows between 90 preceding and 1 preceding) as avg_open_90
+        , min(s.open) over (w rows between 30 preceding and 1 preceding) as min_open_30
+        , min(s.open) over (w rows between 60 preceding and 1 preceding) as min_open_60
+        , min(s.open) over (w rows between 90 preceding and 1 preceding) as min_open_90
+        , max(s.open) over (w rows between 30 preceding and 1 preceding) as max_open_30
+        , max(s.open) over (w rows between 60 preceding and 1 preceding) as max_open_60
+        , max(s.open) over (w rows between 90 preceding and 1 preceding) as max_open_90
     from {{ ref('stocks') }} as s
     inner join tickers as t
         on t.symbol = s.symbol
@@ -91,6 +100,13 @@ select
     , 1 - (open_27 / nullif(open_28, 0)) as open_27
     , 1 - (open_28 / nullif(open_29, 0)) as open_28
     , 1 - (open_29 / nullif(open_30, 0)) as open_29
+    , 1 - (avg_open_30 / nullif(avg_open_60, 0)) as avg_open_30_over_60
+    , 1 - (avg_open_60 / nullif(avg_open_90, 0)) as avg_open_60_over_90
+    , 1 - (min_open_30 / nullif(max_open_30, 0)) as min_over_max_30
+    , 1 - (min_open_60 / nullif(max_open_60, 0)) as min_over_max_60
+    , 1 - (min_open_90 / nullif(max_open_90, 0)) as min_over_max_90
+    , 1 - (min_open_60 / nullif(min_open_30, 0)) as min_open_60_over_30
+    , 1 - (min_open_90 / nullif(min_open_60, 0)) as min_open_90_over_60
 from lagged
 where market_datetime > '2016-01-01'
   and open_30 is not null
