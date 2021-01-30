@@ -7,7 +7,7 @@
 ## Running executor.py locally
 * Train:
   ```
-  python science/executor.py --job=s1 --start_date='2015-01-15' --n_days=500 --is_training_run
+  python science/executor.py --job=s1 --start_date='2016-01-15' --n_days=500 --is_training_run
   ```
 * Backtest:
   ```

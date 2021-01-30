@@ -5,15 +5,7 @@ import pandas as pd
 import torch
 
 from science import core
-from utilities import utils, lstm_utils, modeling_utils, science_utils
-
-SYMBOL = 'symbol'
-TARGET = 'target'
-DENORMALIZED_TARGET = 'denormalized_target'
-PREDICTION = 'prediction'
-DENORMALIZED_PREDICTION = 'denormalized_prediction'
-NORMALIZATION_MIN = 'normalization_min'
-NORMALIZATION_MAX = 'normalization_max'
+from utilities import utils, lstm_utils, modeling_utils
 
 
 class Predictor(core.Science, abc.ABC):
@@ -51,56 +43,35 @@ class Predictor(core.Science, abc.ABC):
         return f'/usr/src/app/audit/science/{self.location}/models/{self.model_id}'
 
     @property
-    def target_column(self) -> str:
-        return TARGET
-
-    @property
-    def columns_to_ignore(self) -> list:
-        cols = [
-            'market_datetime',
-            SYMBOL,
-            DENORMALIZED_TARGET,
-            NORMALIZATION_MIN,
-            NORMALIZATION_MAX,
-        ] + [self.target_column]
-        return cols
-
-    @property
-    def get_symbols(self) -> pd.DataFrame:
-        """Generate sql for one hot encoding columns in query"""
-        query = '''
-            select symbol
-            from dbt.tickers
-            order by 1
-            '''
-        df = utils.query_db(query=query)
-        return df
-
-    def preprocess_data(self, df: pd.DataFrame) -> pd.DataFrame:
-        """Process data pre-model run"""
-        symbols = self.get_symbols
-        final = science_utils.encode_one_hot(
-            df=df,
-            column='symbol',
-            keys=symbols['symbol'].to_list(),
-        )
-        return final
-
-    @property
     @abc.abstractmethod
     def model_kwargs(self) -> dict:
         """LSTM model keyword arguments"""
         pass
 
+    @property
+    def target_column(self) -> str:
+        """Column for model to predict"""
+        return 'target'
+
+    @property
+    @abc.abstractmethod
+    def columns_to_ignore(self) -> list:
+        """Columns to exclude from model inputs"""
+        pass
+
+    @abc.abstractmethod
+    def preprocess_data(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Process data pre-model run"""
+        pass
+
+    @abc.abstractmethod
     def postprocess_data(
             self,
             input: pd.DataFrame,
             output: pd.DataFrame,
     ) -> pd.DataFrame:
-        output['model_id'] = self.model_id
-        df = input[self.columns_to_ignore].join(output)
-        df[DENORMALIZED_PREDICTION] = df[PREDICTION] * (df[NORMALIZATION_MAX] - df[NORMALIZATION_MIN]) + df[NORMALIZATION_MIN]
-        return df
+        """Process data post-model run"""
+        pass
 
     def execute(self):
         print(f'''

@@ -1,11 +1,11 @@
 """
-python science/executor.py --job=s2 --start_date='2015-01-15' --n_days=200 --is_training_run
+python science/executor.py --job=s2 --start_date='2016-01-15' --n_days=200 --is_training_run
 python science/executor.py --job=s2 --start_date='2019-02-01' --n_days=30 -ab
 """
-from science.predictor import s1
+from science.predictor import thirty_day_low as tdl
 
 
-class S2(s1.ThirtyDayLowPredictor):
+class S2(tdl.ThirtyDayLowPredictor):
     @property
     def model_id(self) -> str:
         return 's2'

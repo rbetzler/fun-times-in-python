@@ -18,7 +18,7 @@ tickers as (
     select
           s.symbol
         , s.market_datetime
-        , min(s.open) over (partition by s.symbol order by s.market_datetime rows between 1 following and 31 following) as target
+        , min(s.open) over (partition by s.symbol order by s.market_datetime rows between 1 following and 31 following) as scaled_target
         , s.open
         , lag(s.open,  1) over w as open_1
         , lag(s.open,  2) over w as open_2
@@ -50,137 +50,48 @@ tickers as (
         , lag(s.open, 28) over w as open_28
         , lag(s.open, 29) over w as open_29
         , lag(s.open, 30) over w as open_30
-        , abs(s.open - avg(s.open) over (w rows between 11 preceding and 1 preceding)) / nullif(avg(s.open) over (w rows between 11 preceding and 1 preceding), 0) as abs_deviation_10
-        , abs(s.open - avg(s.open) over (w rows between 31 preceding and 1 preceding)) / nullif(avg(s.open) over (w rows between 31 preceding and 1 preceding), 0) as abs_deviation_30
-        , abs(s.open - avg(s.open) over (w rows between 61 preceding and 1 preceding)) / nullif(avg(s.open) over (w rows between 61 preceding and 1 preceding), 0) as abs_deviation_60
-        , abs(s.open - avg(s.open) over (w rows between 91 preceding and 1 preceding)) / nullif(avg(s.open) over (w rows between 91 preceding and 1 preceding), 0) as abs_deviation_90
     from {{ ref('stocks') }} as s
     inner join tickers as t
         on t.symbol = s.symbol
     where s.market_datetime > '2015-01-01'
     window w as (partition by s.symbol order by s.market_datetime)
     )
-, summarized as (
-    select *
-        , least(
-              open_1
-            , open_2
-            , open_3
-            , open_4
-            , open_5
-            , open_6
-            , open_7
-            , open_8
-            , open_9
-            , open_10
-            , open_11
-            , open_12
-            , open_13
-            , open_14
-            , open_15
-            , open_16
-            , open_17
-            , open_18
-            , open_19
-            , open_20
-            , open_21
-            , open_22
-            , open_23
-            , open_24
-            , open_25
-            , open_26
-            , open_27
-            , open_28
-            , open_29
-            , open_30
-          ) as normalization_min
-        , greatest(
-              open_1
-            , open_2
-            , open_3
-            , open_4
-            , open_5
-            , open_6
-            , open_7
-            , open_8
-            , open_9
-            , open_10
-            , open_11
-            , open_12
-            , open_13
-            , open_14
-            , open_15
-            , open_16
-            , open_17
-            , open_18
-            , open_19
-            , open_20
-            , open_21
-            , open_22
-            , open_23
-            , open_24
-            , open_25
-            , open_26
-            , open_27
-            , open_28
-            , open_29
-            , open_30
-          ) as normalization_max
-        , avg(abs_deviation_10) over (w rows between 11 preceding and 1 preceding) as mean_deviation_10
-        , avg(abs_deviation_30) over (w rows between 31 preceding and 1 preceding) as mean_deviation_30
-        , avg(abs_deviation_60) over (w rows between 61 preceding and 1 preceding) as mean_deviation_60
-        , avg(abs_deviation_90) over (w rows between 91 preceding and 1 preceding) as mean_deviation_90
-        , max(abs_deviation_10) over (w rows between 11 preceding and 1 preceding) as max_deviation_10
-        , max(abs_deviation_30) over (w rows between 31 preceding and 1 preceding) as max_deviation_30
-        , max(abs_deviation_60) over (w rows between 61 preceding and 1 preceding) as max_deviation_60
-        , max(abs_deviation_90) over (w rows between 91 preceding and 1 preceding) as max_deviation_90
-    from lagged
-    window w as (partition by symbol order by market_datetime)
-    )
 select
       symbol
     , market_datetime
-    , (target - normalization_min) / (normalization_max - normalization_min) as target
-    , target as denormalized_target
-    , normalization_min
-    , normalization_max
-    , (open_1  - normalization_min) / (normalization_max - normalization_min) as open_1
-    , (open_2  - normalization_min) / (normalization_max - normalization_min) as open_2
-    , (open_3  - normalization_min) / (normalization_max - normalization_min) as open_3
-    , (open_4  - normalization_min) / (normalization_max - normalization_min) as open_4
-    , (open_5  - normalization_min) / (normalization_max - normalization_min) as open_5
-    , (open_6  - normalization_min) / (normalization_max - normalization_min) as open_6
-    , (open_7  - normalization_min) / (normalization_max - normalization_min) as open_7
-    , (open_8  - normalization_min) / (normalization_max - normalization_min) as open_8
-    , (open_9  - normalization_min) / (normalization_max - normalization_min) as open_9
-    , (open_10 - normalization_min) / (normalization_max - normalization_min) as open_10
-    , (open_11 - normalization_min) / (normalization_max - normalization_min) as open_11
-    , (open_12 - normalization_min) / (normalization_max - normalization_min) as open_12
-    , (open_13 - normalization_min) / (normalization_max - normalization_min) as open_13
-    , (open_14 - normalization_min) / (normalization_max - normalization_min) as open_14
-    , (open_15 - normalization_min) / (normalization_max - normalization_min) as open_15
-    , (open_16 - normalization_min) / (normalization_max - normalization_min) as open_16
-    , (open_17 - normalization_min) / (normalization_max - normalization_min) as open_17
-    , (open_18 - normalization_min) / (normalization_max - normalization_min) as open_18
-    , (open_19 - normalization_min) / (normalization_max - normalization_min) as open_19
-    , (open_20 - normalization_min) / (normalization_max - normalization_min) as open_20
-    , (open_21 - normalization_min) / (normalization_max - normalization_min) as open_21
-    , (open_22 - normalization_min) / (normalization_max - normalization_min) as open_22
-    , (open_23 - normalization_min) / (normalization_max - normalization_min) as open_23
-    , (open_24 - normalization_min) / (normalization_max - normalization_min) as open_24
-    , (open_25 - normalization_min) / (normalization_max - normalization_min) as open_25
-    , (open_26 - normalization_min) / (normalization_max - normalization_min) as open_26
-    , (open_27 - normalization_min) / (normalization_max - normalization_min) as open_27
-    , (open_28 - normalization_min) / (normalization_max - normalization_min) as open_28
-    , (open_29 - normalization_min) / (normalization_max - normalization_min) as open_29
-    , (open_30 - normalization_min) / (normalization_max - normalization_min) as open_30
-    , (mean_deviation_10 - mean_deviation_30) / nullif(mean_deviation_30, 0) as mean_deviation_10_over_30
-    , (mean_deviation_10 - mean_deviation_60) / nullif(mean_deviation_60, 0) as mean_deviation_10_over_60
-    , (mean_deviation_10 - mean_deviation_90) / nullif(mean_deviation_90, 0) as mean_deviation_10_over_90
-    , (max_deviation_10 - max_deviation_30) / nullif(max_deviation_30, 0) as max_deviation_10_over_30
-    , (max_deviation_10 - max_deviation_60) / nullif(max_deviation_60, 0) as max_deviation_10_over_60
-    , (max_deviation_10 - max_deviation_90) / nullif(max_deviation_90, 0) as max_deviation_10_over_90
-from summarized
-where open_30 is not null
-  and normalization_max <> normalization_min
+    , scaled_target
+    , 1 - (scaled_target / nullif(open, 0)) as target
+    , open
+    , 1 - (open_1 / nullif(open_2, 0)) as open_1
+    , 1 - (open_2 / nullif(open_3, 0)) as open_2
+    , 1 - (open_3 / nullif(open_4, 0)) as open_3
+    , 1 - (open_4 / nullif(open_5, 0)) as open_4
+    , 1 - (open_5 / nullif(open_6, 0)) as open_5
+    , 1 - (open_6 / nullif(open_7, 0)) as open_6
+    , 1 - (open_7 / nullif(open_8, 0)) as open_7
+    , 1 - (open_8 / nullif(open_9, 0)) as open_8
+    , 1 - (open_9 / nullif(open_10, 0)) as open_9
+    , 1 - (open_10 / nullif(open_11, 0)) as open_10
+    , 1 - (open_11 / nullif(open_12, 0)) as open_11
+    , 1 - (open_12 / nullif(open_13, 0)) as open_12
+    , 1 - (open_13 / nullif(open_14, 0)) as open_13
+    , 1 - (open_14 / nullif(open_15, 0)) as open_14
+    , 1 - (open_15 / nullif(open_16, 0)) as open_15
+    , 1 - (open_16 / nullif(open_17, 0)) as open_16
+    , 1 - (open_17 / nullif(open_18, 0)) as open_17
+    , 1 - (open_18 / nullif(open_19, 0)) as open_18
+    , 1 - (open_19 / nullif(open_20, 0)) as open_19
+    , 1 - (open_20 / nullif(open_21, 0)) as open_20
+    , 1 - (open_21 / nullif(open_22, 0)) as open_21
+    , 1 - (open_22 / nullif(open_23, 0)) as open_22
+    , 1 - (open_23 / nullif(open_24, 0)) as open_23
+    , 1 - (open_24 / nullif(open_25, 0)) as open_24
+    , 1 - (open_25 / nullif(open_26, 0)) as open_25
+    , 1 - (open_26 / nullif(open_27, 0)) as open_26
+    , 1 - (open_27 / nullif(open_28, 0)) as open_27
+    , 1 - (open_28 / nullif(open_29, 0)) as open_28
+    , 1 - (open_29 / nullif(open_30, 0)) as open_29
+from lagged
+where market_datetime > '2016-01-01'
+  and open_30 is not null
 order by market_datetime, symbol

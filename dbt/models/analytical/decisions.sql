@@ -20,7 +20,7 @@ predictions as (
       p.model_id
     , p.market_datetime
     , p.symbol
-    , p.denormalized_prediction as thirty_day_low_prediction
+    , p.scaled_prediction as thirty_day_low_prediction
     , s.close as stock_closing_price
     , o.is_call
     , o.days_to_expiration

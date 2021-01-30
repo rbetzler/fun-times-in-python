@@ -18,11 +18,9 @@ class PredictionsLoader(loader.ScienceLoader, abc.ABC):
             'market_datetime',
             'symbol',
             'target',
-            'denormalized_target',
             'prediction',
-            'denormalized_prediction',
-            'normalization_min',
-            'normalization_max',
+            'scaled_target',
+            'scaled_prediction',
             'file_datetime',
         ]
 

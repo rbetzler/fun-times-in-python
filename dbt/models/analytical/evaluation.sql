@@ -21,11 +21,11 @@ p as (
     , t.symbol
     , i.sector
     , i.industry
-    , t.denormalized_target as target
-    , p.denormalized_prediction as prediction
-    , (p.denormalized_prediction - t.denormalized_target) / nullif(t.denormalized_target, 0) as error
-    , abs(p.denormalized_prediction - t.denormalized_target) / nullif(t.denormalized_target, 0) as abs_error
-    , p.denormalized_prediction > t.denormalized_target as is_loss
+    , t.scaled_target as target
+    , p.scaled_prediction as prediction
+    , (p.scaled_prediction - t.scaled_target) / nullif(t.scaled_target, 0) as error
+    , abs(p.scaled_prediction - t.scaled_target) / nullif(t.scaled_target, 0) as abs_error
+    , p.scaled_prediction > t.scaled_target as is_loss
   from {{ ref('training') }} as t
   inner join p
     on  p.symbol = t.symbol
