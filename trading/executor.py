@@ -21,15 +21,15 @@ class TDOrderExecutor:
         orders as (
           select
               model_id
-            , direction
-            , asset
+            , 'SELL' as direction
+            , 'OPTION' as asset
             , thirty_day_low_prediction as price
-            , quantity
+            , 0 as quantity
             , symbol
-            , dense_rank() over (order by model_datetime desc) as dr
-          from {self.environment}.decisions
+            , dense_rank() over (order by market_datetime desc) as dr
+          from dbt.decisions
           where model_id = '{self.model_id}'
-            and model_datetime::date = current_date
+            and market_datetime::date = current_date
         )
         select distinct *
         from orders
