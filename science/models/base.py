@@ -1,15 +1,15 @@
 """lstm utils"""
+import abc
 import math
 import numpy as np
 import pandas as pd
+import torch
+
 from matplotlib import pyplot as plt
 from typing import Tuple
 
-import torch
-from torch import nn, optim
 
-
-class TorchLSTM(nn.Module):
+class LSTM(torch.nn.Module):
     def __init__(
             self,
             x: pd.DataFrame = None,
@@ -29,36 +29,28 @@ class TorchLSTM(nn.Module):
             benchmark: bool = False,
             pad: bool = True,
     ):
-
-        super(TorchLSTM, self).__init__()
-
-        torch.manual_seed(seed)
-        torch.backends.cudnn.deterministic = deterministic
-        torch.backends.cudnn.benchmark = benchmark
-
-        # Network params
-        self.n_layers = n_layers
-        self.hidden_shape = hidden_shape
-        self.output_shape = output_shape
-
-        # Learning params
-        self.n_epochs = n_epochs
-        self.learning_rate = learning_rate
-        self.device = device
-
-        # Data and dimensions
-        self.input_shape = x.shape[1]
-
-        self.batch_size = math.ceil(batch_size / sequence_length)
-        self.x, self.y = self.pad(batch_size, x, y)
-        self.n_training_batches = int(len(self.x) / self.batch_size / sequence_length)
-
-        self.input = (
-            sequence_length,
-            self.batch_size,
-            self.input_shape
+        super(LSTM, self).__init__()
+        self._configure_torch(
+            seed=seed,
+            deterministic=deterministic,
+            benchmark=benchmark,
         )
-
+        self._set_params(
+            n_layers=n_layers,
+            hidden_shape=hidden_shape,
+            output_shape=output_shape,
+            n_epochs=n_epochs,
+            learning_rate=learning_rate,
+            device=device,
+            bias=bias,
+            dropout=dropout,
+        )
+        self._arrange_data(
+            x=x,
+            y=y,
+            batch_size=batch_size,
+            sequence_length=sequence_length,
+        )
         print(f'''
         LSTM Config
             Sequence Length: {sequence_length}
@@ -68,27 +60,58 @@ class TorchLSTM(nn.Module):
             Padded Dataset: {len(self.x)}
             N Training Batches: {self.n_training_batches}
         ''')
+        self._configure_network()
 
-        # Network
-        self.lstm = nn.LSTM(
-            input_size=self.input_shape,
-            hidden_size=self.hidden_shape,
-            num_layers=self.n_layers,
-            bias=bias,
-            dropout=dropout,
-        ).to(self.device)
+    @staticmethod
+    def _configure_torch(seed, deterministic, benchmark):
+        """Set some background pytorch configs"""
+        torch.manual_seed(seed)
+        torch.backends.cudnn.deterministic = deterministic
+        torch.backends.cudnn.benchmark = benchmark
 
-        self.relu = nn.ReLU6()
-        self.linear = nn.Linear(self.hidden_shape, self.output_shape).to(self.device)
+    def _set_params(
+            self,
+            n_layers,
+            hidden_shape,
+            output_shape,
+            n_epochs,
+            learning_rate,
+            device,
+            bias,
+            dropout,
+    ):
+        """Set (most) init params"""
+        self.n_layers = n_layers
+        self.hidden_shape = hidden_shape
+        self.output_shape = output_shape
+        self.n_epochs = n_epochs
+        self.learning_rate = learning_rate
+        self.device = device
+        self.bias = bias
+        self.dropout = dropout
 
-        # Parallelization
-        self.lstm = nn.DataParallel(self.lstm)
-        self.relu = nn.DataParallel(self.relu)
-        self.linear = nn.DataParallel(self.linear)
+    def _arrange_data(
+            self,
+            x,
+            y,
+            batch_size,
+            sequence_length,
+    ):
+        """Conform data and set as attribute"""
+        self.input_shape = x.shape[1]
+        self.batch_size = math.ceil(batch_size / sequence_length)
+        self.x, self.y = self.pad(batch_size, x, y)
+        self.n_training_batches = int(len(self.x) / self.batch_size / sequence_length)
+        self.input = (
+            sequence_length,
+            self.batch_size,
+            self.input_shape
+        )
 
-    def reset_network(self):
-        self.lstm.reset_parameters()
-        self.linear.reset_parameters()
+    @abc.abstractmethod
+    def _configure_network(self):
+        """Network structure"""
+        pass
 
     @staticmethod
     def pad(
@@ -118,35 +141,24 @@ class TorchLSTM(nn.Module):
         return data
 
     @property
+    @abc.abstractmethod
     def loss_function(self):
-        loss = nn.L1Loss(reduction='sum').to(self.device)
-        return loss
+        """Loss function to use when training"""
+        pass
 
     @property
+    @abc.abstractmethod
     def optimizer(self):
-        return optim.Adam(self.parameters(), lr=self.learning_rate)
+        """Optimizer for training"""
+        pass
 
-    # def create_hidden_states(self):
-    #     hidden = torch.zeros(self.n_layers,
-    #                          self.batch_size,
-    #                          self.hidden_shape).to(self.device)
-    #
-    #     cell = torch.zeros(self.n_layers,
-    #                        self.batch_size,
-    #                        self.hidden_shape).to(self.device)
-    #     return hidden, cell
-
+    @abc.abstractmethod
     def forward(self, data):
-        # TODO: figure out what hidden states actually do
-        # output, self.hidden = self.lstm(data, self.hidden)
-
-        self.lstm.module.flatten_parameters()
-        output, _ = self.lstm(data, None)
-        output = self.linear(output)
-        output = self.relu(output)
-        return output
+        """Forward pass to make when training or testing"""
+        pass
 
     def fit(self):
+        """Fix pytorch model on training data"""
         optimizer = self.optimizer
         history = []
 
@@ -175,6 +187,7 @@ class TorchLSTM(nn.Module):
         plt.plot(df_history.groupby('epoch').sum()['loss'])
 
     def predict(self):
+        """Predict on input data"""
         self.eval()
         predictions = np.array([])
         arrays = np.array_split(self.x, self.n_training_batches)
@@ -186,8 +199,7 @@ class TorchLSTM(nn.Module):
 
     @property
     def prediction_df(self):
+        """Convert model prediction to user friendly dataframe"""
         df = self.x.copy()
         df['prediction'] = self.predict()
         return df
-
-    # TODO: Add and refine basic performance features

@@ -5,7 +5,8 @@ import pandas as pd
 import torch
 
 from science import core
-from utilities import utils, lstm_utils, modeling_utils
+from utilities import utils, modeling_utils
+from science.models import lstm
 
 
 class Predictor(core.Science, abc.ABC):
@@ -95,7 +96,7 @@ class Predictor(core.Science, abc.ABC):
             input = self.preprocess_data(df)
 
             print(f'Configuring model {datetime.datetime.utcnow()}')
-            model = lstm_utils.TorchLSTM(
+            model = lstm.LSTM0(
                 x=input.drop(self.columns_to_ignore, axis=1),
                 y=input[self.target_column],
                 **self.model_kwargs,
