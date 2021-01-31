@@ -15,6 +15,7 @@ class Predictor(core.Science, abc.ABC):
             n_days: int = 1000,
             is_training_run: bool = False,
             n_subrun: int = None,
+            device: int = 0,
             *args,
             **kwargs,
     ):
@@ -22,6 +23,7 @@ class Predictor(core.Science, abc.ABC):
         self.end_date = self.start_date + datetime.timedelta(days=int(n_days))
         self._is_training_run = is_training_run
         self.n_subrun = n_subrun
+        self.device = device
 
     @property
     def is_training_run(self) -> bool:
@@ -99,6 +101,7 @@ class Predictor(core.Science, abc.ABC):
             model = lstm.LSTM0(
                 x=input.drop(self.columns_to_ignore, axis=1),
                 y=input[self.target_column],
+                device=self.device,
                 **self.model_kwargs,
             )
 

@@ -21,7 +21,7 @@ class LSTM(torch.nn.Module):
             batch_size=None,
             n_epochs: int = 100,
             learning_rate: float = .0001,
-            device: str = 'cuda',
+            device: int = 0,
             bias: bool = True,
             dropout: float = 0,
             seed: int = 3,
@@ -59,7 +59,9 @@ class LSTM(torch.nn.Module):
             Dataset: {len(x)}
             Padded Dataset: {len(self.x)}
             N Training Batches: {self.n_training_batches}
+            Device: {self.device}
         ''')
+        self.hidden = None
         self._configure_network()
 
     @staticmethod
@@ -86,7 +88,7 @@ class LSTM(torch.nn.Module):
         self.output_shape = output_shape
         self.n_epochs = n_epochs
         self.learning_rate = learning_rate
-        self.device = device
+        self.device = f'cuda:{device}'
         self.bias = bias
         self.dropout = dropout
 
@@ -114,11 +116,16 @@ class LSTM(torch.nn.Module):
         pass
 
     @staticmethod
+    def split(df, n):
+        """Split pandas data frame by batch size"""
+        return np.array_split(df, n)
+
+    @staticmethod
     def pad(
             batch_size: int,
             x: pd.DataFrame,
-            y: pd.DataFrame,
-    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+            y: pd.Series,
+    ) -> Tuple[pd.DataFrame, pd.Series]:
         """Pad raw pandas df with zeros"""
         n = len(x)
         while n % batch_size > 0:
@@ -132,9 +139,8 @@ class LSTM(torch.nn.Module):
         return x, y
 
     def training_data(self):
-        x = np.array_split(self.x, self.n_training_batches)
-        y = np.array_split(self.y, self.n_training_batches)
-
+        x = self.split(self.x, self.n_training_batches)
+        y = self.split(self.y, self.n_training_batches)
         data = []
         for n in range(0, self.n_training_batches):
             data.append((x[n], y[n]))
@@ -160,13 +166,11 @@ class LSTM(torch.nn.Module):
     def fit(self):
         """Fix pytorch model on training data"""
         optimizer = self.optimizer
-        history = []
-
         batch = 0
         for data in self.training_data():
             batch += 1
-            x = torch.tensor(data[0].values).to(self.device).float().detach().requires_grad_(True).view(self.input)
-            y = torch.tensor(data[1].values).to(self.device).float()
+            x = torch.tensor(data[0].values).to(self.device).float().detach().view(self.input)
+            y = torch.tensor(data[1].values).to(self.device).float().detach()
 
             for epoch in range(self.n_epochs):
                 prediction = self.forward(x)
@@ -175,22 +179,15 @@ class LSTM(torch.nn.Module):
                 if epoch % int(self.n_epochs/10) == 0:
                     print(f'Batch {batch}, Epoch {epoch}, Loss {loss.item()}')
 
-                history.append([batch, epoch, loss.item()])
-
-                loss.backward()
+                loss.backward(retain_graph=True)
                 optimizer.step()
                 optimizer.zero_grad()
-
-        df_history = pd.DataFrame(history, columns=['batch', 'epoch', 'loss'])
-
-        plt.title('Cumulative Loss by Epoch')
-        plt.plot(df_history.groupby('epoch').sum()['loss'])
 
     def predict(self):
         """Predict on input data"""
         self.eval()
         predictions = np.array([])
-        arrays = np.array_split(self.x, self.n_training_batches)
+        arrays = self.split(self.x, self.n_training_batches)
         for array in arrays:
             x = torch.tensor(array.values).to(self.device).float().detach().view(self.input)
             prediction = self.forward(x)
