@@ -1,5 +1,4 @@
 from data import reporter
-from science.decisioner import d1
 from utilities import utils
 
 REPORT_FOLDER_PREFIX = 'audit/reports'
