@@ -1,4 +1,4 @@
-"""lstm utils"""
+"""base nn class"""
 import abc
 import math
 import numpy as np
@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt
 from typing import Tuple
 
 
-class LSTM(torch.nn.Module):
+class NN(torch.nn.Module):
     def __init__(
             self,
             x: pd.DataFrame = None,
@@ -29,7 +29,7 @@ class LSTM(torch.nn.Module):
             benchmark: bool = False,
             pad: bool = True,
     ):
-        super(LSTM, self).__init__()
+        super(NN, self).__init__()
         self._configure_torch(
             seed=seed,
             deterministic=deterministic,
@@ -52,7 +52,7 @@ class LSTM(torch.nn.Module):
             sequence_length=sequence_length,
         )
         print(f'''
-        LSTM Config
+        NN Config
             Sequence Length: {sequence_length}
             Batch Size: {batch_size}
             Adj. Batch Size: {self.batch_size}

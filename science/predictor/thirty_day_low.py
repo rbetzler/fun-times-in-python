@@ -1,6 +1,7 @@
 import abc
 import pandas as pd
 
+from science.models import lstm, nn
 from science.predictor import base
 from utilities import science_utils, utils
 
@@ -120,3 +121,29 @@ class ThirtyDayLowPredictor(base.Predictor, abc.ABC):
         df = input[self.columns_to_ignore].join(output)
         df[SCALED_PREDICTION] = (1 - df[PREDICTION]) * df[OPEN]
         return df
+
+
+class ThirtyDayLowPredictorLSTM(ThirtyDayLowPredictor, abc.ABC):
+    """LSTM implementation of 30 day low price predictor"""
+
+    def model(self, df: pd.DataFrame):
+        model = lstm.LSTM0(
+            x=df.drop(self.columns_to_ignore, axis=1),
+            y=df[self.target_column],
+            device=self.device,
+            **self.model_kwargs,
+        )
+        return model
+
+
+class ThirtyDayLowPredictorNN(ThirtyDayLowPredictor, abc.ABC):
+    """NN implementation of 30 day low price predictor"""
+
+    def model(self, df: pd.DataFrame):
+        model = nn.NN0(
+            x=df.drop(self.columns_to_ignore, axis=1),
+            y=df[self.target_column],
+            device=self.device,
+            **self.model_kwargs,
+        )
+        return model

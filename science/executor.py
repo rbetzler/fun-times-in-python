@@ -28,8 +28,8 @@ def get_class_kwargs(cls: classmethod) -> set:
     """Get keyword arguments for classes"""
     sub_cls_kwargs = inspect.getfullargspec(cls.__init__).args
     base_cls_kwargs = inspect.getfullargspec(core.Science.__init__).args
-    lstm_cls_kwargs = inspect.getfullargspec(base.LSTM.__init__).args
-    cls_kwargs = set(base_cls_kwargs + sub_cls_kwargs + lstm_cls_kwargs)
+    nn_cls_kwargs = inspect.getfullargspec(base.NN.__init__).args
+    cls_kwargs = set(base_cls_kwargs + sub_cls_kwargs + nn_cls_kwargs)
     return cls_kwargs
 
 

@@ -5,7 +5,7 @@ python science/executor.py --job=s4 --start_date='2019-02-01' --n_days=30 -ab
 from science.predictor import thirty_day_low as tdl
 
 
-class S4(tdl.ThirtyDayLowPredictor):
+class S4(tdl.ThirtyDayLowPredictorNN):
     @property
     def model_id(self) -> str:
         return 's4'

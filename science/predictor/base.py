@@ -6,7 +6,6 @@ import torch
 
 from science import core
 from utilities import utils, modeling_utils
-from science.models import lstm
 
 
 class Predictor(core.Science, abc.ABC):
@@ -49,6 +48,11 @@ class Predictor(core.Science, abc.ABC):
     @abc.abstractmethod
     def model_kwargs(self) -> dict:
         """LSTM model keyword arguments"""
+        pass
+
+    @abc.abstractmethod
+    def model(self):
+        """Pytorch nn to implement"""
         pass
 
     @property
@@ -98,12 +102,7 @@ class Predictor(core.Science, abc.ABC):
             input = self.preprocess_data(df)
 
             print(f'Configuring model {datetime.datetime.utcnow()}')
-            model = lstm.LSTM0(
-                x=input.drop(self.columns_to_ignore, axis=1),
-                y=input[self.target_column],
-                device=self.device,
-                **self.model_kwargs,
-            )
+            model = self.model(input)
 
             if os.path.isfile(self.trained_model_filepath):
                 print(f'Loading pre-trained model {datetime.datetime.utcnow()}')

@@ -1,9 +1,9 @@
-"""lstm utils"""
+"""lstm implementation 0"""
 import torch
 from science.models import base
 
 
-class LSTM0(base.LSTM):
+class LSTM0(base.NN):
 
     def _configure_network(self):
         self.lstm = torch.nn.LSTM(
