@@ -157,9 +157,9 @@ dbt_decisions = DockerOperator(
     **dbt_kwargs,
 )
 
-report_stock_decisions = DockerOperator(
-    task_id='stock_decision_report',
-    command='python data/science/decisions/report.py',
+report_short_puts = DockerOperator(
+    task_id='short_puts_report',
+    command='python data/science/reports/short_puts.py',
     **kwargs,
 )
 
@@ -205,7 +205,7 @@ dbt_training_technicals.set_upstream(dbt_tests)
 predict_stocks.set_upstream(dbt_training_technicals)
 load_stock_predictions.set_upstream(predict_stocks)
 dbt_decisions.set_upstream(load_stock_predictions)
-report_stock_decisions.set_upstream(dbt_decisions)
-execute_trades.set_upstream(report_stock_decisions)
+report_short_puts.set_upstream(dbt_decisions)
+execute_trades.set_upstream(report_short_puts)
 
 end_time.set_upstream(execute_trades)

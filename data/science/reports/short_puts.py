@@ -1,10 +1,8 @@
 from data import reporter
 from utilities import utils
 
-REPORT_FOLDER_PREFIX = 'audit/reports'
 
-
-class Decisions(reporter.Reporter):
+class ShortPuts(reporter.Reporter):
 
     @property
     def query(self) -> str:
@@ -13,7 +11,7 @@ class Decisions(reporter.Reporter):
         decisions as (
           select *
             , dense_rank() over (partition by model_id order by market_datetime desc) as dr
-          from dbt.decisions
+          from dbt.short_puts
           where model_id = 's2'
             and has_sufficient_days_to_expiration
             and has_sufficient_pe
@@ -34,7 +32,7 @@ class Decisions(reporter.Reporter):
 
     @property
     def subject(self) -> str:
-        return f'Daily Decision Report {self.report_day}'
+        return f'Daily Short Puts Report {self.report_day}'
 
     @property
     def body(self) -> str:
@@ -42,12 +40,12 @@ class Decisions(reporter.Reporter):
 
     @property
     def export_folder(self) -> str:
-        return 'decisions'
+        return 'short_puts'
 
     @property
     def export_file_name(self) -> str:
-        return 'decisions'
+        return 'short_puts'
 
 
 if __name__ == '__main__':
-    Decisions().execute()
+    ShortPuts().execute()
