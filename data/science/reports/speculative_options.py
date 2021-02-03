@@ -8,7 +8,7 @@ class SpeculativeOptions(reporter.Reporter):
     def query(self) -> str:
         query = '''
         select *
-        from dbt.speculative_options
+        from dbt_trade.speculative_options
         '''
         return query
 

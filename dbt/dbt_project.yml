@@ -13,3 +13,5 @@ models:
   dw_stocks:
     td:
       schema: "td"
+    trade:
+      schema: "trade"

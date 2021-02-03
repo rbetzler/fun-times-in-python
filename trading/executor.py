@@ -27,7 +27,7 @@ class TDOrderExecutor:
             , 0 as quantity
             , symbol
             , dense_rank() over (order by market_datetime desc) as dr
-          from dbt.short_puts
+          from dbt_trade.short_puts
           where model_id = '{self.model_id}'
             and market_datetime::date = current_date
         )

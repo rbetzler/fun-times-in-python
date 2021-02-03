@@ -11,7 +11,7 @@ class ShortPuts(reporter.Reporter):
         decisions as (
           select *
             , dense_rank() over (partition by model_id order by market_datetime desc) as dr
-          from dbt.short_puts
+          from dbt_trade.short_puts
           where model_id = 's2'
             and has_sufficient_days_to_expiration
             and has_sufficient_pe
