@@ -28,7 +28,7 @@
   ```
 * Initially run the db
   ```
-  sudo docker run -d -p 5432:5432 --name dw-stocks -e POSTGRES_PASSWORD=password -v /media/nautilus/docks/postgres:/var/lib/postgresql/data -v /media/nautilus/fun-times-in-python:/mnt -v /mnt:/media --network bridge postgres
+  sudo docker run -d -p 5432:5432 --name dw-stocks --shm-size=1g -e POSTGRES_PASSWORD=password -v /media/nautilus/docks/postgres:/var/lib/postgresql/data -v /media/nautilus/fun-times-in-python:/mnt -v /mnt:/media --network bridge postgres
   ```
 * Edit configs
   ```
