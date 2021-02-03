@@ -9,3 +9,7 @@ clean-targets:
     - "logs"
     - "dbt_modules"
     - "target"
+models:
+  dw_stocks:
+    td:
+      schema: "td"

@@ -25,7 +25,7 @@ def save_file(
 
 
 def get_latest_market_datetime():
-    query = 'select max(market_datetime)::date as market_datetime from dbt.stocks;'
+    query = 'select max(market_datetime)::date as market_datetime from dbt_td.stocks;'
     df = utils.query_db(query=query)
     latest_market_datetime = df['market_datetime'].values[0].strftime('%Y-%m-%d')
     return latest_market_datetime

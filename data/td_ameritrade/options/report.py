@@ -19,8 +19,8 @@ class Options(reporter.Reporter):
                 , close
                 , volume
                 , market_datetime
-              from dbt.stocks
-              where market_datetime = (select max(market_datetime) from dbt.stocks)
+              from dbt_td.stocks
+              where market_datetime = (select max(market_datetime) from dbt_td.stocks)
               )
             , options as (
               select
@@ -34,8 +34,8 @@ class Options(reporter.Reporter):
                 , last
                 , open_interest
                 , file_datetime
-              from dbt.options
-              where file_datetime >= (select max(file_datetime)::date from dbt.options)
+              from dbt_td.options
+              where file_datetime >= (select max(file_datetime)::date from dbt_td.options)
                 and not is_call
                 and open_interest > 1
                 and days_to_expiration < 60

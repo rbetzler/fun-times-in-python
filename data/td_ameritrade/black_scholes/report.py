@@ -40,7 +40,7 @@ def get_report_days() -> list:
           select
               min(market_datetime)::date as option_earliest
             , max(market_datetime)::date as option_latest
-          from dbt.options
+          from dbt_td.options
         )
         select
             o.option_latest
@@ -84,7 +84,7 @@ class BlackScholes(reporter.Reporter):
                   market_datetime
                 , symbol
                 , close
-              from dbt.stocks
+              from dbt_td.stocks
               where market_datetime = '{self._report_day}'
               )
             , options as (
@@ -98,7 +98,7 @@ class BlackScholes(reporter.Reporter):
                 , ask
                 , volatility
                 , expiration_date_from_epoch
-              from dbt.options
+              from dbt_td.options
               where file_datetime = '{self._report_day}'
                 and days_to_expiration > 0
                 and strike > 0
