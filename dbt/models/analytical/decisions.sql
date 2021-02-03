@@ -120,12 +120,12 @@ predictions as (
 )
 , row_numbers as (
   select *
-    , row_number() over (w order by risk_neutral_probability desc) as rn_probability
-    , row_number() over (w order by potential_annual_return desc) as rn_return
-    , row_number() over (w order by oom_percent desc) as rn_oom
-    , row_number() over (w order by theta) as rn_theta
-    , row_number() over (w order by theta_gamma_offset) as rn_theta_gamma_offset
-    , row_number() over (w order by theta_vega_offset) as rn_theta_vega_offset
+    , percent_rank() over (w order by risk_neutral_probability desc) as pr_probability
+    , percent_rank() over (w order by potential_annual_return desc) as pr_return
+    , percent_rank() over (w order by oom_percent desc) as pr_oom
+    , percent_rank() over (w order by theta) as pr_theta
+    , percent_rank() over (w order by theta_gamma_offset) as pr_theta_gamma_offset
+    , percent_rank() over (w order by theta_vega_offset) as pr_theta_vega_offset
   from tradables
   window w as (partition by symbol, market_datetime, days_to_expiration, is_tradable)
 )
@@ -192,7 +192,7 @@ predictions as (
     , is_tradable
     , is_tradable and 1 = row_number() over (
         partition by symbol, market_datetime, days_to_expiration, is_tradable
-        order by rn_probability + rn_return + rn_oom + rn_theta + rn_theta_gamma_offset + rn_theta_vega_offset
+        order by pr_probability + pr_return + pr_oom + pr_theta + pr_theta_gamma_offset + pr_theta_vega_offset
       ) as should_place_trade
   from row_numbers
 )
