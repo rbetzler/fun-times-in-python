@@ -27,7 +27,10 @@ class Decisions(reporter.Reporter):
 
     @property
     def email_recipients(self) -> list:
-        return utils.retrieve_secret('EMAIL_DAD')
+        return [
+            utils.retrieve_secret('EMAIL_DAD'),
+            utils.retrieve_secret('EMAIL_ME'),
+        ]
 
     @property
     def subject(self) -> str:
