@@ -135,7 +135,7 @@ dbt_tests = DockerOperator(
 
 dbt_training_technicals = DockerOperator(
     task_id='update_dbt_training_table',
-    command='dbt run -m training technicals --profiles-dir .',
+    command='dbt run -m thirty_day_low technicals --profiles-dir .',
     **dbt_kwargs,
 )
 

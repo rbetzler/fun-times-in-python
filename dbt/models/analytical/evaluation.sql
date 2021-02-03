@@ -26,7 +26,7 @@ p as (
     , (p.scaled_prediction - t.scaled_target) / nullif(t.scaled_target, 0) as error
     , abs(p.scaled_prediction - t.scaled_target) / nullif(t.scaled_target, 0) as abs_error
     , p.scaled_prediction > t.scaled_target as is_loss
-  from {{ ref('training') }} as t
+  from {{ ref('thirty_day_low') }} as t
   inner join p
     on  p.symbol = t.symbol
     and p.market_datetime = t.market_datetime

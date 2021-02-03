@@ -77,7 +77,7 @@ class ThirtyDayLowPredictor(base.Predictor, abc.ABC):
               , min_over_max_90
               , min_open_60_over_30
               , min_open_90_over_60
-            from dbt.training
+            from dbt_train.thirty_day_low
             where market_datetime between '{self.start_date}' and '{self.end_date}'
               {'and target is not null' if self.is_training_run else ''}
             order by market_datetime, symbol
