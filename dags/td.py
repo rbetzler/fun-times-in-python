@@ -203,8 +203,6 @@ load_fundamentals.set_upstream(scrape_fundamentals)
 dbt_fundamentals.set_upstream(load_fundamentals)
 
 dbt_tests.set_upstream(dbt_black_scholes)
-dbt_tests.set_upstream(report_options)
-dbt_tests.set_upstream(load_black_scholes)
 dbt_tests.set_upstream(dbt_fundamentals)
 
 dbt_training_technicals.set_upstream(dbt_tests)
@@ -213,7 +211,6 @@ load_stock_predictions.set_upstream(predict_stocks)
 dbt_trading.set_upstream(load_stock_predictions)
 report_short_puts.set_upstream(dbt_trading)
 report_speculative_options.set_upstream(dbt_trading)
-execute_trades.set_upstream(report_speculative_options)
-execute_trades.set_upstream(report_short_puts)
+execute_trades.set_upstream(dbt_trading)
 
 end_time.set_upstream(execute_trades)
