@@ -153,19 +153,13 @@ load_stock_predictions = DockerOperator(
 
 dbt_trading = DockerOperator(
     task_id='update_dbt_trading_tables',
-    command='dbt run -m short_puts speculative_options --profiles-dir .',
+    command='dbt run -m short_puts --profiles-dir .',
     **dbt_kwargs,
 )
 
 report_short_puts = DockerOperator(
     task_id='short_puts_report',
     command='python data/science/reports/short_puts.py',
-    **kwargs,
-)
-
-report_speculative_options = DockerOperator(
-    task_id='speculative_options_report',
-    command='python data/science/reports/speculative_options.py',
     **kwargs,
 )
 
@@ -210,7 +204,7 @@ predict_stocks.set_upstream(dbt_training_technicals)
 load_stock_predictions.set_upstream(predict_stocks)
 dbt_trading.set_upstream(load_stock_predictions)
 report_short_puts.set_upstream(dbt_trading)
-report_speculative_options.set_upstream(dbt_trading)
 execute_trades.set_upstream(dbt_trading)
 
+end_time.set_upstream(report_short_puts)
 end_time.set_upstream(execute_trades)

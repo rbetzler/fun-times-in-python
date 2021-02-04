@@ -12,13 +12,21 @@ with
 stocks as (
   select *
     , dense_rank() over (partition by symbol order by market_datetime desc) as dr
-  from {{ ref('stocks') }} as s
+  from {{ ref('stocks') }}
+)
+, predictions as (
+  select *
+    , dense_rank() over (partition by model_id, symbol, market_datetime order by file_datetime desc) as dr
+  from {{ source('dev', 'predictions') }}
+  where model_id in ('s3', 's4')
 )
 , base as (
   select
       s.market_datetime
     , s.symbol
     , s.close as stock_closing_price
+    , pl.scaled_prediction as ten_day_stock_price_prediction_low
+    , ph.scaled_prediction as ten_day_stock_price_prediction_high
     , o.is_call
     , o.days_to_expiration
     , o.strike
@@ -61,6 +69,16 @@ stocks as (
   left join {{ ref('technicals') }} as t
     on  s.symbol = t.symbol
     and s.market_datetime = t.market_datetime
+  left join predictions as pl
+    on  s.symbol = pl.symbol
+    and s.market_datetime = pl.market_datetime
+    and pl.dr = 1
+    and pl.model_id = 's3'
+  left join predictions as ph
+    on  s.symbol = ph.symbol
+    and s.market_datetime = ph.market_datetime
+    and ph.dr = 1
+    and ph.model_id = 's4'
   where s.dr = 1
     and s.close > 0
     and o.days_to_expiration between 10 and 60
@@ -88,6 +106,8 @@ stocks as (
       market_datetime
     , symbol
     , stock_closing_price
+    , ten_day_stock_price_prediction_low
+    , ten_day_stock_price_prediction_high
     , is_call
     , days_to_expiration
     , strike

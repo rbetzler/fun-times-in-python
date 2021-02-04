@@ -1,11 +1,11 @@
 """
-python science/executor.py --job=s3 --start_date='2016-01-15' --n_days=200 --is_training_run
-python science/executor.py --job=s3 --start_date='2019-02-01' --n_days=30 -ab
+python science/executor.py --job=s3 --start_date='2019-01-15' --n_days=200 --is_training_run
+python science/executor.py --job=s3 --start_date='2020-08-03' --n_days=30 -ab
 """
-from science.predictor import thirty_day_low as tdl
+from science.predictor import speculation as spc
 
 
-class S3(tdl.ThirtyDayLowPredictorLSTM):
+class S3(spc.LowSpeculativePredictorNN):
     @property
     def model_id(self) -> str:
         return 's3'
