@@ -3,6 +3,8 @@ from __future__ import print_function
 from airflow.models import DAG
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.docker_operator import DockerOperator
+from airflow.operators.dagrun_operator import TriggerDagRunOperator
+
 from datetime import datetime, timedelta
 
 
@@ -133,46 +135,14 @@ dbt_tests = DockerOperator(
     **dbt_kwargs,
 )
 
-dbt_training_technicals = DockerOperator(
-    task_id='update_dbt_training_table',
-    command='dbt run -m thirty_day_low technicals --profiles-dir .',
-    **dbt_kwargs,
+kick_short_puts = TriggerDagRunOperator(
+    trigger_dag_id='kick_short_puts',
+    task_id='short_puts',
 )
 
-predict_stocks = DockerOperator(
-    task_id='stock_predictor',
-    command='python science/executor.py --job=s2 --archive_files',
-    **prediction_kwargs,
-)
-
-load_stock_predictions = DockerOperator(
-    task_id='stock_prediction_loader',
-    command='python data/science/predictions/loader.py',
-    **kwargs,
-)
-
-dbt_trading = DockerOperator(
-    task_id='update_dbt_trading_tables',
-    command='dbt run -m short_puts --profiles-dir .',
-    **dbt_kwargs,
-)
-
-report_short_puts = DockerOperator(
-    task_id='short_puts_report',
-    command='python data/science/reports/short_puts.py',
-    **kwargs,
-)
-
-execute_trades = DockerOperator(
-    task_id='execute_trades',
-    command='python trading/executor.py',
-    **kwargs,
-)
-
-end_time = BashOperator(
-    task_id='end_pipeline',
-    bash_command='date',
-    dag=dag,
+kick_speculative_options = TriggerDagRunOperator(
+    trigger_dag_id='kick_speculative_options',
+    task_id='speculative_options',
 )
 
 scrape_options.set_upstream(start_time)
@@ -199,12 +169,5 @@ dbt_fundamentals.set_upstream(load_fundamentals)
 dbt_tests.set_upstream(dbt_black_scholes)
 dbt_tests.set_upstream(dbt_fundamentals)
 
-dbt_training_technicals.set_upstream(dbt_tests)
-predict_stocks.set_upstream(dbt_training_technicals)
-load_stock_predictions.set_upstream(predict_stocks)
-dbt_trading.set_upstream(load_stock_predictions)
-report_short_puts.set_upstream(dbt_trading)
-execute_trades.set_upstream(dbt_trading)
-
-end_time.set_upstream(report_short_puts)
-end_time.set_upstream(execute_trades)
+kick_short_puts.set_upstream(dbt_tests)
+kick_speculative_options.set_upstream(dbt_tests)

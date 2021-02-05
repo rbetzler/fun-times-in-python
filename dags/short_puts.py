@@ -5,6 +5,7 @@ from airflow.operators.bash_operator import BashOperator
 from airflow.operators.docker_operator import DockerOperator
 from datetime import datetime, timedelta
 
+
 args = {
     'owner': 'airflow',
     'depends_on_past': False,
@@ -16,7 +17,7 @@ args = {
 }
 
 dag = DAG(
-    dag_id='speculative_options',
+    dag_id='short_puts',
     default_args=args,
     start_date=datetime(2019, 10, 29),
     schedule_interval='0 10 * * 7',
@@ -42,21 +43,15 @@ start_time = BashOperator(
     dag=dag,
 )
 
-dbt_train = DockerOperator(
-    task_id='update_dbt_training_tables',
-    command='dbt run -m speculation --profiles-dir .',
+dbt_training_technicals = DockerOperator(
+    task_id='update_dbt_training_table',
+    command='dbt run -m thirty_day_low technicals --profiles-dir .',
     **dbt_kwargs,
 )
 
-high_price_predictor = DockerOperator(
-    task_id='high_price_predictor',
-    command='python science/executor.py --job=s3 -d=1 --archive_files',
-    **prediction_kwargs,
-)
-
-low_price_predictor = DockerOperator(
-    task_id='low_price_predictor',
-    command='python science/executor.py --job=s4 -d=1 --archive_files',
+predict_stocks = DockerOperator(
+    task_id='stock_predictor',
+    command='python science/executor.py --job=s2 --archive_files',
     **prediction_kwargs,
 )
 
@@ -66,28 +61,27 @@ load_stock_predictions = DockerOperator(
     **kwargs,
 )
 
-dbt_trade = DockerOperator(
+dbt_trading = DockerOperator(
     task_id='update_dbt_trading_tables',
-    command='dbt run -m speculative_options --profiles-dir .',
+    command='dbt run -m short_puts --profiles-dir .',
     **dbt_kwargs,
 )
 
-report_speculative_options = DockerOperator(
-    task_id='speculative_options_report',
-    command='python data/science/reports/speculative_options.py',
+report_short_puts = DockerOperator(
+    task_id='short_puts_report',
+    command='python data/science/reports/short_puts.py',
     **kwargs,
 )
 
-end_time = BashOperator(
+endtime = BashOperator(
     task_id='end_pipeline',
     bash_command='date',
     dag=dag,
 )
 
-dbt_train.set_upstream(start_time)
-high_price_predictor.set_upstream(dbt_train)
-low_price_predictor.set_upstream(high_price_predictor)
-load_stock_predictions.set_upstream(low_price_predictor)
-dbt_trade.set_upstream(load_stock_predictions)
-report_speculative_options.set_upstream(dbt_trade)
-end_time.set_upstream(report_speculative_options)
+dbt_training_technicals.set_upstream(start_time)
+predict_stocks.set_upstream(dbt_training_technicals)
+load_stock_predictions.set_upstream(predict_stocks)
+dbt_trading.set_upstream(load_stock_predictions)
+report_short_puts.set_upstream(dbt_trading)
+endtime.set_upstream(report_short_puts)
