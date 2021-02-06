@@ -86,6 +86,11 @@ class Caller(abc.ABC):
     def column_mapping(self) -> dict:
         return {}
 
+    @property
+    def write_raw_file(self) -> bool:
+        """Whether to write the raw api/url call"""
+        return False
+
     def parse(
             self,
             response: requests.Response,
@@ -99,12 +104,18 @@ class Caller(abc.ABC):
             key: str,
             call: str,
     ):
-        """Get data from an api, parse it, write it as a csv"""
+        """Get data from an api/url, either save the raw file or parse it and write to a csv"""
         response = requests.get(call)
-        df = self.parse(response, key)
-        if bool(self.column_mapping):
-            df = df.rename(columns=self.column_mapping)
-        df.to_csv(self.export_file_path(key), index=False)
+        export_file_path = self.export_file_path(key)
+        if self.write_raw_file:
+            output = response.json()
+            file = open(export_file_path, 'w')
+            file.write(str(output))
+        else:
+            df = self.parse(response, key)
+            if bool(self.column_mapping):
+                df = df.rename(columns=self.column_mapping)
+            df.to_csv(export_file_path, index=False)
         time.sleep(self.len_of_pause)
 
     def parallel_execute(
