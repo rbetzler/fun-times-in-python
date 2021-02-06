@@ -64,7 +64,7 @@ tickers as (
     from {{ ref('stocks') }} as s
     inner join tickers as t
         on t.symbol = s.symbol
-    where s.market_datetime > '2015-01-01'
+    where s.market_datetime > '2016-01-01'
     window w as (partition by s.symbol order by s.market_datetime)
     )
 select
@@ -112,6 +112,6 @@ select
     , 1 - (min_open_60 / nullif(min_open_30, 0)) as min_open_60_over_30
     , 1 - (min_open_90 / nullif(min_open_60, 0)) as min_open_90_over_60
 from lagged
-where market_datetime > '2016-01-01'
+where market_datetime > '2017-01-01'
   and open_30 is not null
 order by market_datetime, symbol

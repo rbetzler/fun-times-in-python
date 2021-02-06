@@ -28,13 +28,13 @@ base as (
     , max(high) over (w rows between 89 preceding and current row) as max_90
     , max(high) over (w rows between 239 preceding and current row) as max_240
   from {{ ref('stocks') }}
-  where market_datetime > '2014-01-01'
+  where market_datetime > current_date - 500
   window w as (partition by symbol order by market_datetime)
 )
 , final as (
   select *
   from base
-  where market_datetime >= '2015-01-01'
+  where market_datetime > current_date - 10
 )
 select *
 from final
