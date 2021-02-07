@@ -17,3 +17,5 @@ models:
       schema: "trade"
     train:
       schema: "train"
+    yahoo:
+      schema: "yahoo"
