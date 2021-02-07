@@ -1,36 +1,13 @@
-from __future__ import print_function
+import airflow_utils
 
 from airflow.models import DAG
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.docker_operator import DockerOperator
-from datetime import datetime, timedelta
 
 
-args = {
-    'owner': 'airflow',
-    'depends_on_past': False,
-    'email': ['rbetzler94@gmail.com'],
-    'email_on_failure': True,
-    'email_on_retry': True,
-    'retries': 1,
-    'retry_delay': timedelta(minutes=1),
-}
-
-dag = DAG(
-    dag_id='yahoo',
-    default_args=args,
-    start_date=datetime(2019, 10, 29),
-    schedule_interval='0 10 * * 7',
-    catchup=False,
-)
-
-kwargs = {
-    'image': 'py-dw-stocks',
-    'auto_remove': True,
-    'volumes': ['/media/nautilus/fun-times-in-python:/usr/src/app'],
-    'network_mode': 'bridge',
-    'dag': dag,
-}
+dag = airflow_utils.generate_dag(id='yahoo')
+kwargs = airflow_utils.get_dag_kwargs(dag=dag)
+dbt_kwargs = airflow_utils.get_dag_kwargs(dag=dag, type='dbt')
 
 start_time = BashOperator(
     task_id='start_pipeline',
@@ -62,6 +39,24 @@ scrape_cash_flow = DockerOperator(
     **kwargs,
 )
 
+scrape_sp = DockerOperator(
+    task_id='scrape_yahoo_sp',
+    command='python data/yahoo/sp/scrape.py',
+    **kwargs,
+)
+
+load_sp = DockerOperator(
+    task_id='load_yahoo_sp',
+    command='python data/yahoo/sp/load.py',
+    **kwargs,
+)
+
+dbt_sp = DockerOperator(
+    task_id='update_dbt_sp',
+    command='dbt run -m sp --profiles-dir .',
+    **dbt_kwargs,
+)
+
 end_time = BashOperator(
     task_id='end_pipeline',
     bash_command='date',
@@ -72,4 +67,8 @@ scrape_options.set_upstream(start_time)
 scrape_income_statements.set_upstream(scrape_options)
 scrape_balance_sheet.set_upstream(scrape_income_statements)
 scrape_cash_flow.set_upstream(scrape_balance_sheet)
-end_time.set_upstream(scrape_cash_flow)
+
+scrape_sp.set_upstream(scrape_cash_flow)
+load_sp.set_upstream(scrape_sp)
+dbt_sp.set_upstream(load_sp)
+end_time.set_upstream(dbt_sp)

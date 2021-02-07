@@ -1,43 +1,16 @@
-from __future__ import print_function
+import airflow_utils
 
 from airflow.models import DAG
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.docker_operator import DockerOperator
 from airflow.operators.dagrun_operator import TriggerDagRunOperator
 
-from datetime import datetime, timedelta
 
+dag = airflow_utils.generate_dag(id='td')
+kwargs = airflow_utils.get_dag_kwargs(dag=dag)
+dbt_kwargs = airflow_utils.get_dag_kwargs(dag=dag, type='dbt')
+prediction_kwargs = airflow_utils.get_dag_kwargs(dag=dag, type='prediction')
 
-args = {
-    'owner': 'airflow',
-    'depends_on_past': False,
-    'email': ['rbetzler94@gmail.com'],
-    'email_on_failure': True,
-    'email_on_retry': True,
-    'retries': 1,
-    'retry_delay': timedelta(minutes=1),
-}
-
-dag = DAG(
-    dag_id='td',
-    default_args=args,
-    start_date=datetime(2019, 10, 29),
-    schedule_interval='0 10 * * 7',
-    catchup=False,
-)
-
-kwargs = {
-    'image': 'py-dw-stocks',
-    'auto_remove': True,
-    'volumes': ['/media/nautilus/fun-times-in-python:/usr/src/app'],
-    'network_mode': 'bridge',
-    'dag': dag,
-}
-dbt_kwargs = kwargs.copy()
-dbt_kwargs['volumes'] = ['/media/nautilus/fun-times-in-python/dbt:/usr/src/app']
-
-prediction_kwargs = kwargs.copy()
-prediction_kwargs['image'] = 'pytorch'
 
 start_time = BashOperator(
     task_id='start_pipeline',
