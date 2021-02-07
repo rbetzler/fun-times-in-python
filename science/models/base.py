@@ -169,8 +169,8 @@ class NN(torch.nn.Module):
         batch = 0
         for data in self.training_data():
             batch += 1
-            x = torch.tensor(data[0].values).to(self.device).float().detach().view(self.input)
-            y = torch.tensor(data[1].values).to(self.device).float().detach()
+            x = torch.tensor(data[0].values).to(self.device).float().view(self.input)
+            y = torch.tensor(data[1].values).to(self.device).float()
 
             for epoch in range(self.n_epochs):
                 prediction = self.forward(x)
@@ -189,7 +189,7 @@ class NN(torch.nn.Module):
         predictions = np.array([])
         arrays = self.split(self.x, self.n_training_batches)
         for array in arrays:
-            x = torch.tensor(array.values).to(self.device).float().detach().view(self.input)
+            x = torch.tensor(array.values).to(self.device).float().view(self.input)
             prediction = self.forward(x)
             predictions = np.append(predictions, prediction.view(-1).cpu().detach().numpy())
         return predictions
