@@ -48,7 +48,9 @@ class LSTM0(unittest.TestCase):
             model.fit()
             trained_parameters = [(p[0], p[1].clone()) for p in model.named_parameters() if p[1].requires_grad]
             for n in range(0, len(initial_parameters)):
-                assert not torch.equal(initial_parameters[n][1], trained_parameters[n][1]), 'Parameters did not change!'
+                # Ignore hidden state because it gets reinitialized every time
+                if 'h_' not in initial_parameters[n][0]:
+                    assert not torch.equal(initial_parameters[n][1], trained_parameters[n][1]), 'Parameters did not change!'
 
 
 if __name__ == '__main__':

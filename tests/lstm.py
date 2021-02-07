@@ -52,7 +52,7 @@ class BaseLSTM(unittest.TestCase):
         """
         Whether lstm dataframe splitting works correctly
         """
-        case = base.LSTM.split(df=self.y, n=3)
+        case = base.NN.split(df=self.y, n=3)
         expectation = self.expectation_split()
         self.assertEqual(len(expectation), len(case))
         for n in range(0, len(case)):
@@ -83,7 +83,7 @@ class BaseLSTM(unittest.TestCase):
         """
         Whether lstm dataframe padding works correctly
         """
-        x, y = base.LSTM.pad(
+        x, y = base.NN.pad(
            batch_size=3,
            x=self.x,
            y=self.y_series,
