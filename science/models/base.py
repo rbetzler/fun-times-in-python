@@ -109,6 +109,7 @@ class NN(torch.nn.Module):
             self.batch_size,
             self.input_shape
         )
+        self.output = sequence_length * self.batch_size, self.output_shape
 
     @abc.abstractmethod
     def _configure_network(self):
@@ -124,7 +125,7 @@ class NN(torch.nn.Module):
     def pad(
             batch_size: int,
             x: pd.DataFrame,
-            y: pd.Series,
+            y: pd.Series or pd.DataFrame,
     ) -> Tuple[pd.DataFrame, pd.Series]:
         """Pad raw pandas df with zeros"""
         n = len(x)
@@ -133,7 +134,10 @@ class NN(torch.nn.Module):
         padding = n - len(x)
         if padding > 0:
             x_zeros = pd.DataFrame(np.zeros(shape=(padding, x.shape[1])), columns=x.columns)
-            y_zeros = pd.Series(np.zeros(padding), name=y.name)
+            if isinstance(y, pd.Series):
+                y_zeros = pd.Series(np.zeros(padding), name=y.name)
+            else:
+                y_zeros = pd.DataFrame(np.zeros(shape=(padding, y.shape[1])), columns=y.columns)
             x = x.append(x_zeros, ignore_index=True)
             y = y.append(y_zeros, ignore_index=True)
         return x, y
@@ -186,12 +190,12 @@ class NN(torch.nn.Module):
     def predict(self):
         """Predict on input data"""
         self.eval()
-        predictions = np.array([])
+        predictions = np.empty((0, self.output[1]))
         arrays = self.split(self.x, self.n_training_batches)
         for array in arrays:
             x = torch.tensor(array.values).to(self.device).float().view(self.input)
             prediction = self.forward(x)
-            predictions = np.append(predictions, prediction.view(-1).cpu().detach().numpy())
+            predictions = np.append(predictions, prediction.view(self.output).cpu().detach().numpy(), axis=0)
         return predictions
 
     @property
