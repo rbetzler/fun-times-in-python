@@ -109,13 +109,13 @@ dbt_tests = DockerOperator(
 )
 
 kick_short_puts = TriggerDagRunOperator(
-    trigger_dag_id='kick_short_puts',
-    task_id='short_puts',
+    task_id='kick_short_puts',
+    trigger_dag_id='short_puts',
 )
 
 kick_speculative_options = TriggerDagRunOperator(
-    trigger_dag_id='kick_speculative_options',
-    task_id='speculative_options',
+    task_id='kick_speculative_options',
+    trigger_dag_id='speculative_options',
 )
 
 scrape_options.set_upstream(start_time)
