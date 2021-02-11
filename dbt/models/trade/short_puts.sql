@@ -66,6 +66,7 @@ predictions as (
     , t.max_30
     , t.max_90
     , t.max_240
+    , coalesce(w.symbol is not null, false) as is_on_watchlist
   from predictions as p
   inner join {{ ref('stocks') }} as s
     on  p.symbol = s.symbol
@@ -86,6 +87,8 @@ predictions as (
   left join {{ ref('technicals') }} as t
     on  p.symbol = t.symbol
     and p.market_datetime = t.market_datetime
+  left join {{ ref('watchlist') }} as w
+    on p.symbol = w.symbol
   where p.dr = 1
     and o.days_to_expiration > 0
     and o.price > 0
@@ -189,6 +192,7 @@ predictions as (
     , has_sufficient_pe
     , has_sufficient_market_cap
     , has_early_theta_decay
+    , is_on_watchlist
     , is_tradable
     , is_tradable and 1 = row_number() over (
         partition by symbol, market_datetime, days_to_expiration, is_tradable

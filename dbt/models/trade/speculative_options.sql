@@ -53,6 +53,7 @@ stocks as (
     , t.avg_open_120 between t.avg_open_60 and t.avg_open_240 as has_long_downtrend
     , t.avg_open_20 between t.avg_open_30 and t.avg_open_10 as has_short_uptrend
     , t.avg_open_120 between t.avg_open_240 and t.avg_open_60 as has_long_uptrend
+    , coalesce(w.symbol is not null, false) as is_on_watchlist
   from stocks as s
   inner join {{ ref('options') }} as o
     on  s.symbol = o.symbol
@@ -69,6 +70,8 @@ stocks as (
   left join {{ ref('technicals') }} as t
     on  s.symbol = t.symbol
     and s.market_datetime = t.market_datetime
+  left join {{ ref('watchlist') }} as w
+    on s.symbol = w.symbol
   left join predictions as pl
     on  s.symbol = pl.symbol
     and s.market_datetime = pl.market_datetime
@@ -130,6 +133,7 @@ stocks as (
     , has_long_uptrend
     , has_short_downtrend
     , has_long_downtrend
+    , is_on_watchlist
     , 1 = row_number() over (
         partition by symbol, market_datetime
         order by pr_probability + pr_oom + pr_delta + pr_theta + pr_theta_gamma_offset + pr_theta_vega_offset + pr_implied_volatility
