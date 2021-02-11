@@ -12,6 +12,10 @@ class StockAutoencoder(base.Predictor):
     """Subclass for stock autoencoder"""
 
     @property
+    def output_folder(self) -> str:
+        return 'pred_autoencoder'
+
+    @property
     def columns_to_ignore(self) -> list:
         cols = [
             MARKET_DATETIME,
