@@ -100,9 +100,14 @@
   ```
 * Install python packages (no venv)
   ```
-  sudo apt-get install python3-numpy python3-pandas python3-requests python-psycopg2 -y
+  sudo apt-get install python3-numpy python3-pandas python3-requests python3-psycopg2 -y
   ```
 * Mount hdd
   ```
   sudo mount /dev/sda1 ~/fun-times-in-python/audit/
+  ```
+* Add some paths
+  ```
+  export PATH=~/fun-times-in-python:$PATH
+  export PYTHONPATH=~/fun-times-in-python
   ```

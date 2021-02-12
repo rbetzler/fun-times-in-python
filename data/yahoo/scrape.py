@@ -1,4 +1,5 @@
 import abc
+import pandas as pd
 from data import scraper
 
 
@@ -20,15 +21,17 @@ class YahooScraper(scraper.Caller, abc.ABC):
         pass
 
     @property
-    def calls_query(self) -> str:
-        query = r'''
-            select symbol as ticker
-            from dbt.tickers
-            order by 1
-            limit {batch_size}
-            offset {batch_start}
-            '''
-        return query.format(batch_size=self.batch_size, batch_start=self.lower_bound)
+    def calls_query(self):
+        pass
+
+    @property
+    def _get_calls(self):
+        """
+        Grab input for api calls from dbt dir
+        TODO: Replace with csv in either audit/ or dbt/
+        """
+        df = pd.read_csv('dbt/seeds/watchlist.csv', names=['ticker'], header=0)
+        return df
 
     def format_calls(self, row) -> tuple:
         key = row.ticker
