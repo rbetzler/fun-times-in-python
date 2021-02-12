@@ -1,3 +1,5 @@
+# Setup for Docker & Undockerized Pi
+
 ## Python
 * Build python docker container, from `docks/python`
   ```
@@ -89,4 +91,18 @@
 * Startup jupyter labs
   ```
   jupyter lab --ip=0.0.0.0 --port=8888 --notebook-dir=/usr/src/app --allow-root
+  ```
+
+## Pi
+* Update pi
+  ```
+  sudo apt-get update && sudo-apt-get upgrade
+  ```
+* Install python packages (no venv)
+  ```
+  sudo apt-get install python3-numpy python3-pandas python3-requests python-psycopg2 -y
+  ```
+* Mount hdd
+  ```
+  sudo mount /dev/sda1 ~/fun-times-in-python/audit/
   ```
