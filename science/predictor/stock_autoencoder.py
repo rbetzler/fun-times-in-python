@@ -12,7 +12,7 @@ class StockAutoencoder(base.Predictor):
     """Subclass for stock autoencoder"""
 
     @property
-    def output_folder(self) -> str:
+    def output_subfolder(self) -> str:
         return 'pred_autoencoder'
 
     @property

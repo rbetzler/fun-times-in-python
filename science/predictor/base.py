@@ -45,7 +45,7 @@ class Predictor(core.Science, abc.ABC):
         return f'/usr/src/app/audit/science/{self.location}/models/{self.model_id}'
 
     @property
-    def output_folder(self) -> str:
+    def output_subfolder(self) -> str:
         """Filepath from where to load and to where to save a trained model"""
         return 'predictions'
 
@@ -130,7 +130,7 @@ class Predictor(core.Science, abc.ABC):
                 print(f'Saving model predictions to {self.location} {datetime.datetime.utcnow()}')
                 modeling_utils.save_file(
                     df=predictions,
-                    subfolder=self.output_folder,
+                    subfolder=self.output_subfolder,
                     filename=self.filename(self.model_id),
                     is_prod=self.is_prod,
                 )
