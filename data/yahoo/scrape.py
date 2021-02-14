@@ -25,7 +25,7 @@ class YahooScraper(scraper.Caller, abc.ABC):
         pass
 
     @property
-    def _get_calls(self):
+    def call_inputs(self):
         """
         Grab input for api calls from dbt dir
         TODO: Replace with csv in either audit/ or dbt/

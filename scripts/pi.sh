@@ -9,7 +9,6 @@ fi
 
 export PYTHONPATH=/home/pi/fun-times-in-python
 cd $PYTHONPATH
-
 echo "Moved to dir: $(pwd)"
 
 if [ $# -eq 0 ]; then

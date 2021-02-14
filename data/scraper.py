@@ -49,14 +49,14 @@ class Caller(abc.ABC):
         pass
 
     @property
-    def _get_calls(self) -> pd.DataFrame:
+    def call_inputs(self) -> pd.DataFrame:
         """Grab call data from db"""
         return utils.query_db(query=self.calls_query)
 
     def get_calls(self) -> List[Tuple]:
         """Generate a list of api calls (as tuples)"""
         keys_requests = []
-        params = self._get_calls
+        params = self.call_inputs
         for row in params.itertuples():
             key_request = self.format_calls(row)
             keys_requests.append(key_request)
