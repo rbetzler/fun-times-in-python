@@ -1,31 +1,43 @@
-import datetime
 import io
 import pandas as pd
 import requests
-from utilities import utils
+from data import scraper
+from typing import List, Tuple
 
 
-class YahooSPCaller:
-    def __init__(self):
-        self.run_datetime = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+class YahooSPCaller(scraper.Caller):
 
     @property
-    def call(self) -> str:
-        return 'https://query1.finance.yahoo.com/v7/finance/download/%5EGSPC?period1=-1325635200&period2=1581206400&interval=1d&events=history&includeAdjustedClose=true'
+    def job_name(self) -> str:
+        return 'sp'
+
+    @property
+    def calls_query(self):
+        pass
+
+    def format_calls(self, row):
+        pass
+
+    def get_calls(self) -> List[Tuple]:
+        key = ''
+        req = 'https://query1.finance.yahoo.com/v7/finance/download/%5EGSPC?period1=-1325635200&period2=1581206400&interval=1d&events=history&includeAdjustedClose=true'
+        return [(key, req)]
 
     @property
     def export_folder(self) -> str:
-        return f'audit/yahoo/sp/{self.run_datetime}'
+        return f'audit/yahoo/{self.job_name}/{self.folder_datetime}/'
 
     @property
-    def export_filepath(self) -> str:
-        return f'{self.export_folder}/sp_{self.run_datetime}.csv'
+    def export_file_name(self) -> str:
+        return f'{self.job_name}'
 
-    def execute(self):
-        utils.create_directory(self.export_folder)
-        response = requests.get(self.call)
+    def parse(
+            self,
+            response: requests.Response,
+            key: str,
+    ) -> pd.DataFrame:
         df = pd.read_csv(io.StringIO(response.text))
-        df.to_csv(self.export_filepath)
+        return df
 
 
 if __name__ == '__main__':
