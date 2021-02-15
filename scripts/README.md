@@ -1,5 +1,8 @@
 ## Miscellaneous bash scripts
 
+## Startup nautilus
+* `nautilus.sh` is a symlinked file to mount hdd and startup docker containers
+
 ## Pi setup
 * Update pi
   ```
@@ -17,3 +20,9 @@
 
 ## Sync
 * Run `sh scripts/sync.sh`
+* To sync data from nautilus to pi
+
+## Nasdaq
+* Run `sh nasdaq.sh` and click `Download CSV` on the webpage that opens
+* Semi-manual process to download a csv from the nasdaq website and run some jobs
+* TODO: Replace bash with selenium
