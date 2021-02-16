@@ -17,7 +17,7 @@ docker exec py-temp bash -c "python data/nasdaq/load.py; cd dbt; dbt run -m tick
 echo "Docker jobs complete"
 
 echo "Writing report to pi"
-PiIp=$(nmap -sn 192.168.1.0/24 | grep "pi" | awk -F"[()]" '{print $2}')
+PiIp="$(nmap -sn 192.168.1.0/24 | grep "pi" | awk -F"[()]" '{print $2}')"
 echo "Pi Ip identified as $PiIp"
 
 echo "Running pi startup script"
