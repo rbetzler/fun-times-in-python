@@ -30,7 +30,7 @@ class YahooScraper(scraper.Caller, abc.ABC):
         Grab input for api calls from dbt dir
         TODO: Replace with csv in either audit/ or dbt/
         """
-        df = pd.read_csv('dbt/seeds/watchlist.csv', names=['ticker'], header=0)
+        df = pd.read_csv('audit/reports/listed_stocks/listed_stocks.csv', names=['ticker'], header=0)
         return df
 
     def format_calls(self, row) -> tuple:
