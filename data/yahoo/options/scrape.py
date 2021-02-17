@@ -1,3 +1,5 @@
+import requests
+import time
 from data.yahoo import scrape
 
 
@@ -12,10 +14,37 @@ class YahooOptions(scrape.YahooScraper):
         """Not used for yahoo options job"""
         return None
 
-    def format_calls(self, row) -> tuple:
-        key = row.ticker
-        request = f'https://query2.finance.yahoo.com/v8/finance/chart/{key}?formatted=true&crumb=3eIGSD3T5Ul&lang=en-US&region=US&period1=34450&period2=153145400400&interval=1d&events=div%7Csplit&corsDomain=finance.yahoo.com'
+    def format_calls(self, row, expiration_date: str=None) -> tuple:
+        key = row if isinstance(row, str) else row.ticker
+        date_param = f'&date={expiration_date}' if expiration_date else ''
+        request = f'https://query2.finance.yahoo.com/v7/finance/options/{key}?formatted=true&lang=en-US&region=US{date_param}&corsDomain=finance.yahoo.com'
         return key, request
+
+    @staticmethod
+    def _get(call: str, export_file_path: str) -> dict:
+        response = requests.get(call)
+        output = response.json()
+        file = open(export_file_path, 'w')
+        file.write(str(output))
+        return output
+
+    def get(
+            self,
+            key: str,
+            call: str,
+    ):
+        """Get data from an api/url, either save the raw file or parse it and write to a csv"""
+        export_file_path = self.export_file_path(f'{key}_0')
+        output = self._get(call, export_file_path)
+
+        chain = output.get('optionChain')
+        underlying = chain.get('result')[0]
+        expiration_dates = underlying.get('expirationDates')
+        for expiration_date in expiration_dates:
+            _, call = self.format_calls(row=key, expiration_date=expiration_date)
+            export_file_path = self.export_file_path(f'{key}_{expiration_date}')
+            self._get(call, export_file_path)
+            time.sleep(self.len_of_pause)
 
 
 if __name__ == '__main__':
