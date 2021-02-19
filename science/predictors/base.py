@@ -160,9 +160,7 @@ class Predictor(core.Science, abc.ABC):
                 hidden_shape=self.hidden_shape,
                 output_shape=o_shape,
             ).to(self.device)
-
-            # TODO: Confirm parallelization works
-            # model = torch.nn.DataParallel(model)
+            model = torch.nn.DataParallel(model)
 
             if os.path.isfile(self.trained_model_filepath):
                 print(f'Loading pre-trained model {datetime.datetime.utcnow()}')
