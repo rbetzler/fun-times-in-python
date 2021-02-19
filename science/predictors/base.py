@@ -146,19 +146,16 @@ class Predictor(core.Science, abc.ABC):
                 batch_size=self.batch_size,
                 sequence_length=self.sequence_length,
             )
-            i_shape = input_shape[2]
-            o_shape = output_shape[1]
-
             print(f'''
             Configuring model {datetime.datetime.utcnow()}
-                Input shape: {i_shape}
+                Input shape: {input_shape}
                 Hidden shape: {self.hidden_shape}
-                Output shape: {o_shape}
+                Output shape: {output_shape}
             ''')
             model = self.model(
-                input_shape=i_shape,
+                input_shape=input_shape[2],
                 hidden_shape=self.hidden_shape,
-                output_shape=o_shape,
+                output_shape=output_shape[1],
             ).to(self.device)
             model = torch.nn.DataParallel(model)
 
