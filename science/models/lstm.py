@@ -1,39 +1,35 @@
 """lstm implementation 0"""
 import torch
-from science.models import base
 
 
-class LSTM0(base.NN):
-
-    def _configure_network(self):
+class LSTM0(torch.nn.Module):
+    def __init__(
+        self,
+        input_shape,
+        hidden_shape,
+        output_shape,
+        n_layers=2,
+        bias=True,
+        dropout=.15,
+    ):
+        super(LSTM0, self).__init__()
         self.lstm = torch.nn.LSTM(
-            input_size=self.input_shape,
-            hidden_size=self.hidden_shape,
-            num_layers=self.n_layers,
-            bias=self.bias,
-            dropout=self.dropout,
-        ).to(self.device)
+            input_shape,
+            hidden_shape,
+            num_layers=n_layers,
+            bias=bias,
+            dropout=dropout,
+        )
         self.relu = torch.nn.ReLU6()
-        self.linear = torch.nn.Linear(self.hidden_shape, self.output_shape).to(self.device)
+        self.linear = torch.nn.Linear(
+            hidden_shape,
+            output_shape,
+        )
 
-        # TODO: Get parallelization working with hidden states
-        # self.lstm = torch.nn.DataParallel(self.lstm)
-        # self.relu = torch.nn.DataParallel(self.relu)
-        # self.linear = torch.nn.DataParallel(self.linear)
-
-    @property
-    def loss_function(self):
-        loss = torch.nn.L1Loss(reduction='sum').to(self.device)
-        return loss
-
-    @property
-    def optimizer(self):
-        return torch.optim.Adam(self.parameters(), lr=self.learning_rate)
-
-    def forward(self, data):
+    def forward(self, x):
         # self.lstm.flatten_parameters()
         # output, self.hidden = self.lstm(data, self.hidden)
-        output, _ = self.lstm(data)
-        output = self.linear(output)
+        output, _ = self.lstm(x)
         output = self.relu(output)
+        output = self.linear(output)
         return output
