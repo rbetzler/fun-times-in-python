@@ -9,7 +9,19 @@ SYMBOL = 'symbol'
 
 
 class StockAutoencoder(base.Predictor):
-    """Subclass for stock autoencoder"""
+    """Stock autoencoder"""
+
+    def model(
+        self,
+        input_shape,
+        hidden_shape,
+        output_shape,
+    ):
+        model = autoencoder.Autoencoder0(
+            input_shape=input_shape,
+            hidden_shape=hidden_shape,
+        )
+        return model
 
     @property
     def output_subfolder(self) -> str:
@@ -87,13 +99,3 @@ class StockAutoencoder(base.Predictor):
     @property
     def target_column(self) -> str:
         pass
-
-    def model(self, df: pd.DataFrame):
-        model = autoencoder.NNAutoencoder0(
-            x=df.drop(self.columns_to_ignore, axis=1),
-            y=df.drop(self.columns_to_ignore, axis=1),
-            output_shape=len(df.drop(self.columns_to_ignore, axis=1).columns),
-            device=self.device,
-            **self.model_kwargs,
-        )
-        return model

@@ -1,9 +1,8 @@
 import abc
 import pandas as pd
 
-from science.models import lstm, nn
+from science.models import nn
 from science.predictor import thirty_day_low as tdl
-from utilities import science_utils, utils
 
 PREDICTION = 'prediction'
 SCALED_PREDICTION = 'scaled_prediction'
@@ -21,8 +20,21 @@ TARGET_MIN = 'target_min'
 TARGET_MAX = 'target_max'
 
 
-class SpeculativePredictor(tdl.ThirtyDayLowPredictor, abc.ABC):
+class SpeculativePredictor(tdl.ThirtyDayLowPredictorNN, abc.ABC):
     """Subclass for speculative predictions"""
+
+    def model(
+        self,
+        input_shape,
+        hidden_shape,
+        output_shape,
+    ):
+        model = nn.NN0(
+            input_shape=input_shape,
+            hidden_shape=hidden_shape,
+            output_shape=output_shape,
+        )
+        return model
 
     @property
     def columns_to_ignore(self) -> list:
@@ -159,15 +171,6 @@ class LowSpeculativePredictorNN(SpeculativePredictor, abc.ABC):
     def target_column(self) -> str:
         return TARGET_MIN
 
-    def model(self, df: pd.DataFrame):
-        model = lstm.LSTM0(
-            x=df.drop(self.columns_to_ignore, axis=1),
-            y=df[self.target_column],
-            device=self.device,
-            **self.model_kwargs,
-        )
-        return model
-
 
 class HighSpeculativePredictorNN(SpeculativePredictor, abc.ABC):
     """NN implementation of 10 day high price speculative predictor"""
@@ -175,12 +178,3 @@ class HighSpeculativePredictorNN(SpeculativePredictor, abc.ABC):
     @property
     def target_column(self) -> str:
         return TARGET_MAX
-
-    def model(self, df: pd.DataFrame):
-        model = nn.NN0(
-            x=df.drop(self.columns_to_ignore, axis=1),
-            y=df[self.target_column],
-            device=self.device,
-            **self.model_kwargs,
-        )
-        return model

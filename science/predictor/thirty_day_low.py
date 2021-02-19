@@ -15,8 +15,21 @@ SECTOR = 'sector'
 SYMBOL = 'symbol'
 
 
-class ThirtyDayLowPredictor(base.Predictor, abc.ABC):
-    """Predict the lowest stock prices over the next 30 days"""
+class ThirtyDayLowPredictorNN(base.Predictor, abc.ABC):
+    """NN implementation of 30 day low price predictor"""
+
+    def model(
+        self,
+        input_shape,
+        hidden_shape,
+        output_shape,
+    ):
+        model = nn.NN0(
+            input_shape=input_shape,
+            hidden_shape=hidden_shape,
+            output_shape=output_shape,
+        )
+        return model
 
     @property
     def columns_to_ignore(self) -> list:
@@ -123,27 +136,18 @@ class ThirtyDayLowPredictor(base.Predictor, abc.ABC):
         return df
 
 
-class ThirtyDayLowPredictorLSTM(ThirtyDayLowPredictor, abc.ABC):
-    """LSTM implementation of 30 day low price predictor"""
-
-    def model(self, df: pd.DataFrame):
-        model = lstm.LSTM0(
-            x=df.drop(self.columns_to_ignore, axis=1),
-            y=df[self.target_column],
-            device=self.device,
-            **self.model_kwargs,
-        )
-        return model
-
-
-class ThirtyDayLowPredictorNN(ThirtyDayLowPredictor, abc.ABC):
+class ThirtyDayLowPredictorLSTM(ThirtyDayLowPredictorNN, abc.ABC):
     """NN implementation of 30 day low price predictor"""
 
-    def model(self, df: pd.DataFrame):
-        model = nn.NN0(
-            x=df.drop(self.columns_to_ignore, axis=1),
-            y=df[self.target_column],
-            device=self.device,
-            **self.model_kwargs,
+    def model(
+        self,
+        input_shape,
+        hidden_shape,
+        output_shape,
+    ):
+        model = lstm.LSTM0(
+            input_shape=input_shape,
+            hidden_shape=hidden_shape,
+            output_shape=output_shape,
         )
         return model
