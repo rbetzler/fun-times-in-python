@@ -2,7 +2,7 @@ import abc
 import pandas as pd
 
 from science.models import nn
-from science.predictor import thirty_day_low as tdl
+from science.predictors import thirty_day_low as tdl
 
 PREDICTION = 'prediction'
 SCALED_PREDICTION = 'scaled_prediction'

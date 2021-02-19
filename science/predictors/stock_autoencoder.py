@@ -2,7 +2,7 @@ import abc
 import pandas as pd
 
 from science.models import autoencoder
-from science.predictor import base
+from science.predictors import base
 
 MARKET_DATETIME = 'market_datetime'
 SYMBOL = 'symbol'

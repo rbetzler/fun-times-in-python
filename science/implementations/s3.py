@@ -1,14 +1,14 @@
 """
-python science/executor.py --job=s4 --start_date='2019-01-15' --n_days=200 --is_training_run
-python science/executor.py --job=s4 --start_date='2020-08-03' --n_days=30 -ab
+python science/executor.py --job=s3 --start_date='2019-01-15' --n_days=200 --is_training_run
+python science/executor.py --job=s3 --start_date='2020-08-03' --n_days=30 -ab
 """
-from science.predictor import speculation as spc
+from science.predictors import speculation as spc
 
 
-class S4(spc.HighSpeculativePredictorNN):
+class S3(spc.LowSpeculativePredictorNN):
     @property
     def model_id(self) -> str:
-        return 's4'
+        return 's3'
 
     @property
     def hidden_shape(self) -> int:

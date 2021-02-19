@@ -2,7 +2,7 @@ import abc
 import pandas as pd
 
 from science.models import lstm, nn
-from science.predictor import base
+from science.predictors import base
 from utilities import science_utils, utils
 
 INDUSTRY = 'industry'

@@ -11,9 +11,7 @@ from utilities import modeling_utils
 def get_class(job_id: str) -> classmethod:
     """Determine which class to run"""
     if job_id[0] in ['a', 's']:
-        job_type = 'predictor'
-    elif job_id[0] == 'd':
-        job_type = 'decisioner'
+        job_type = 'implementations'
     else:
         raise NotImplementedError('Missing job_id arg')
 

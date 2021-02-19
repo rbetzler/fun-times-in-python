@@ -160,6 +160,7 @@ class Predictor(core.Science, abc.ABC):
                 hidden_shape=self.hidden_shape,
                 output_shape=o_shape,
             ).to(self.device)
+
             # TODO: Confirm parallelization works
             # model = torch.nn.DataParallel(model)
 
