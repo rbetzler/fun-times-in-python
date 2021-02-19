@@ -5,7 +5,6 @@ import inspect
 import pandas as pd
 from datetime import datetime, timedelta
 from science import core
-from science.models import base
 from utilities import modeling_utils
 
 
@@ -28,8 +27,7 @@ def get_class_kwargs(cls: classmethod) -> set:
     """Get keyword arguments for classes"""
     sub_cls_kwargs = inspect.getfullargspec(cls.__init__).args
     base_cls_kwargs = inspect.getfullargspec(core.Science.__init__).args
-    nn_cls_kwargs = inspect.getfullargspec(base.NN.__init__).args
-    cls_kwargs = set(base_cls_kwargs + sub_cls_kwargs + nn_cls_kwargs)
+    cls_kwargs = set(base_cls_kwargs + sub_cls_kwargs)
     return cls_kwargs
 
 
