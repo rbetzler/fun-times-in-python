@@ -11,15 +11,14 @@ class S4(spc.HighSpeculativePredictorNN):
         return 's4'
 
     @property
-    def model_kwargs(self) -> dict:
-        kwargs = {
-            'n_layers': 2,
-            'n_epochs': 400,
-            'hidden_shape': 750,
-            'dropout': 0.2,
-            'learning_rate': .0001,
-            'seed': 55,
-            'sequence_length': 10,
-            'batch_size': 31000,
-        }
-        return kwargs
+    def hidden_shape(self) -> int:
+        return 500
+
+    @property
+    def batch_size(self) -> int:
+        return 4000
+
+    @property
+    def limit(self) -> int:
+        """When backtesting, the size of the dataset"""
+        return 12000

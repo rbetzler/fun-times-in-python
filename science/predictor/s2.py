@@ -11,15 +11,14 @@ class S2(tdl.ThirtyDayLowPredictorLSTM):
         return 's2'
 
     @property
-    def model_kwargs(self) -> dict:
-        kwargs = {
-            'n_layers': 2,
-            'n_epochs': 500,
-            'hidden_shape': 500,
-            'dropout': 0.1,
-            'learning_rate': .0001,
-            'seed': 44,
-            'sequence_length': 2,
-            'batch_size': 31000,
-        }
-        return kwargs
+    def hidden_shape(self) -> int:
+        return 1000
+
+    @property
+    def batch_size(self) -> int:
+        return 10000
+
+    @property
+    def limit(self) -> int:
+        """When backtesting, the size of the dataset"""
+        return 40000
