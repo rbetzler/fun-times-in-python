@@ -16,9 +16,9 @@ class S3(spc.LowSpeculativePredictorNN):
 
     @property
     def batch_size(self) -> int:
-        return 4000
+        return 8000
 
     @property
     def limit(self) -> int:
         """When backtesting, the size of the dataset"""
-        return 12000
+        return 24000
