@@ -107,8 +107,9 @@ class Predictor(core.Science, abc.ABC):
     @abc.abstractmethod
     def postprocess_data(
             self,
-            input: pd.DataFrame,
-            output: pd.DataFrame,
+            raw_input: pd.DataFrame,
+            pad_input: pd.DataFrame,
+            prediction: pd.Series or pd.DataFrame,
     ) -> pd.DataFrame:
         """Process data post-model run"""
         pass
@@ -134,7 +135,7 @@ class Predictor(core.Science, abc.ABC):
             print(f'Pre-processing raw data {datetime.datetime.utcnow()}')
             input = self.preprocess_data(df)
             x = input.drop(self.columns_to_ignore, axis=1)
-            y = input[self.target_column]
+            y = input[self.target_column] if self.target_column else x
 
             print(f'Padding data {datetime.datetime.utcnow()}')
             x_pad, y_pad = nn_utils.pad_data(self.batch_size, x, y)
@@ -189,8 +190,7 @@ class Predictor(core.Science, abc.ABC):
 
             else:
                 print(f'Generating prediction {datetime.datetime.utcnow()}')
-                output = x_pad.copy()
-                output['prediction'] = nn_utils.predict(
+                prediction = nn_utils.predict(
                     model=model,
                     x=x_pad,
                     n_batches=n_batches,
@@ -199,7 +199,12 @@ class Predictor(core.Science, abc.ABC):
                     device=self.device,
                 )
                 print(f'Post-processing data {datetime.datetime.utcnow()}')
-                predictions = self.postprocess_data(input=input, output=output)
+                input['model_id'] = self.model_id
+                predictions = self.postprocess_data(
+                    raw_input=input,
+                    pad_input=x_pad.copy(),
+                    prediction=prediction,
+                )
                 if self.archive_files:
                     print(f'Saving model predictions to {self.location} {datetime.datetime.utcnow()}')
                     modeling_utils.save_file(

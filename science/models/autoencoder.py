@@ -8,7 +8,7 @@ class Autoencoder0(torch.nn.Module):
         input_shape,
         hidden_shape,
     ):
-        super(NN0, self).__init__()
+        super(Autoencoder0, self).__init__()
         self.linear0 = torch.nn.Linear(
             input_shape,
             hidden_shape,

@@ -127,11 +127,12 @@ class ThirtyDayLowPredictorNN(base.Predictor, abc.ABC):
 
     def postprocess_data(
             self,
-            input: pd.DataFrame,
-            output: pd.DataFrame,
+            raw_input: pd.DataFrame,
+            pad_input: pd.DataFrame,
+            prediction: pd.Series,
     ) -> pd.DataFrame:
-        output['model_id'] = self.model_id
-        df = input[self.columns_to_ignore].join(output)
+        pad_input['prediction'] = prediction
+        df = raw_input[self.columns_to_ignore].join(pad_input)
         df[SCALED_PREDICTION] = (1 - df[PREDICTION]) * df[OPEN]
         return df
 

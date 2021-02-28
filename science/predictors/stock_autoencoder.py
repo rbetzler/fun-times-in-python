@@ -1,4 +1,5 @@
 import abc
+import numpy as np
 import pandas as pd
 
 from science.models import autoencoder
@@ -83,13 +84,14 @@ class StockAutoencoder(base.Predictor):
 
     def postprocess_data(
             self,
-            input: pd.DataFrame,
-            output: pd.DataFrame,
+            raw_input: pd.DataFrame,
+            pad_input: pd.DataFrame,
+            prediction: np.ndarray,
     ) -> pd.DataFrame:
-        output['model_id'] = self.model_id
+        prediction_df = pd.DataFrame(prediction, columns=pad_input.columns)
         df = pd.merge(
-            input,
-            output,
+            raw_input,
+            prediction_df,
             left_index=True,
             right_index=True,
             suffixes=('_target', '_prediction'),
