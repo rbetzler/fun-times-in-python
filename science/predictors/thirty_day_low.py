@@ -134,6 +134,7 @@ class ThirtyDayLowPredictorNN(base.Predictor, abc.ABC):
         pad_input['prediction'] = prediction
         df = raw_input[self.columns_to_ignore].join(pad_input)
         df[SCALED_PREDICTION] = (1 - df[PREDICTION]) * df[OPEN]
+        df['model_id'] = self.model_id
         return df
 
 

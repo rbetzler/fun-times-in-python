@@ -162,6 +162,7 @@ class SpeculativePredictor(tdl.ThirtyDayLowPredictorNN, abc.ABC):
         df[SCALED_PREDICTION] = df[PREDICTION] * df[CLOSE]
         df[TARGET] = df[self.target_column]
         df[SCALED_TARGET] = df[f'scaled_{self.target_column}']
+        df['model_id'] = self.model_id
         return df
 
 

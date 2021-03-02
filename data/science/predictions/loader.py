@@ -120,5 +120,5 @@ class DevPredAutoencoderLoader(loader.ScienceLoader):
 
 if __name__ == '__main__':
     DevPredictionsLoader().execute()
-    DevPredAutoencoderLoader().execute()
+    # DevPredAutoencoderLoader().execute()
     # ProdPredictionsLoader().execute()
